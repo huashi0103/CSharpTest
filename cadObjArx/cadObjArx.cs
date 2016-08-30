@@ -38,7 +38,7 @@ namespace cadObjArx
             Editor ed = Application.DocumentManager.MdiActiveDocument.Editor;
             ed.SetImpliedSelection(new ObjectId[0]);
             ed.WriteMessage("\n加载cadObjArx\n");
-            load();
+           // load();
             Application.Idle += new EventHandler(Application_Idle);
            
         }
@@ -47,12 +47,12 @@ namespace cadObjArx
         {
             Application.Idle -= new EventHandler(Application_Idle);
       
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            if (doc.LockMode() == DocumentLockMode.NotLocked)
-            {
-                doc.LockDocument(DocumentLockMode.Write, "", "", false);
-            }
-            doc.SendStringToExecute("InitT\n", false, false, false);
+            //Document doc = Application.DocumentManager.MdiActiveDocument;
+            //if (doc.LockMode() == DocumentLockMode.NotLocked)
+            //{
+            //    doc.LockDocument(DocumentLockMode.Write, "", "", false);
+            //}
+            //doc.SendStringToExecute("InitT\n", false, false, false);
    
         }
 

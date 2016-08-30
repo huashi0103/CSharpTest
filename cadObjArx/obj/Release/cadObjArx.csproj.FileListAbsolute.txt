@@ -1,0 +1,6 @@
+D:\workspace\test\cadObjArx\bin\Release\cadObjArx.dll
+D:\workspace\test\cadObjArx\bin\Release\cadObjArx.pdb
+D:\workspace\test\cadObjArx\obj\Release\cadObjArx.dll
+D:\workspace\test\cadObjArx\obj\Release\cadObjArx.pdb
+D:\workspace\test\cadObjArx\obj\Release\cadObjArx.csproj.ResolveComReference.cache
+D:\workspace\test\cadObjArx\obj\Release\cadObjArx.csprojResolveAssemblyReference.cache

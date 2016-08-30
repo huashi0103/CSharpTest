@@ -1,0 +1,9 @@
+D:\workspace\test\cadObjArx\bin\Debug\cadObjArx.dll
+D:\workspace\test\cadObjArx\bin\Debug\cadObjArx.pdb
+D:\workspace\test\cadObjArx\bin\Debug\AcDbMgd.dll
+D:\workspace\test\cadObjArx\bin\Debug\AcMgd.dll
+D:\workspace\test\cadObjArx\bin\Debug\AdWindows.dll
+D:\workspace\test\cadObjArx\bin\Debug\AcTcMgd.dll
+D:\workspace\test\cadObjArx\bin\Debug\AcCui.dll
+D:\workspace\test\cadObjArx\obj\Debug\cadObjArx.dll
+D:\workspace\test\cadObjArx\obj\Debug\cadObjArx.pdb

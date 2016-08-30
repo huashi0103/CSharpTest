@@ -1,0 +1,8 @@
+D:\workspace\test\WinDraw\bin\Release\WinDraw.exe
+D:\workspace\test\WinDraw\bin\Release\WinDraw.pdb
+D:\workspace\test\WinDraw\obj\x86\Release\WinDraw.Properties.Resources.resources
+D:\workspace\test\WinDraw\obj\x86\Release\WinDraw.csproj.GenerateResource.Cache
+D:\workspace\test\WinDraw\obj\x86\Release\WinDraw.exe
+D:\workspace\test\WinDraw\obj\x86\Release\WinDraw.pdb
+D:\workspace\test\WinDraw\obj\x86\Release\WinDraw.Form1.resources
+D:\workspace\test\WinDraw\obj\x86\Release\WinDraw.csprojResolveAssemblyReference.cache

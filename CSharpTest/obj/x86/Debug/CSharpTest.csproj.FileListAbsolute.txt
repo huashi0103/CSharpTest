@@ -1,0 +1,4 @@
+D:\workspace\CSharpTest\CSharpTest\bin\Debug\CSharpTest.exe
+D:\workspace\CSharpTest\CSharpTest\bin\Debug\CSharpTest.pdb
+D:\workspace\CSharpTest\CSharpTest\obj\x86\Debug\CSharpTest.exe
+D:\workspace\CSharpTest\CSharpTest\obj\x86\Debug\CSharpTest.pdb

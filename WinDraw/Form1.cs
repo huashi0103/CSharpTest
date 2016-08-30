@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Autodesk.AutoCAD.Interop;
+using System.Diagnostics;
+using System.IO;
 
 namespace WinDraw
 {
@@ -17,6 +19,7 @@ namespace WinDraw
         public Form1()
         {
             InitializeComponent();
+
         }
 
         protected override void OnLoad(EventArgs e)
@@ -24,12 +27,9 @@ namespace WinDraw
             base.OnLoad(e);
             OpencadToolStripMenuItem.Click += (s, ea) =>
             {
-                OpenCad(); 
-                log("程序5秒后退出");
                 ThreadPool.QueueUserWorkItem((obj) =>
                 {
-                    Thread.Sleep(5000);
-                    this.Invoke(new EventHandler(delegate { this.Close(); }));
+                    OpenCad();
                 });
             };
             showpic1ToolStripMenuItem.Click += delegate {
@@ -50,6 +50,14 @@ namespace WinDraw
 
 
         }
+        public void CloseAllInstance()
+        {
+            Process[] aCAD = Process.GetProcessesByName("acad");
+            foreach (Process aCADPro in aCAD)
+            {
+                aCADPro.CloseMainWindow();
+            }
+        }
 
         private void log(string msg)
         {
@@ -65,96 +73,89 @@ namespace WinDraw
                 textBox1.AppendText(msg + Environment.NewLine);
             }
         }
-
+ 
         //启动CAD
         private void OpenCad()
         {
-
+            this.Invoke(new EventHandler(delegate { this.TopMost = true; }));
+            //CloseAllInstance();
             string sAppPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "AutoCAD文件(*.dwg)|*.dwg";
             ofd.Title = "选择CAD文件";
-            ofd.ShowDialog();
-            string sPath = ofd.FileName;
-
+            if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.Cancel) return;
+            string sPath = ofd.FileName; //@"D:\Desktop\坝基渗压监测重要点A断面.dwg";// 
             string sProgID = "AutoCAD.Application.18";
             AcadApplication acApp = null;
+            axAcCtrl1.Src =null;
             try
             {
-                if (System.Diagnostics.Process.GetProcessesByName("acad").Count() > 0)
+                log("构造cad对象");
+                Process[] aCAD = Process.GetProcessesByName("acad");
+                if (aCAD.Length > 0)
                 {
-                    log("已经启动cad，获取cad对象");
                     acApp = (AcadApplication)Marshal.GetActiveObject(sProgID);
-
                 }
                 else
                 {
-                    log("未启动cad,新建cad对象，启动cad");
-                    //Type acType = Type.GetTypeFromProgID(sProgID);
-                    //acApp = (AcadApplication)Activator.CreateInstance(acType, true);
                     acApp = new AcadApplication();
-
-                }
-
-                string sCommand = "";
-                if (System.IO.File.Exists(sPath))
-                {
-                    log("打开文件:" + sPath);
-                    System.Threading.Thread.Sleep(300);
-                    acApp.Documents.Open(sPath, null, null);
-                }
-                else
-                {
-                    //保存
-                    while (true)
+                    log("启动CAD中....");
+                    ThreadPool.QueueUserWorkItem((state) =>
                     {
-                        SaveFileDialog sfd = new SaveFileDialog();
-                        sfd.Filter = "AutoCAD文件(*.dwg)|*.dwg";
-                        sfd.Title = "新建CAD文件";
-                        if (sfd.ShowDialog() == DialogResult.Cancel) return;
-                        sPath = sfd.FileName;
-                        if (System.IO.File.Exists(sPath))
+                        for (int i = 1; i < 6; i++)
                         {
-                            if (MessageBox.Show("文件已经存在，要覆盖吗", "确认", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                            {
-                                try
-                                {
-                                    System.IO.File.Delete(sPath);
-                                    acApp.ActiveDocument.SaveAs(sPath);
-                                    break;
-                                }
-                                catch
-                                {
-                                    MessageBox.Show("该文件不能覆盖，请重新指定输出路径");
-                                }
-                            }
+
+                            log(i.ToString());
+                            Thread.Sleep(1000);
                         }
-                        else
-                        {
-                            log("新建文件");
-                            acApp.ActiveDocument.SaveAs(sPath);
-                            log("关闭文件");
-                            acApp.Documents.Close();
-                            log("打开刚刚新建的文件");
-                            acApp.Documents.Open(sPath);
-                            break;
-                        }
-                    }
+                    });
+                    Thread.Sleep(5000);
                 }
-                acApp.Visible = true;
-                log("打开cad完成");
+
+                acApp.Visible = false;
+                log("打开文件:" + sPath);
+                acApp.Documents.Open(sPath);
+                log("加载arx文件");
+                string dllPath = Environment.CurrentDirectory + @"\cadObjArx.dll";
+                dllPath = dllPath.Replace("\\", "\\\\");
+                string sCommand = string.Format("(command \"netload\" \"{0}\")\n", dllPath);
+                log(sCommand);
+                acApp.ActiveDocument.SendCommand(sCommand);
+
+
+                log("do SB command");
+                acApp.ActiveDocument.SendCommand("SB\n");
+                string newPath = Path.GetDirectoryName(sPath) + "\\" + Path.GetFileNameWithoutExtension(sPath) + "_new.dwg";
+                acApp.ActiveDocument.SaveAs(newPath);
+                acApp.ActiveDocument.Close(false, null);
+                log("OK");
+                axAcCtrl1.Src = newPath;
+
+            }
+            catch (COMException ex)
+            {
+                log(ex.Message);
             }
             catch (Exception ex)
             {
                 log(ex.Message);
             }
+            finally
+            {
+                acApp = null;
+            }
+            this.Invoke(new EventHandler(delegate { this.TopMost = false; }));
         }
         
         //winform中嵌入cad绘图控件
         private void 打开dwgToolStripMenuItem_Click(object sender, EventArgs e)
         {
             axAcCtrl1.Src=@"D:\Desktop\坝基渗压监测重要点A断面.dwg";            
+        }
+
+        private void loadarxToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

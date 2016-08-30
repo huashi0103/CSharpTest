@@ -44,6 +44,7 @@
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.axAcCtrl1 = new AxACCTRLLib.AxAcCtrl();
+            this.loadarxToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -77,7 +78,8 @@
             // 
             this.打开ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.OpencadToolStripMenuItem,
-            this.打开dwgToolStripMenuItem});
+            this.打开dwgToolStripMenuItem,
+            this.loadarxToolStripMenuItem});
             this.打开ToolStripMenuItem.Name = "打开ToolStripMenuItem";
             this.打开ToolStripMenuItem.Size = new System.Drawing.Size(44, 21);
             this.打开ToolStripMenuItem.Text = "打开";
@@ -187,6 +189,13 @@
             this.axAcCtrl1.Size = new System.Drawing.Size(612, 316);
             this.axAcCtrl1.TabIndex = 0;
             // 
+            // loadarxToolStripMenuItem
+            // 
+            this.loadarxToolStripMenuItem.Name = "loadarxToolStripMenuItem";
+            this.loadarxToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.loadarxToolStripMenuItem.Text = "loadarx";
+            this.loadarxToolStripMenuItem.Click += new System.EventHandler(this.loadarxToolStripMenuItem_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -228,6 +237,7 @@
         private System.Windows.Forms.ToolStripMenuItem 打开dwgToolStripMenuItem;
         private System.Windows.Forms.TabPage tabPage3;
         private AxACCTRLLib.AxAcCtrl axAcCtrl1;
+        private System.Windows.Forms.ToolStripMenuItem loadarxToolStripMenuItem;
 
     }
 }

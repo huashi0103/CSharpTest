@@ -22,3 +22,4 @@ D:\workspace\CSharpTest\WinDraw\obj\x86\Debug\WinDraw.Properties.Resources.resou
 D:\workspace\CSharpTest\WinDraw\obj\x86\Debug\WinDraw.csproj.GenerateResource.Cache
 D:\workspace\CSharpTest\WinDraw\obj\x86\Debug\WinDraw.exe
 D:\workspace\CSharpTest\WinDraw\obj\x86\Debug\WinDraw.pdb
+D:\workspace\CSharpTest\WinDraw\bin\Debug\WinDraw.exe.config

@@ -15,7 +15,8 @@ D:\workspace\test\test\bin\Debug\cadObjArx.pdb
 D:\workspace\test\cadObjArx\obj\x86\Debug\cadObjArx.csprojResolveAssemblyReference.cache
 D:\workspace\CSharpTest\CSharpTest\bin\Debug\cadObjArx.dll
 D:\workspace\CSharpTest\CSharpTest\bin\Debug\cadObjArx.pdb
-D:\workspace\CSharpTest\cadObjArx\obj\x86\Debug\cadObjArx.csprojResolveAssemblyReference.cache
 D:\workspace\CSharpTest\cadObjArx\obj\x86\Debug\cadObjArx.csproj.ResolveComReference.cache
 D:\workspace\CSharpTest\cadObjArx\obj\x86\Debug\cadObjArx.dll
 D:\workspace\CSharpTest\cadObjArx\obj\x86\Debug\cadObjArx.pdb
+D:\workspace\CSharpTest\WinDraw\bin\Debug\cadObjArx.dll
+D:\workspace\CSharpTest\WinDraw\bin\Debug\cadObjArx.pdb

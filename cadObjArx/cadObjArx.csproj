@@ -67,6 +67,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="cadObjArx.cs" />
+    <Compile Include="CodeClass.cs" />
+    <Compile Include="FormToolsForCass.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormToolsForCass.Designer.cs">
+      <DependentUpon>FormToolsForCass.cs</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -97,6 +104,11 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="FormToolsForCass.resx">
+      <DependentUpon>FormToolsForCass.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

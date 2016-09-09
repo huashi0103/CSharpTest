@@ -316,35 +316,64 @@ namespace cadObjArx
         {
             Editor ed = Application.DocumentManager.MdiActiveDocument.Editor;
             Polyline line;
-            if(!SelectEntity(out line,"多段线"))return;
-            
+            if (!SelectEntity(out line, "多段线")) return;
+            if (line == null) return;
             if (line != null)
             {
                 using (var tr = Application.DocumentManager.MdiActiveDocument.TransactionManager.StartTransaction())
                 {
-                    var dic = tr.GetObject(line.ExtensionDictionary, OpenMode.ForRead) as DBDictionary;
-                    ObjectId id = dic.GetAt("attr");
-                    var dt = tr.GetObject(id, OpenMode.ForRead) as DataTable;
-                    int index = dt.GetColumnIndexAtName("line_id");
-                    var att = dt.GetCellAt(0, index).Value;
-                    ed.WriteMessage(att + "\n");
-
-                    id = dic.GetAt("exta");
-                    var xrec = tr.GetObject(id, OpenMode.ForRead) as Xrecord;
-                    foreach (var xdata in xrec.Data)
+                    var xdata = line.XData;
+                    if (xdata != null)
                     {
-                        ed.WriteMessage(xdata.Value.ToString() + "\n");
+                        var iter = xdata.GetEnumerator();
+                        while (iter.MoveNext())
+                        {
+                            var value = (TypedValue)iter.Current;
+                            ed.WriteMessage(value.TypeCode.ToString() +":"+ value.Value + "\n");
+                        }
                     }
-
-
-
+                    //var dic = tr.GetObject(line.ExtensionDictionary, OpenMode.ForRead) as DBDictionary;
+                    //ObjectId id = dic.GetAt("attr");
+                    //var dt = tr.GetObject(id, OpenMode.ForRead) as DataTable;
+                    //int index = dt.GetColumnIndexAtName("line_id");
+                    //var att = dt.GetCellAt(0, index).Value;
+                    //ed.WriteMessage(att + "\n");
+                    //id = dic.GetAt("exta");
+                    //var xrec = tr.GetObject(id, OpenMode.ForRead) as Xrecord;
+                    //foreach (var xdata in xrec.Data)
+                    //{
+                    //    ed.WriteMessage(xdata.Value.ToString() + "\n");
+                    //}
                 }
-
                 // ed.WriteMessage("\n{0},{1}", line.StartPoint.X, line.StartPoint.Y);
                 //ed.WriteMessage("\n{0},{1}", line.EndPoint.X, line.EndPoint.Y);
             }
-  
         }
+        [CommandMethod("SLLT")]
+        public void SelectPolyline2d()
+        {
+            Editor ed = Application.DocumentManager.MdiActiveDocument.Editor;
+            Polyline2d line;
+            if (!SelectEntity(out line, "二维多段线")) return;
+            if (line == null) return;
+            if (line != null)
+            {
+                using (var tr = Application.DocumentManager.MdiActiveDocument.TransactionManager.StartTransaction())
+                {
+                    var xdata = line.XData;
+                    if (xdata != null)
+                    {
+                        var iter = xdata.GetEnumerator();
+                        while (iter.MoveNext())
+                        {
+                            var value = (TypedValue)iter.Current;
+                            ed.WriteMessage(value.TypeCode.ToString() + ":" + value.Value + "\n");
+                        }
+                    }
+                }
+            }
+        }
+
         //添加文字
         [CommandMethod("SLP")]
         public void SelectPoint()
@@ -423,13 +452,13 @@ namespace cadObjArx
 
         }
         //选择一个实体对象，取消或者选中返回
-        private bool SelectEntity<T>(out T obj, string entityName) where T : Entity
+        private bool SelectEntity<T>(out T obj, string entityName,bool allclass=false) where T : Entity
         {
             Editor ed = Application.DocumentManager.MdiActiveDocument.Editor;
             var db = Application.DocumentManager.MdiActiveDocument.Database;
             PromptEntityOptions peo = new PromptEntityOptions(string.Format("\n请选择{0}:", entityName));
             peo.SetRejectMessage(string.Format("\n必须是{0}!", entityName));
-            peo.AddAllowedClass(typeof(T), false);
+            peo.AddAllowedClass(typeof(T), allclass);
             obj = null;
             while (true)
             {
@@ -652,6 +681,58 @@ namespace cadObjArx
             }
             
         }
+
+        //列举cass编辑后的cad中所有宗地
+        [CommandMethod("LISTZD")]
+         public void ListAll()
+         {
+             var ed = Application.DocumentManager.MdiActiveDocument.Editor;
+             Thread thread = new Thread(() =>
+             {
+                 List<ZDinfo> ZDS = new List<ZDinfo>();
+    
+                 //添加过滤条件，可以添加类型/图层条件不同的dxfcode对应不同的对象
+                 var tvs = new TypedValue[] { new TypedValue((int)DxfCode.Start, "POLYLINE"),
+                                                                new TypedValue((int)DxfCode.LayerName,"JZD")};
+                 var sf = new SelectionFilter(tvs);
+                 var sel = ed.SelectAll(sf);
+                 if (sel.Value == null) return;
+                 using (var tr = Application.DocumentManager.MdiActiveDocument.TransactionManager.StartTransaction())
+                 {
+                     var ids = sel.Value.GetObjectIds();
+                     foreach (var obj in ids)
+                     {
+                         try
+                         {
+                             var line = tr.GetObject(obj, OpenMode.ForRead) as Polyline2d;
+                             var xzd = line.XData;
+                             if (xzd == null) continue;
+                             var bufs = xzd.AsArray();
+                             ZDinfo zd = new ZDinfo();
+                             zd.Code = bufs[6].Value.ToString() + bufs[2].Value.ToString();
+                             zd.Owner = bufs[3].Value.ToString();
+                             zd.Area = line.Area.ToString("#0.00");
+                             ZDS.Add(zd);
+
+                         }
+                         catch (Exception ex)
+                         {
+                             Application.ShowAlertDialog(ex.Message);
+                             continue;
+                         }
+                     }
+                     tr.Commit();
+                 }
+                 Tools.Sort(ZDS);
+                 FormToolsForCass frm = new FormToolsForCass(ZDS);
+                 Application.ShowModalDialog(frm);
+             });
+             thread.Start();
+
+
+         }
+
+
 
 
         [DllImport("USER32.DLL")]

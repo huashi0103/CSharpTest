@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using Autodesk.AutoCAD.Interop;
 using System.Diagnostics;
 using System.IO;
+using CSharpTest;
 
 namespace WinDraw
 {
@@ -156,6 +157,15 @@ namespace WinDraw
         private void loadarxToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void loadexcelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            NExcel excel = new NExcel();
+            string filepath = @"D:\WORK\Project\三峡\三峡工程自动化文件\XIN三峡枢纽考证表格式.xls";
+            excel.Open(filepath);
+            var data = excel.getData(excel.getSheet(0));
+            this.dataGridView1.DataSource = data;
         }
     }
 }

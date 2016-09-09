@@ -23,3 +23,9 @@ D:\workspace\CSharpTest\WinDraw\obj\x86\Debug\WinDraw.csproj.GenerateResource.Ca
 D:\workspace\CSharpTest\WinDraw\obj\x86\Debug\WinDraw.exe
 D:\workspace\CSharpTest\WinDraw\obj\x86\Debug\WinDraw.pdb
 D:\workspace\CSharpTest\WinDraw\bin\Debug\WinDraw.exe.config
+D:\workspace\CSharpTest\WinDraw\obj\x86\Debug\WinDraw.csprojResolveAssemblyReference.cache
+D:\workspace\CSharpTest\WinDraw\bin\Debug\CSharpTest.exe
+D:\workspace\CSharpTest\WinDraw\bin\Debug\NPOI.dll
+D:\workspace\CSharpTest\WinDraw\bin\Debug\ICSharpCode.SharpZipLib.dll
+D:\workspace\CSharpTest\WinDraw\bin\Debug\CSharpTest.pdb
+D:\workspace\CSharpTest\WinDraw\bin\Debug\NPOI.xml

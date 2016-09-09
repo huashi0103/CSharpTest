@@ -20,3 +20,5 @@ D:\workspace\CSharpTest\cadObjArx\obj\x86\Debug\cadObjArx.dll
 D:\workspace\CSharpTest\cadObjArx\obj\x86\Debug\cadObjArx.pdb
 D:\workspace\CSharpTest\WinDraw\bin\Debug\cadObjArx.dll
 D:\workspace\CSharpTest\WinDraw\bin\Debug\cadObjArx.pdb
+D:\workspace\CSharpTest\cadObjArx\obj\x86\Debug\cadObjArx.FormToolsForCass.resources
+D:\workspace\CSharpTest\cadObjArx\obj\x86\Debug\cadObjArx.csproj.GenerateResource.Cache

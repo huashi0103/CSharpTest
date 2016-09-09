@@ -34,6 +34,8 @@
             this.打开ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.OpencadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.打开dwgToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadarxToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadexcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.绘图ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showpic1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showpic2ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -44,7 +46,8 @@
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.axAcCtrl1 = new AxACCTRLLib.AxAcCtrl();
-            this.loadarxToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.menuStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -52,6 +55,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.tabPage3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.axAcCtrl1)).BeginInit();
+            this.tabPage4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
             // textBox1
@@ -79,7 +84,8 @@
             this.打开ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.OpencadToolStripMenuItem,
             this.打开dwgToolStripMenuItem,
-            this.loadarxToolStripMenuItem});
+            this.loadarxToolStripMenuItem,
+            this.loadexcelToolStripMenuItem});
             this.打开ToolStripMenuItem.Name = "打开ToolStripMenuItem";
             this.打开ToolStripMenuItem.Size = new System.Drawing.Size(44, 21);
             this.打开ToolStripMenuItem.Text = "打开";
@@ -96,6 +102,20 @@
             this.打开dwgToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.打开dwgToolStripMenuItem.Text = "打开dwg";
             this.打开dwgToolStripMenuItem.Click += new System.EventHandler(this.打开dwgToolStripMenuItem_Click);
+            // 
+            // loadarxToolStripMenuItem
+            // 
+            this.loadarxToolStripMenuItem.Name = "loadarxToolStripMenuItem";
+            this.loadarxToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.loadarxToolStripMenuItem.Text = "loadarx";
+            this.loadarxToolStripMenuItem.Click += new System.EventHandler(this.loadarxToolStripMenuItem_Click);
+            // 
+            // loadexcelToolStripMenuItem
+            // 
+            this.loadexcelToolStripMenuItem.Name = "loadexcelToolStripMenuItem";
+            this.loadexcelToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.loadexcelToolStripMenuItem.Text = "loadexcel";
+            this.loadexcelToolStripMenuItem.Click += new System.EventHandler(this.loadexcelToolStripMenuItem_Click);
             // 
             // 绘图ToolStripMenuItem
             // 
@@ -130,6 +150,7 @@
             this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Controls.Add(this.tabPage2);
             this.tabControl1.Controls.Add(this.tabPage3);
+            this.tabControl1.Controls.Add(this.tabPage4);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(0, 25);
             this.tabControl1.Name = "tabControl1";
@@ -189,12 +210,26 @@
             this.axAcCtrl1.Size = new System.Drawing.Size(612, 316);
             this.axAcCtrl1.TabIndex = 0;
             // 
-            // loadarxToolStripMenuItem
+            // tabPage4
             // 
-            this.loadarxToolStripMenuItem.Name = "loadarxToolStripMenuItem";
-            this.loadarxToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.loadarxToolStripMenuItem.Text = "loadarx";
-            this.loadarxToolStripMenuItem.Click += new System.EventHandler(this.loadarxToolStripMenuItem_Click);
+            this.tabPage4.Controls.Add(this.dataGridView1);
+            this.tabPage4.Location = new System.Drawing.Point(4, 22);
+            this.tabPage4.Name = "tabPage4";
+            this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage4.Size = new System.Drawing.Size(618, 322);
+            this.tabPage4.TabIndex = 3;
+            this.tabPage4.Text = "tabPage4";
+            this.tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // dataGridView1
+            // 
+            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridView1.Location = new System.Drawing.Point(3, 3);
+            this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.RowTemplate.Height = 23;
+            this.dataGridView1.Size = new System.Drawing.Size(612, 316);
+            this.dataGridView1.TabIndex = 0;
             // 
             // Form1
             // 
@@ -203,6 +238,7 @@
             this.ClientSize = new System.Drawing.Size(626, 373);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.menuStrip1);
+            this.DoubleBuffered = true;
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "Form1";
             this.Text = "Form1";
@@ -215,6 +251,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.tabPage3.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.axAcCtrl1)).EndInit();
+            this.tabPage4.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -238,6 +276,9 @@
         private System.Windows.Forms.TabPage tabPage3;
         private AxACCTRLLib.AxAcCtrl axAcCtrl1;
         private System.Windows.Forms.ToolStripMenuItem loadarxToolStripMenuItem;
+        private System.Windows.Forms.TabPage tabPage4;
+        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.ToolStripMenuItem loadexcelToolStripMenuItem;
 
     }
 }

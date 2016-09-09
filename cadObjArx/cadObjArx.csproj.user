@@ -13,7 +13,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <StartAction>Program</StartAction>
     <StartProgram>C:\Program Files (x86)\Autodesk\AutoCAD 2012 - Simplified Chinese\acad.exe</StartProgram>
-    <StartWorkingDirectory>D:\workspace\test\test\bin\Debug\</StartWorkingDirectory>
-    <StartArguments>D:\Desktop\坝基渗压监测重要点A断面.dwg</StartArguments>
+    <StartWorkingDirectory>D:\workspace\CSharpTest\WinDraw\bin\Debug\</StartWorkingDirectory>
+    <StartArguments>D:\Desktop\枝江\关庙山村权籍图.dwg</StartArguments>
   </PropertyGroup>
 </Project>

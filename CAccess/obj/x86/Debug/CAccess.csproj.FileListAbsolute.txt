@@ -1,0 +1,7 @@
+D:\workspace\CSharpTest\CAccess\obj\x86\Debug\CAccess.Form1.resources
+D:\workspace\CSharpTest\CAccess\obj\x86\Debug\CAccess.Properties.Resources.resources
+D:\workspace\CSharpTest\CAccess\obj\x86\Debug\CAccess.csproj.GenerateResource.Cache
+D:\workspace\CSharpTest\CAccess\bin\Debug\CAccess.exe
+D:\workspace\CSharpTest\CAccess\bin\Debug\CAccess.pdb
+D:\workspace\CSharpTest\CAccess\obj\x86\Debug\CAccess.exe
+D:\workspace\CSharpTest\CAccess\obj\x86\Debug\CAccess.pdb

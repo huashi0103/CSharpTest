@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tcpserverTest", "tcpserverT
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinDraw", "WinDraw\WinDraw.csproj", "{0D7EA531-6C72-42ED-B504-F3000BD5B868}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAccess", "CAccess\CAccess.csproj", "{2BAA60FD-E3CF-487E-AE20-3D30599D7C38}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoadDataCalc", "LoadDataCalc\LoadDataCalc.csproj", "{4BB98847-4F23-4D19-9789-0C3B9B65D8E1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +47,18 @@ Global
 		{0D7EA531-6C72-42ED-B504-F3000BD5B868}.Release|Any CPU.ActiveCfg = Release|x86
 		{0D7EA531-6C72-42ED-B504-F3000BD5B868}.Release|x86.ActiveCfg = Release|x86
 		{0D7EA531-6C72-42ED-B504-F3000BD5B868}.Release|x86.Build.0 = Release|x86
+		{2BAA60FD-E3CF-487E-AE20-3D30599D7C38}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{2BAA60FD-E3CF-487E-AE20-3D30599D7C38}.Debug|x86.ActiveCfg = Debug|x86
+		{2BAA60FD-E3CF-487E-AE20-3D30599D7C38}.Debug|x86.Build.0 = Debug|x86
+		{2BAA60FD-E3CF-487E-AE20-3D30599D7C38}.Release|Any CPU.ActiveCfg = Release|x86
+		{2BAA60FD-E3CF-487E-AE20-3D30599D7C38}.Release|x86.ActiveCfg = Release|x86
+		{2BAA60FD-E3CF-487E-AE20-3D30599D7C38}.Release|x86.Build.0 = Release|x86
+		{4BB98847-4F23-4D19-9789-0C3B9B65D8E1}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{4BB98847-4F23-4D19-9789-0C3B9B65D8E1}.Debug|x86.ActiveCfg = Debug|x86
+		{4BB98847-4F23-4D19-9789-0C3B9B65D8E1}.Debug|x86.Build.0 = Debug|x86
+		{4BB98847-4F23-4D19-9789-0C3B9B65D8E1}.Release|Any CPU.ActiveCfg = Release|x86
+		{4BB98847-4F23-4D19-9789-0C3B9B65D8E1}.Release|x86.ActiveCfg = Release|x86
+		{4BB98847-4F23-4D19-9789-0C3B9B65D8E1}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

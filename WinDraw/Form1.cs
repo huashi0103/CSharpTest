@@ -17,6 +17,11 @@ namespace WinDraw
 {
     public partial class Form1 : Form
     {
+        string[] parameters = { "A", "B", "C", "K", "G", "x", "y" };
+        Dictionary<string, double> Datas = new Dictionary<string, double>() { { "A", 10 },
+        { "B", 10 } ,{ "C", 10 },{ "K", 10 },{ "G", 10 },{ "x", 10 },{ "y", 10 } };
+
+        string[] Oporetions = { "+", "-", "*", "/", "(", ")", "平方" };
         public Form1()
         {
             InitializeComponent();
@@ -45,12 +50,75 @@ namespace WinDraw
             showpic3ToolStripMenuItem.Click += delegate
             {
                 Pic pic = new Pic();
-                pictureBox1.Image = pic.pic1(3);
+                var bmp= pic.pic1(3);
+                pictureBox1.Image = bmp;
+                bmp.Save(@"D:\1.jpg");
+                
             };
+            Load();
+            btnClear.Click += new EventHandler((o, eg) => { textBox1.Clear(); });
+            btncalc.Click+=new EventHandler((o,eg)=>{
+                string exp = textBox1.Text;
+                foreach (string s in Datas.Keys)
+                {
+                    exp = exp.Replace(s, Datas[s].ToString());
 
+                }
+                var result = new DataTable().Compute(exp, "");
+                textBox1.AppendText(String.Format("={0}={1}", exp, result));
 
-
+            });
         }
+
+        void Load()
+        {
+            foreach (string p in Datas.Keys)
+            {
+                Button btn = new Button();
+                btn.Text = p;
+                btn.Click += new EventHandler((o, e) => {
+                    var obj = o as Button;
+                    textBox1.AppendText(obj.Text);
+                });
+                flowLayoutPanel1.Controls.Add(btn);
+            }
+
+            foreach (string p in Oporetions)
+            {
+                Button btn = new Button();
+                btn.Text = p;
+                btn.Click += new EventHandler((o, e) =>
+                {
+                    var obj = o as Button;
+                    if (obj.Text == "平方")
+                    {
+                        string exp = textBox1.Text;
+                        if (exp.EndsWith(")"))
+                        {
+                            if (exp.LastIndexOf('(') >= 0)
+                            {
+                                string s = exp.Substring(exp.LastIndexOf('('));
+                                textBox1.AppendText("*" + s);
+                            }
+                        }
+                        else
+                        {
+                            textBox1.AppendText("*"+exp[exp.Length - 1]);
+                        }
+                        //textBox1.AppendText("^2");
+                        
+                    }
+                    else
+                    {
+                        textBox1.AppendText(obj.Text);
+                    }
+                });
+                flowLayoutPanel1.Controls.Add(btn);
+            }
+        }
+
+
+
         public void CloseAllInstance()
         {
             Process[] aCAD = Process.GetProcessesByName("acad");
@@ -84,8 +152,8 @@ namespace WinDraw
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "AutoCAD文件(*.dwg)|*.dwg";
             ofd.Title = "选择CAD文件";
-            if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.Cancel) return;
-            string sPath = ofd.FileName; //@"D:\Desktop\坝基渗压监测重要点A断面.dwg";// 
+            //if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.Cancel) return;
+            string sPath = @"D:\Desktop\糯扎渡\坝基渗压监测重要点A断面.dwg";// 
             string sProgID = "AutoCAD.Application.18";
             AcadApplication acApp = null;
             axAcCtrl1.Src =null;

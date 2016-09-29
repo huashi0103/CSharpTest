@@ -7,6 +7,8 @@ using NPOI.HSSF.UserModel;
 using System.IO;
 using NPOI.SS.UserModel;
 using System.Data;
+using NPOI.XSSF.UserModel;
+using System.Globalization;
 
 
 namespace CSharpTest
@@ -38,7 +40,7 @@ namespace CSharpTest
            ISheet sheet;
            if(sheetname==null)
            {
-                 sheet =hssfworkbook.GetSheetAt(index);
+                sheet =hssfworkbook.GetSheetAt(index);
            }else
            {
                sheet=hssfworkbook.GetSheet(sheetname);
@@ -53,27 +55,27 @@ namespace CSharpTest
        /// <returns></returns>
        public DataTable getData(ISheet sheet)
        {
-               System.Collections.IEnumerator rows = sheet.GetRowEnumerator();  
-               DataTable dt = new DataTable();  
-                for (int j = 0; j < (sheet.GetRow(0).LastCellNum); j++)  
-                {  
-                    dt.Columns.Add(Convert.ToChar(((int)'A') + j).ToString());  
-                }  
-                while (rows.MoveNext())  
+            System.Collections.IEnumerator rows = sheet.GetRowEnumerator();  
+            DataTable dt = new DataTable();  
+            for (int j = 0; j < (sheet.GetRow(0).LastCellNum); j++)  
+            {  
+                dt.Columns.Add(Convert.ToChar(((int)'A') + j).ToString());  
+            }  
+            while (rows.MoveNext())  
+            {
+                if (rows.Current == null) continue ;
+                HSSFRow row = (HSSFRow)rows.Current;
+                DataRow dr = dt.NewRow();  
+                for (int i = 0; i < row.LastCellNum-1; i++)  
                 {
-                    if (rows.Current == null) continue ;
-                    HSSFRow row = (HSSFRow)rows.Current;
-                    DataRow dr = dt.NewRow();  
-                    for (int i = 0; i < row.LastCellNum-1; i++)  
-                    {
-                        var cell = row.GetCell(i);
-                        if (cell != null) cell.SetCellType(CellType.String);
-                        dr[i] = cell == null ? null : cell.ToString();
+                    var cell = row.GetCell(i);
+                    if (cell != null) cell.SetCellType(CellType.String);
+                    dr[i] = cell == null ? null : cell.ToString();
                         
-                    }  
-                    dt.Rows.Add(dr);  
                 }  
-                return dt;  
+                dt.Rows.Add(dr);  
+            }  
+            return dt;  
        }
        
        /// <summary>
@@ -116,6 +118,48 @@ namespace CSharpTest
                book = null;
            }
        }
+
+
+       public static void test()
+       {
+           string path = @"D:\WORK\Project\苗尾\昆明院苗尾监测资料\内观资料\PD45探洞（渗压计）\PD45探洞渗压计.xls";
+           //path = @"D:\WORK\Project\白鹤滩\数字边坡数据下红岩渗压计.xlsx";
+           using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+           {
+               IFormatProvider culture = CultureInfo.CurrentCulture;
+                var workbook = WorkbookFactory.Create(path);
+                for (int i = 0; i < workbook.NumberOfSheets; i++)
+                {
+                    var psheet = workbook.GetSheetAt(i);
+                    for (int j = 10; j < psheet.LastRowNum; j++)
+                    {
+                        
+                        System.Collections.IEnumerator rows = psheet.GetRowEnumerator();
+                        //while (rows.MoveNext())
+                        {
+                            //if (rows.Current == null) continue;
+                            //IRow row = (IRow)rows.Current;
+                            IRow row = psheet.GetRow(j);
+                            var cell = row.GetCell(0);
+                            if (String.IsNullOrEmpty(cell.ToString())) break;
+                            var ndt = cell.DateCellValue.ToString("MM/dd/yyyy");
+                            var nt = row.GetCell(1).ToString();
+                            var dt = DateTime.Parse(ndt + " " + nt,culture,DateTimeStyles.NoCurrentDateDefault);
+                            var sd = row.GetCell(2).ToString();
+                            var st = row.GetCell(3).ToString();
+                            Console.WriteLine(string.Format("{0},{1},{2},{3}", dt,nt, sd, st));
+                        }
+                    }
+                    break;
+
+                }
+               
+
+           }
+
+
+       }
+            
 
     }
 }

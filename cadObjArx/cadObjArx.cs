@@ -155,10 +155,18 @@ namespace cadObjArx
             Database acCurDb = acDoc.Database;
             using (Transaction acTrans = acCurDb.TransactionManager.StartTransaction())
             {
-                BlockTable acBlkTbl;
-                acBlkTbl = acTrans.GetObject(acCurDb.BlockTableId, OpenMode.ForRead) as BlockTable;
-                BlockTableRecord acBlkTblRec;
-                acBlkTblRec = acTrans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForRead) as BlockTableRecord;
+                //列举组
+                var dicgroup = acTrans.GetObject(acCurDb.GroupDictionaryId, OpenMode.ForRead) as DBDictionary;
+                foreach (var dic in dicgroup)
+                {
+                    var group = acTrans.GetObject(dic.Value, OpenMode.ForRead) as Group;
+                    if (group == null) continue;
+                    acadEd.WriteMessage(dic.Key+":"+group.Name+"\n");
+
+                }
+                //列举实体对象
+                BlockTable acBlkTbl = acTrans.GetObject(acCurDb.BlockTableId, OpenMode.ForRead) as BlockTable;
+                BlockTableRecord acBlkTblRec = acTrans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForRead) as BlockTableRecord;
                 int nCnt = 0;
                 acDoc.Editor.WriteMessage("\nModel space objects: ");
                 foreach (ObjectId acObjId in acBlkTblRec)
@@ -175,6 +183,7 @@ namespace cadObjArx
                 {
                     acDoc.Editor.WriteMessage("\nTotal {0} objects.", nCnt);
                 }
+
             }
         }
 
@@ -463,6 +472,7 @@ namespace cadObjArx
             while (true)
             {
                 var selection = ed.GetEntity(peo);
+                
                 if (selection.Status == PromptStatus.OK)
                 {
                     using (var tr = db.TransactionManager.StartTransaction())
@@ -683,56 +693,240 @@ namespace cadObjArx
         }
 
         //列举cass编辑后的cad中所有宗地
-        [CommandMethod("LISTZD")]
+         [CommandMethod("LISTZD")]
          public void ListAll()
          {
              var ed = Application.DocumentManager.MdiActiveDocument.Editor;
-             Thread thread = new Thread(() =>
-             {
-                 List<ZDinfo> ZDS = new List<ZDinfo>();
-    
-                 //添加过滤条件，可以添加类型/图层条件不同的dxfcode对应不同的对象
-                 var tvs = new TypedValue[] { new TypedValue((int)DxfCode.Start, "POLYLINE"),
-                                                                new TypedValue((int)DxfCode.LayerName,"JZD")};
-                 var sf = new SelectionFilter(tvs);
-                 var sel = ed.SelectAll(sf);
-                 if (sel.Value == null) return;
-                 using (var tr = Application.DocumentManager.MdiActiveDocument.TransactionManager.StartTransaction())
-                 {
-                     var ids = sel.Value.GetObjectIds();
-                     foreach (var obj in ids)
-                     {
-                         try
-                         {
-                             var line = tr.GetObject(obj, OpenMode.ForRead) as Polyline2d;
-                             var xzd = line.XData;
-                             if (xzd == null) continue;
-                             var bufs = xzd.AsArray();
-                             ZDinfo zd = new ZDinfo();
-                             zd.Code = bufs[6].Value.ToString() + bufs[2].Value.ToString();
-                             zd.Owner = bufs[3].Value.ToString();
-                             zd.Area = line.Area.ToString("#0.00");
-                             ZDS.Add(zd);
+             List<ZDinfo> ZDS = new List<ZDinfo>();
 
-                         }
-                         catch (Exception ex)
+             //添加过滤条件，可以添加类型/图层条件不同的dxfcode对应不同的对象
+             var tvszd = new TypedValue[] { new TypedValue((int)DxfCode.Start, "POLYLINE"),
+                                                                new TypedValue((int)DxfCode.LayerName,"JZD")};
+             var tvshouse = new TypedValue[] { new TypedValue((int)DxfCode.Start, "LWPOLYLINE"),
+                                                                new TypedValue((int)DxfCode.LayerName,"JMD")};
+             var sf = new SelectionFilter(tvszd);
+             var sel = ed.SelectAll(sf);
+             if (sel.Value == null) return;
+             using (var tr = Application.DocumentManager.MdiActiveDocument.TransactionManager.StartTransaction())
+             {
+                 var ids = sel.Value.GetObjectIds();
+                 foreach (var obj in ids)
+                 {
+                     try
+                     {
+                         //获取宗地
+                         var line = tr.GetObject(obj, OpenMode.ForRead) as Polyline2d;
+                         ZDinfo zd = getZD(line);
+                         //获取宗地内部的所有闭合多段线
+                         if (zd == null) continue;
+                         var collection=new Point3dCollection();
+                         var iter=line.GetEnumerator();
+                         while(iter.MoveNext())
                          {
-                             Application.ShowAlertDialog(ex.Message);
-                             continue;
+                             ObjectId id = (ObjectId)iter.Current;
+                             Vertex2d vtx = tr.GetObject(id, OpenMode.ForRead) as Vertex2d;
+                             collection.Add(vtx.Position);
                          }
+                        var result = ed.SelectCrossingPolygon(collection, new SelectionFilter(tvshouse));
+                        if (result.Status == PromptStatus.OK)
+                        {
+                            //获取宗地内部的房屋信息
+                            //var regColl = new DBObjectCollection();
+                            foreach (var id in result.Value.GetObjectIds())
+                            {
+                                var pline = tr.GetObject(id, OpenMode.ForRead) as Polyline;
+                                if (pline == null) continue;
+                                //var newline = ent.Clone() as Polyline;
+                                //newline.Elevation = 0;
+                                //if (newline.Closed)
+                                //{
+                                //    regColl.Add(newline);
+                                //}
+                                var house = gethouse(pline);
+                                if (house != null)
+                                {
+                                    zd.Houses.Add(house);
+                                }
+                            }
+                            //用区域内的闭合多边形生成面域可以用来判断有几幢
+                            //if (regColl.Count <= 0) continue;
+                            //var redbs = Autodesk.AutoCAD.DatabaseServices.Region.CreateFromCurves(regColl);
+                            //zd.PartCount = redbs.Count;
+                        }
+                        string data = String.Format("{0}:{1},{2}", zd.Owner, line.StartPoint.X, line.StartPoint.Y);
+                        ed.WriteMessage(data + "\n");
+                        //Log(data);
+                        zd.Group = zd.Houses.Count.ToString();
+                        ZDS.Add(zd);
                      }
-                     tr.Commit();
+                     catch (Exception ex)
+                     {
+                         Application.ShowAlertDialog(ex.Message);
+                         continue;
+                     }
                  }
-                 Tools.Sort(ZDS);
-                 FormToolsForCass frm = new FormToolsForCass(ZDS);
-                 Application.ShowModalDialog(frm);
-             });
-             thread.Start();
+                 tr.Commit();
+             }
+             Tools.Sort(ZDS);
+             FormToolsForCass frm = new FormToolsForCass(ZDS);
+             Application.ShowModalDialog(frm);
 
 
          }
+        //测试记录
+         void Log(string data)
+         {
+             using (StreamWriter sw = new StreamWriter(@"D:\test1.txt", true))
+             {
+                 sw.WriteLine(data);
+             }
+         }
+        ZDinfo getZD(Polyline2d line )
+        {
+            try
+            {
+                ZDinfo zd = new ZDinfo();
+                var xzd = line.XData;
+                if (xzd == null) return null;
+                var bufs = xzd.AsArray();
+                zd.Code = bufs[6].Value.ToString() + bufs[2].Value.ToString();
+                zd.Owner = bufs[3].Value.ToString();
+                zd.Area = line.Area;
+                return zd;
+            }
+            catch { return null; }
+        }
+        House gethouse(Polyline line)
+        {
+            if (!line.Closed) return null;
+            var xzd = line.XData;
+            if (xzd == null) return null;
+            var bufs = xzd.AsArray();
+            House house = new House();
+            house.Area = line.Area;
+            string type=bufs[1].Value.ToString();
+            switch(type)
+            {
+                case "141161":
+                    house.Structure="混合";
+                    if (bufs.Length > 2)
+                    {
+                        house.FloorCount = int.Parse(bufs[2].Value.ToString());
+                    }
+                    break;
+                case "141121":
+                    house.Structure="砖木";
+                    if (bufs.Length > 2)
+                    {
+                        house.FloorCount = int.Parse(bufs[2].Value.ToString());
+                    }
+                    break;
+                case "143130":
+                    house.Isbalcony=true;
+                    break;
+                default:
+                    return null;
+                    //house.Structure = type;
+                    //if (bufs.Length > 2)
+                    //{
+                    //    house.FloorCount = int.Parse(bufs[2].Value.ToString());
+                    //}
+                    //break;
+            }
 
+            return house;
+        }
+        [CommandMethod("SELGP")]
+         public void SelectGroup()
+         {
+            Document acDoc = Application.DocumentManager.MdiActiveDocument;
+            Editor acadEd = Application.DocumentManager.MdiActiveDocument.Editor;
+            Database acCurDb = acDoc.Database;
+            using (Transaction acTrans = acCurDb.TransactionManager.StartTransaction())
+            {
+                var dicgroup = acTrans.GetObject(acCurDb.GroupDictionaryId, OpenMode.ForRead) as DBDictionary;
+                foreach (var dic in dicgroup)
+                {
 
+                    var group = acTrans.GetObject(dic.Value, OpenMode.ForRead) as Group;
+                    if (group == null) continue;
+                    //acadEd.WriteMessage(dic.Key + ":" + group.Name + "\n");
+                    foreach (var zdid in group.GetAllEntityIds())
+                    {
+                        var zd = acTrans.GetObject(zdid, OpenMode.ForRead);
+                        if (zd.GetType() == typeof(Polyline2d))
+                        {
+                            var zdinfo = getZD(zd as Polyline2d);
+                            acDoc.Editor.WriteMessage("\n" + zdinfo.Owner + "--" + zdinfo.Code);
+                        }
+                        else if (zd.GetType() ==typeof(BlockReference))
+                        {
+                            var table = acTrans.GetObject((zd as BlockReference).BlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
+                            foreach (var id in table)
+                            {
+                                var line = acTrans.GetObject(id, OpenMode.ForRead) as Polyline;
+                                if (line == null) continue;
+                                var xzd = line.XData;
+                                if (xzd == null) continue;
+                                var bufs = xzd.AsArray();
+                                acDoc.Editor.WriteMessage("\n" + bufs[0].TypeCode+":"+bufs[0].Value + "--" + bufs[1].TypeCode+":"+ bufs[1].Value);
+                            }
+                        }
+
+                    }
+                    acDoc.Editor.WriteMessage("\n=================");
+                }
+
+            }
+        }
+
+        [CommandMethod("listp")]
+        public void listPolyline()
+        {
+            Polyline2d line;
+            
+            var ed = Application.DocumentManager.MdiActiveDocument.Editor;
+            if (SelectEntity(out line, "多段线"))
+            {
+                var collection = new Point3dCollection();
+                //for (int i = 0; i < line.NumberOfVertices; i++)
+                //{
+                //    collection.Add(line.GetPoint3dAt(i));
+                //}
+                using (var tr = Application.DocumentManager.MdiActiveDocument.TransactionManager.StartTransaction())
+                {
+                    var iter = line.GetEnumerator();
+                    while (iter.MoveNext())
+                    {
+                        ObjectId id = (ObjectId)iter.Current;
+                        Vertex2d vtx = tr.GetObject(id, OpenMode.ForRead) as Vertex2d;
+
+                        collection.Add(vtx.Position);
+                    }
+                  var  tvs = new TypedValue[] { new TypedValue((int)DxfCode.Start, "LWPOLYLINE"),
+                                                                new TypedValue((int)DxfCode.LayerName,"JMD")};
+
+                    var result = ed.SelectCrossingPolygon(collection, new SelectionFilter(tvs));
+                    if (result.Status == PromptStatus.OK)
+                    {
+                        foreach (var id in result.Value.GetObjectIds())
+                        {
+                            var pline = tr.GetObject(id, OpenMode.ForRead) as Polyline;
+                            if (pline == null||!pline.Closed) continue;
+                            ed.WriteMessage("\n" + pline.ObjectId.ToString());
+                            var house = gethouse(pline);
+                            if (house != null)
+                            {
+                                ed.WriteMessage("\n" + house.Area.ToString() + "--" + house.Structure);
+                            }
+                        }
+                    }
+                    
+                    tr.Commit();
+                }
+                
+            }
+        }
 
 
         [DllImport("USER32.DLL")]
@@ -741,3 +935,4 @@ namespace cadObjArx
         public static extern bool SetForegroundWindow(IntPtr hWnd);
     }
 }
+  

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ProConfig ProjectName="苗尾">
+  <DataRoot>D:\WORK\Project\苗尾\昆明院苗尾监测资料\内观资料</DataRoot>
+  <DataBase>Data Source = 10.6.179.9,1433;Network Library = DBMSSOCN;Initial Catalog = MWDatabase;User ID = {0};Password = {1};</DataBase>
+  <Instruments>
+    <Ins>单点位移计</Ins>
+    <Ins>固定测斜仪</Ins>
+    <Ins>土压力计</Ins>
+    <Ins>多点位移计</Ins>
+    <Ins>多点锚杆应力计</Ins>
+    <Ins>应变计</Ins>
+    <Ins>应变计组</Ins>
+    <Ins>无应力计</Ins>
+    <Ins>测缝计</Ins>
+    <Ins>渗压计</Ins>
+    <Ins>温度计</Ins>
+    <Ins>裂缝计</Ins>
+    <Ins>量水堰</Ins>
+    <Ins>钢板计</Ins>
+    <Ins>钢筋计</Ins>
+    <Ins>锚杆应力计</Ins>
+    <Ins>锚索测力计</Ins>
+  </Instruments>
+</ProConfig>

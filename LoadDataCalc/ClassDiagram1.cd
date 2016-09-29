@@ -1,0 +1,454 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="LoadDataCalc.CalcFactoryClass" Collapsed="true">
+    <Position X="0.5" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.BaseInstrument">
+    <Position X="3" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAgAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>CalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.SurveyParamData" Collapsed="true">
+    <Position X="7.25" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAACAAAIIABBhAABAAAQBQAAAAAAAAAAAAAAAAAQAA=</HashCode>
+      <FileName>CalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.MultiSurveyParamData" Collapsed="true">
+    <Position X="10" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Expand" Collapsed="true">
+    <Position X="4.75" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_SteelWire_Displacement" Collapsed="true">
+    <Position X="14" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Double_Metal_Target" Collapsed="true">
+    <Position X="16.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Earth_Measure" Collapsed="true">
+    <Position X="32" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Inverst_Vertical" Collapsed="true">
+    <Position X="47.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Environment_Elevation" Collapsed="true">
+    <Position X="63.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Watch_Directrix" Collapsed="true">
+    <Position X="79.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Flex_Line" Collapsed="true">
+    <Position X="92.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Laser_Collimation" Collapsed="true">
+    <Position X="106.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Statics_Level" Collapsed="true">
+    <Position X="0.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Extension" Collapsed="true">
+    <Position X="18.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Survey_Slant" Collapsed="true">
+    <Position X="34.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Single_Displacement" Collapsed="true">
+    <Position X="50" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Multi_Displacement" Collapsed="true">
+    <Position X="65.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Glide_Micrometer" Collapsed="true">
+    <Position X="81.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Basic_Rock_Distortion" Collapsed="true">
+    <Position X="95" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Elect_Settlement_Gauge" Collapsed="true">
+    <Position X="108.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Hose_Settlement_Gauge" Collapsed="true">
+    <Position X="3" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Flex_Displacement" Collapsed="true">
+    <Position X="20.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Soil_Displacement" Collapsed="true">
+    <Position X="36.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Measure_Aperture" Collapsed="true">
+    <Position X="52.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Leakage_Pressure" Collapsed="true">
+    <Position X="68" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_MeasureStress_Hose" Collapsed="true">
+    <Position X="83.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_MeasureWater_Weir" Collapsed="true">
+    <Position X="97.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Water_Level" Collapsed="true">
+    <Position X="110.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Strain_Gauge" Collapsed="true">
+    <Position X="5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Strain_Group" Collapsed="true">
+    <Position X="23" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Nonstress" Collapsed="true">
+    <Position X="38.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Steel_Bar" Collapsed="true">
+    <Position X="54.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Anchor_Pole" Collapsed="true">
+    <Position X="70.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Press_Stress" Collapsed="true">
+    <Position X="86" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Soil_Stres" Collapsed="true">
+    <Position X="99.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Anchor_Cable" Collapsed="true">
+    <Position X="113" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Armor_plate" Collapsed="true">
+    <Position X="7.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Temperature" Collapsed="true">
+    <Position X="25.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Aperture" Collapsed="true">
+    <Position X="41" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Vertical_Height" Collapsed="true">
+    <Position X="56.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Environment_Temperature" Collapsed="true">
+    <Position X="72.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Environment_UW_level" Collapsed="true">
+    <Position X="88.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Environment_Rainfall" Collapsed="true">
+    <Position X="101.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Sisters_Pole" Collapsed="true">
+    <Position X="115.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Dislocation" Collapsed="true">
+    <Position X="9.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Multi_Anchor_Pole" Collapsed="true">
+    <Position X="27.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Surface_Measure_Aperture" Collapsed="true">
+    <Position X="43.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_VST_Settlement_Gauge" Collapsed="true">
+    <Position X="59" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Multi_Soil_Stres" Collapsed="true">
+    <Position X="74.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_TwoWays_Measure_Aperture" Collapsed="true">
+    <Position X="90.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_CBT_Settlement_Gauge" Collapsed="true">
+    <Position X="104" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Shear_Deformation_Meter" Collapsed="true">
+    <Position X="117.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_VST_Settlement_System" Collapsed="true">
+    <Position X="11.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Soil_Displacement_Group" Collapsed="true">
+    <Position X="29.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Survey_Slant_Fixed" Collapsed="true">
+    <Position X="45.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Environment_DW_level" Collapsed="true">
+    <Position X="61.25" Y="4.25" Width="1.5" />
+    <InheritanceLine Type="LoadDataCalc.BaseInstrument" ManuallyRouted="true">
+      <Path>
+        <Point X="3.75" Y="3.123" />
+        <Point X="3.75" Y="3.875" />
+        <Point X="62" Y="3.875" />
+        <Point X="62" Y="4.25" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.Fiducial_Geometry_Level" Collapsed="true">
+    <Position X="77" Y="4.25" Width="1.5" />
+    <InheritanceLine Type="LoadDataCalc.BaseInstrument" ManuallyRouted="true">
+      <Path>
+        <Point X="3.75" Y="3.123" />
+        <Point X="3.75" Y="3.875" />
+        <Point X="77.75" Y="3.875" />
+        <Point X="77.75" Y="4.25" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>InstrumentCalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoadDataCalc.LoadDataClass" Collapsed="true">
+    <Position X="0.5" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gCAAAJAAIAABABAACAAAAACABAAAAAAAAAACAAgAAAI=</HashCode>
+      <FileName>LoadDataClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="LoadDataCalc.ProcessData" Collapsed="true">
+    <Position X="0.5" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAABAgAAAAAAAAAAQAAACAAAAAAAAAAAAAA=</HashCode>
+      <FileName>LoadDataClass.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Enum Name="LoadDataCalc.CalcType" Collapsed="true">
+    <Position X="0.5" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAAAAAAAAAAAAAAAAQAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>CalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="LoadDataCalc.InstrumentType" Collapsed="true">
+    <Position X="2.25" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QCTTABAAAIBFkQQwBQAACCIYEIwhAQRKKoASAgkARBI=</HashCode>
+      <FileName>CalcClass.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Microsoft YaHei UI" Size="9" />
+</ClassDiagram>

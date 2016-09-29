@@ -121,7 +121,8 @@ namespace CSharpTest
             var book = excel.Workbooks.Add(true);
             foreach (var table in tables)
             {
-                var sheet = book.Worksheets.Add() as Worksheet;
+                var result = book.Worksheets.Add();
+                var sheet=book.ActiveSheet;
                 sheet.Name = table.TableName;
                 int rownum = table.Rows.Count;
                 int colnum = table.Columns.Count;
@@ -140,17 +141,9 @@ namespace CSharpTest
                     row++;
                 }
                 #region//合并单元格
-                ////合并竖着的单元格
-                //Range rangeLecture = sheet.get_Range(sheet.Cells[1, 1], sheet.Cells[2,  1]);
-                //rangeLecture.Application.DisplayAlerts = false;
-                //rangeLecture.Merge(Missing.Value);
-                //rangeLecture.Application.DisplayAlerts = true;
-                ////合并横着的单元格
+                //Range rangeLecture = sheet.Range[sheet.Cells[1, 1], sheet.Cells[2, 1]];//左上和右下
+                //rangeLecture.MergeCells = true;
 
-                //Range rangeProgram = sheet.get_Range(sheet.Cells[1, 1], sheet.Cells[1, 2]);//获取需要合并的单元格的范围
-                //rangeProgram.Application.DisplayAlerts = false;
-                //rangeProgram.Merge(Missing.Value);
-                //rangeProgram.Application.DisplayAlerts = true
                 #endregion
             }
             excel.DisplayAlerts = false;
@@ -161,5 +154,67 @@ namespace CSharpTest
             GC.Collect();
             GC.WaitForPendingFinalizers();
         }
+        /// <summary>设置字体
+        /// </summary>
+        /// <param name="sheet"></param>
+        void SetFont(Worksheet sheet)
+        {
+            excel.StandardFont = "宋体";
+            excel.StandardFontSize = 9;
+            //sheet.Range.AutoFit();//自适应
+            //sheet.Range[sheet.Cells[1, 1], sheet.Cells[4, 27]].HorizontalAlignment = Microsoft.Office.Interop.Excel.XlVAlign.xlVAlignCenter;//居中对齐
+            //sheet.Range[sheet.Cells[1, 1], sheet.Cells[rowindex, 27]].Borders.LineStyle = 1;//设置边框
+
+        }
+
+        public static void test()
+        {
+            string path = @"D:\WORK\Project\苗尾\昆明院苗尾监测资料\内观资料\PD45探洞（渗压计）\PD45探洞渗压计.xls";
+            var excel1 = new Application();
+            excel1.Visible = false;
+            
+            var workbook = excel1.Application.Workbooks.Open(path);
+            //foreach (var sh in workbook.Worksheets)
+            {
+                //Worksheet psheet = sh as Worksheet;
+                Worksheet psheet = workbook.Worksheets[1];
+                int rowcount = psheet.UsedRange.Cells.Rows.Count;
+                int colcount = psheet.UsedRange.Columns.Count;
+                Range range;
+                for (int iRow = 11; iRow <= rowcount; iRow++)//从第11行开始读
+                {
+                    Range startCell = (Range)psheet.Cells[iRow, 1];
+                    Range endCell = (Range)psheet.Cells[iRow, 4];
+                    range = psheet.Range[startCell, endCell];
+                    var value = (object[,])range.get_Value(Microsoft.Office.Interop.Excel.XlRangeValueDataType.xlRangeValueDefault);
+                    if (value[1,1]==null||string.IsNullOrEmpty(value[1, 1].ToString())) break;
+                    //for (int i = 1; i < value.GetLength(1); i++)
+                    //{
+                    //    Console.Write(value[1,i]);
+                    //    Console.Write(":");
+                    //}
+                    if (value[1, 1] != null && value[1, 2] != null)
+                    {
+                        string data = value[1, 1].ToString();
+                        string time = DateTime.FromOADate(Convert.ToDouble(value[1, 2])).ToString();
+                        DateTime dt = DateTime.Parse(data.Split(' ')[0] + " " + time.Split(' ')[1]);
+                        Console.WriteLine("{0}:{1}", iRow, dt.ToString());
+                    }
+                    else
+                    {
+                        Console.WriteLine("{0}", iRow);
+                    }
+                }
+
+            }
+            excel1.DisplayAlerts = false;
+            excel1.Quit();
+            System.Runtime.InteropServices.Marshal.ReleaseComObject(excel1);
+            GC.Collect();
+            excel1 = null;
+ 
+        }
+
+     
     }
 }

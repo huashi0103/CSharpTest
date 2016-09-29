@@ -17,18 +17,25 @@ namespace cadObjArx
     {
        public string Code { get;set; }
        public string Owner { get; set; }
-       public string Area { get; set; }
+       public double Area { get; set; }
        public string Group { get; set; }
-       List<House> Houses;
+       public List<House> Houses = new List<House>();
+       public List<Balcony> Balconyes = new List<Balcony>();
+       public int PartCount = 0;
     }
    public class House
    {
        /// <summary>结构 </summary>
        public string Structure;
        /// <summary>层数</summary>
-       public int FloorCount;
+       public int FloorCount = 1;
        public double Area;
+       public bool Isbalcony = false;
    }
+    public class Balcony:House
+    {
+         public double Area;
+    }
    public class Tools
    {
        public static void Sort(List<ZDinfo> list)

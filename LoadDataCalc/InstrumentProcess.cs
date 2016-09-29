@@ -1,0 +1,135 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+using System.Data;
+using System.Reflection;
+using System.IO;
+using NPOI.HSSF;
+using NPOI.HSSF.UserModel;
+using NPOI.SS.UserModel;
+using System.Globalization;
+
+
+namespace LoadDataCalc
+{
+    /// <summary>
+    /// 渗压计
+    /// </summary>
+    public class Fiducial_Leakage_PressureProcess : ProcessData
+    {
+
+        /// <summary>仪器类型
+        /// </summary>
+        public InstrumentType InsType { get; set; }
+        /// <summary> 从excel文件中读取数据
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public override void ReadData(string path, out  List<PointSurveyData> datas, out List<ErrorMsg> errors)
+        {
+            datas = new List<PointSurveyData>();
+            errors = new List<ErrorMsg>();
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+            {
+                IFormatProvider culture = CultureInfo.CurrentCulture;
+                var workbook = WorkbookFactory.Create(path);
+                 var sqlhelper=CSqlServerHelper.GetInstance();
+                for (int i = 0; i < workbook.NumberOfSheets; i++)
+                {
+                    var psheet = workbook.GetSheetAt(i);
+                    PointSurveyData pd = new PointSurveyData();
+                    pd.SurveyPoint = psheet.SheetName;
+
+                    DateTime maxDatetime = (DateTime)sqlhelper.SelectFirst("select max(Observation_Date) from Survey_Leakage_Pressure");
+                    for (int j = 10; j < psheet.LastRowNum; j++)
+                    {
+                        try
+                        {
+                            IRow row = psheet.GetRow(j);
+                            var cell = row.GetCell(0);
+                            if (String.IsNullOrEmpty(cell.ToString())) break;
+                            var date = cell.DateCellValue.ToString("MM/dd/yyyy");
+                            var time = row.GetCell(1).ToString();
+                            var digit = row.GetCell(2).ToString();
+                            var tempreture = row.GetCell(3).ToString();
+                            SurveyData sd = new SurveyData();
+                            sd.Survey_ZorR = double.Parse(digit);
+                            sd.Survey_RorT = double.Parse(tempreture);
+                            sd.SurveyDate = DateTime.Parse(date + " " + time, culture, DateTimeStyles.NoCurrentDateDefault);
+                            if (sd.SurveyDate.CompareTo(maxDatetime)>0)//与最大的日期做对比
+                            {
+                                pd.Datas.Add(sd);
+                            }
+                        }
+                        catch 
+                        {
+                            ErrorMsg err = new ErrorMsg();
+                            err.PointNumber = psheet.SheetName;
+                            err.ErrorRow = j;
+                            errors.Add(err);
+                            continue;
+                        }
+                    }
+                }
+               
+            }
+            base.Log(path, errors);            
+        }
+        /// <summary>把测量数据写入到数据库
+        /// </summary>
+        /// <returns></returns>
+        public override int WriteSurveyToDB(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            dt.TableName = "Survey_Leakage_Pressure";
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("Temperature");
+            dt.Columns.Add("Frequency");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            int id = (int)sqlhelper.SelectFirst("select max(ID) as sid  from Survey_Leakage_Pressure ");
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
+                    dr["Temperature"] = surveydata.Survey_RorT;
+                    dr["Frequency"] = surveydata.Survey_ZorR;
+                    dr["Remark"] ="";                   
+                    dr["UpdateTime"] = DateTime.Now;
+                    dt.Rows.Add(dr);
+                }
+            }
+
+
+            
+
+
+            return datas.Count;
+        }
+        /// <summary>把计算后的结果数据写入数据库
+        /// </summary>
+        /// <returns></returns>
+        public override int WriteResultToDB()
+        {
+            return 0;
+        }
+
+        public  Fiducial_Leakage_PressureProcess()
+        {
+            InsType = InstrumentType.Fiducial_Leakage_Pressure;
+           
+        }
+    }
+}

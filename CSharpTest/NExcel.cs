@@ -119,10 +119,17 @@ namespace CSharpTest
            }
        }
 
-
-       public static void test()
+       private static void log(string msg)
        {
-           string path = @"D:\WORK\Project\苗尾\昆明院苗尾监测资料\内观资料\PD45探洞（渗压计）\PD45探洞渗压计.xls";
+           string path="D:\\test1.txt";
+           using (StreamWriter sw = new StreamWriter(path, true))
+           {
+               sw.WriteLine(msg);
+           }
+       }
+       
+       public static void test(string path)
+       {
            //path = @"D:\WORK\Project\白鹤滩\数字边坡数据下红岩渗压计.xlsx";
            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
            {
@@ -131,30 +138,37 @@ namespace CSharpTest
                 for (int i = 0; i < workbook.NumberOfSheets; i++)
                 {
                     var psheet = workbook.GetSheetAt(i);
-                    for (int j = 10; j < psheet.LastRowNum; j++)
+                    System.Collections.IEnumerator rows = psheet.GetRowEnumerator();
+                    int rowcn = 1;//行计数
+                    while (rows.MoveNext())
                     {
-                        
-                        System.Collections.IEnumerator rows = psheet.GetRowEnumerator();
-                        //while (rows.MoveNext())
+                        try
                         {
-                            //if (rows.Current == null) continue;
-                            //IRow row = (IRow)rows.Current;
-                            IRow row = psheet.GetRow(j);
+                            rowcn++;
+                            if (rows.Current == null) continue;
+                            IRow row = (IRow)rows.Current;
                             var cell = row.GetCell(0);
-                            if (String.IsNullOrEmpty(cell.ToString())) break;
-                            var ndt = cell.DateCellValue.ToString("MM/dd/yyyy");
-                            var nt = row.GetCell(1).ToString();
-                            var dt = DateTime.Parse(ndt + " " + nt,culture,DateTimeStyles.NoCurrentDateDefault);
-                            var sd = row.GetCell(2).ToString();
-                            var st = row.GetCell(3).ToString();
-                            Console.WriteLine(string.Format("{0},{1},{2},{3}", dt,nt, sd, st));
+                            if (!cell.IsMergedCell && String.IsNullOrEmpty(cell.ToString())) break;
+                            if (cell.CellType != CellType.Numeric) continue;//用第一列的值是否是数字来判断，时间也是数字
+                            var date = cell.DateCellValue.ToString("MM/dd/yyyy");
+                            double Survey_ZorR = double.Parse(row.GetCell(2).ToString());//频率/基准电阻
+                            double Survey_RorT = double.Parse(row.GetCell(3).ToString());//温度
+                            string Remark = row.GetCell(6) == null ? "" : row.GetCell(6).ToString();
+                            DateTime SurveyDate = DateTime.Parse(date + " " + row.GetCell(1).ToString(), culture, DateTimeStyles.NoCurrentDateDefault);
+                            string msg=String.Format("{0},{1},{2},{3},{4}", SurveyDate, Survey_ZorR, Survey_RorT, Remark,rowcn);
+                            //log(msg)
+                            Console.WriteLine(msg);
+                        }
+                        catch(Exception ex)
+                        {
+                            string msg=string.Format("{0},{1},{2},{3}",psheet.SheetName,rowcn,rowcn,path);
+                            log(msg);
+                            Console.WriteLine(msg);
+                            continue;
                         }
                     }
-                    break;
-
                 }
-               
-
+              
            }
 
 

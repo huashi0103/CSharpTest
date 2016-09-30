@@ -29,17 +29,20 @@
         private void InitializeComponent()
         {
             this.comboType = new System.Windows.Forms.ComboBox();
-            this.btnLoad = new System.Windows.Forms.Button();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.btnRead = new System.Windows.Forms.Button();
-            this.listFiles = new System.Windows.Forms.ListBox();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.btncalc = new System.Windows.Forms.Button();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.toolStripProgressLoad = new System.Windows.Forms.ToolStripProgressBar();
+            this.statuslbl = new System.Windows.Forms.ToolStripStatusLabel();
+            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            this.statusStrip1.SuspendLayout();
+            this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // comboType
             // 
+            this.comboType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboType.FormattingEnabled = true;
             this.comboType.Items.AddRange(new object[] {
             "渗压计",
@@ -59,80 +62,78 @@
             "钢筋计",
             "锚杆应力计",
             "锚索测力计"});
-            this.comboType.Location = new System.Drawing.Point(2, 2);
+            this.comboType.Location = new System.Drawing.Point(3, 3);
             this.comboType.Name = "comboType";
             this.comboType.Size = new System.Drawing.Size(121, 20);
             this.comboType.TabIndex = 1;
             // 
-            // btnLoad
-            // 
-            this.btnLoad.Location = new System.Drawing.Point(129, 2);
-            this.btnLoad.Name = "btnLoad";
-            this.btnLoad.Size = new System.Drawing.Size(87, 23);
-            this.btnLoad.TabIndex = 2;
-            this.btnLoad.Text = "查询所有文件";
-            this.btnLoad.UseVisualStyleBackColor = true;
-            // 
             // dataGridView1
             // 
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Location = new System.Drawing.Point(210, 28);
+            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridView1.Location = new System.Drawing.Point(0, 49);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.RowTemplate.Height = 23;
-            this.dataGridView1.Size = new System.Drawing.Size(568, 472);
+            this.dataGridView1.Size = new System.Drawing.Size(787, 475);
             this.dataGridView1.TabIndex = 3;
             // 
             // btnRead
             // 
-            this.btnRead.Location = new System.Drawing.Point(222, 2);
+            this.btnRead.Location = new System.Drawing.Point(130, 3);
             this.btnRead.Name = "btnRead";
             this.btnRead.Size = new System.Drawing.Size(87, 23);
             this.btnRead.TabIndex = 4;
-            this.btnRead.Text = "读取数据";
+            this.btnRead.Text = "加载数据";
             this.btnRead.UseVisualStyleBackColor = true;
             // 
-            // listFiles
+            // statusStrip1
             // 
-            this.listFiles.FormattingEnabled = true;
-            this.listFiles.ItemHeight = 12;
-            this.listFiles.Location = new System.Drawing.Point(2, 28);
-            this.listFiles.Name = "listFiles";
-            this.listFiles.Size = new System.Drawing.Size(202, 472);
-            this.listFiles.TabIndex = 5;
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripProgressLoad,
+            this.statuslbl});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 524);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(787, 22);
+            this.statusStrip1.TabIndex = 8;
+            this.statusStrip1.Text = "statusStrip1";
             // 
-            // textBox1
+            // toolStripProgressLoad
             // 
-            this.textBox1.Location = new System.Drawing.Point(2, 503);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(776, 21);
-            this.textBox1.TabIndex = 6;
+            this.toolStripProgressLoad.Name = "toolStripProgressLoad";
+            this.toolStripProgressLoad.Size = new System.Drawing.Size(100, 16);
+            this.toolStripProgressLoad.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             // 
-            // btncalc
+            // statuslbl
             // 
-            this.btncalc.Location = new System.Drawing.Point(315, 2);
-            this.btncalc.Name = "btncalc";
-            this.btncalc.Size = new System.Drawing.Size(87, 23);
-            this.btncalc.TabIndex = 7;
-            this.btncalc.Text = "计算";
-            this.btncalc.UseVisualStyleBackColor = true;
-            this.btncalc.Click += new System.EventHandler(this.btncalc_Click);
+            this.statuslbl.Name = "statuslbl";
+            this.statuslbl.Size = new System.Drawing.Size(32, 17);
+            this.statuslbl.Text = "状态";
+            // 
+            // flowLayoutPanel1
+            // 
+            this.flowLayoutPanel1.Controls.Add(this.comboType);
+            this.flowLayoutPanel1.Controls.Add(this.btnRead);
+            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(787, 49);
+            this.flowLayoutPanel1.TabIndex = 9;
             // 
             // FormLoadCalc
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(783, 530);
-            this.Controls.Add(this.btncalc);
-            this.Controls.Add(this.textBox1);
-            this.Controls.Add(this.listFiles);
-            this.Controls.Add(this.btnRead);
+            this.ClientSize = new System.Drawing.Size(787, 546);
             this.Controls.Add(this.dataGridView1);
-            this.Controls.Add(this.btnLoad);
-            this.Controls.Add(this.comboType);
+            this.Controls.Add(this.flowLayoutPanel1);
+            this.Controls.Add(this.statusStrip1);
             this.Name = "FormLoadCalc";
             this.ShowIcon = false;
             this.Text = "加载数据";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
+            this.flowLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -141,12 +142,12 @@
         #endregion
 
         private System.Windows.Forms.ComboBox comboType;
-        private System.Windows.Forms.Button btnLoad;
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.Button btnRead;
-        private System.Windows.Forms.ListBox listFiles;
-        private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.Button btncalc;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripProgressBar toolStripProgressLoad;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
+        private System.Windows.Forms.ToolStripStatusLabel statuslbl;
     }
 }
 

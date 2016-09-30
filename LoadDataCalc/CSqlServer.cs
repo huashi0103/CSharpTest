@@ -104,28 +104,36 @@ namespace LoadDataCalc
         /// <summary> 批量插入数据
         /// </summary>
         /// <param name="dt">插入的数据,根据dt的表名和列名进行匹配</param>
-        public void BulkCopy(DataTable dt)
+        public bool BulkCopy(DataTable dt)
         {
             try
             {
                 sqlConnection.Open();
-                using (SqlBulkCopy bulk = new SqlBulkCopy(sqlConnection))
+                using (SqlBulkCopy bulk = new SqlBulkCopy(Connectionstr, SqlBulkCopyOptions.UseInternalTransaction))
                 {
-                    bulk.BatchSize = 1000;
+                    bulk.BatchSize = dt.Rows.Count;
                     bulk.DestinationTableName = dt.TableName;
-                    for (int i=0;i<dt.Columns.Count;i++)
+                    for (int i = 0; i < dt.Columns.Count; i++)
                     {
                         bulk.ColumnMappings.Add(dt.Columns[0].ColumnName, dt.Columns[0].ColumnName);
                     }
                     bulk.WriteToServer(dt);
                 }
+                return true;
+            }
+            catch
+            {
+                return false;
             }
             finally
             {
                 sqlConnection.Close();
             }
         }
-
+        /// <summary>
+        /// 检查数据库是否可以连接
+        /// </summary>
+        /// <returns></returns>
         public bool Check()
         {
             try

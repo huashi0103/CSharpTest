@@ -24,18 +24,16 @@ namespace LoadDataCalc
         {
             Assembly ass = Assembly.GetExecutingAssembly();
             string completeName ="LoadDataCalc."+type.ToString();
-            var ins=ass.CreateInstance(completeName) as BaseInstrument;
-            ins.SqlHelper = CSqlServerHelper.GetInstance();
+            var ins = ass.CreateInstance(completeName) as BaseInstrument;
             return ins; 
 
         }
-
     }
+
     /// <summary>仪器基类
     /// </summary>
     public  class BaseInstrument
    {
-        public CSqlServerHelper SqlHelper = null;
         /// <summary>仪器类型
         /// </summary>
         public InstrumentType InsType = InstrumentType.BaseInstrument;
@@ -48,6 +46,9 @@ namespace LoadDataCalc
         {
             //Gorf*(Survey_ZorR-ZorR)+Korb*(TemperatureRead*(Survey_RorT-ZeroR)-RorT)
             double result = param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) - param.RorT);
+            data.ResultReading = result;//这里要乘以系数
+            data.Tempreture = param.TemperatureRead * (data.Survey_RorT - param.ZeroR);
+            data.LoadReading = result;
             return result;
         }
         /// <summary>单点振弦式默认计算方法
@@ -59,6 +60,10 @@ namespace LoadDataCalc
         {
             //Gorf*(Survey_ZorR-ZorR)+Korb*(Survey_RorT-RorT)
             double result = param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT);
+            data.ResultReading = result;//这里要乘以系数每种仪器不一样
+            data.Tempreture = data.Survey_RorT;
+            data.LoadReading = result;
+
             return result;
         }
         /// <summary>自定义计算方法，表达式中的参数必须为ParamData类中的名字
@@ -92,6 +97,7 @@ namespace LoadDataCalc
             string sql = @"select Instrument_Type,Calculate_Coeffi_G,Tempera_Revise_K,Benchmark_Resist_Ratio,Benchmark_Resist,Temperature_Read,Zero_Resistance 
                                 from {0} where Survey_point_Number='{1}'";
             sql = string.Format(sql, tablename,Survey_point_Number);
+            var SqlHelper = CSqlServerHelper.GetInstance();
             var dt = SqlHelper.SelectData(sql);
             if (dt.Rows.Count < 1) return null;
             try
@@ -128,6 +134,7 @@ namespace LoadDataCalc
                 return null;
             }
         }
+        
     }
 
     /// <summary> 单点参数类
@@ -166,9 +173,18 @@ namespace LoadDataCalc
         /// 仪器类型振弦/差阻
         /// </summary>
         public CalcType InsCalcType = CalcType.ShakeString;
+        /// <summary>
+        /// 自定义的计算公式,默认为空
+        /// </summary>
+        public string Expression = null;
 
         public InstrumentType InsType = InstrumentType.BaseInstrument;
-
+        /// <summary>
+        /// KPA转MPA 转换系数
+        /// 数据为MPA时为1  数据为KPA时为0.001
+        /// </summary>
+        public double MpaToKpa = 1;
+       
         public static string[] ParamList = new[] { "Gorf", "Korb", "ZorR", "RorT", "TemperatureRead", "ZeroR", "Survey_ZorR", "Survey_RorT" };
 
         /// <summary>根据变量名获取变量值
@@ -193,7 +209,10 @@ namespace LoadDataCalc
         /// <summary>
         /// 当前测点的测量数据
         /// </summary>
-        public List<SurveyData> Datas;
+        public List<SurveyData> Datas = new List<SurveyData>();
+        /// <summary>是否计算成功
+        /// </summary>
+        public bool IsCalc = false;
     }
     /// <summary>
     /// 一组测量值
@@ -214,6 +233,11 @@ namespace LoadDataCalc
         public DateTime SurveyDate = new DateTime();
 
         /// <summary>
+        /// 计算出来的温度
+        /// </summary>
+        public double Tempreture;
+
+        /// <summary>
         /// 第一个计算结果
         /// </summary>
         public double LoadReading;
@@ -222,9 +246,13 @@ namespace LoadDataCalc
         /// </summary>
         public double ResultReading;
         /// <summary>
-        /// 是否计算，校准参数不参与计算
+        /// 是否计算，校准参数不参与计算//备用 ，暂时没用到
         /// </summary>
         public bool IsCalc = true;
+        /// <summary>
+        /// 备注信息
+        /// </summary>
+        public string Remark = "";
 
 
         public static string[] ParamList = new[] {"Survey_ZorR", "Survey_RorT" };
@@ -258,9 +286,9 @@ namespace LoadDataCalc
         /// </summary>
         ShakeString,
         /// <summary>
-        /// 
+        /// 自定义
         /// </summary>
-        unknown
+        AutoDefine
 
     }
     /// <summary> 仪器类型枚举

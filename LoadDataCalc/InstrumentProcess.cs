@@ -10,6 +10,7 @@ using NPOI.HSSF;
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using System.Globalization;
+using System.Data.SqlClient;
 
 
 namespace LoadDataCalc
@@ -41,37 +42,55 @@ namespace LoadDataCalc
                     var psheet = workbook.GetSheetAt(i);
                     PointSurveyData pd = new PointSurveyData();
                     pd.SurveyPoint = psheet.SheetName;
-
-                    DateTime maxDatetime = (DateTime)sqlhelper.SelectFirst("select max(Observation_Date) from Survey_Leakage_Pressure");
-                    for (int j = 10; j < psheet.LastRowNum; j++)
+                    var dt = sqlhelper.SelectData("select * from Survey_Leakage_Pressure where Survey_point_Number=@Survey_point_Number",
+                        new SqlParameter("@Survey_point_Number", pd.SurveyPoint));
+                    bool flag = dt.Rows.Count > 0 ? true : false;
+                    DateTime maxDatetime = new DateTime();
+                    if (flag)//有数据就查数据
+                    {
+                        maxDatetime = (DateTime)sqlhelper.SelectFirst("select max(Observation_Date) from Survey_Leakage_Pressure where Survey_point_Number=@Survey_point_Number",
+                            new SqlParameter("@Survey_point_Number", pd.SurveyPoint));
+                    }
+                    System.Collections.IEnumerator rows = psheet.GetRowEnumerator();
+                    int rowcn = 0;//行计数
+                    while (rows.MoveNext())
                     {
                         try
                         {
-                            IRow row = psheet.GetRow(j);
+                            rowcn++;
+                            if (rows.Current == null) continue;
+                            IRow row = (IRow)rows.Current;
                             var cell = row.GetCell(0);
-                            if (String.IsNullOrEmpty(cell.ToString())) break;
+                            if (!cell.IsMergedCell && String.IsNullOrEmpty(cell.ToString())) break;//用第一列的值是否是数字来判断，时间也是数字
+                            if (cell.CellType != CellType.Numeric) continue;//用第一列的值是否是数字来判断，时间也是数字
                             var date = cell.DateCellValue.ToString("MM/dd/yyyy");
-                            var time = row.GetCell(1).ToString();
-                            var digit = row.GetCell(2).ToString();
-                            var tempreture = row.GetCell(3).ToString();
                             SurveyData sd = new SurveyData();
-                            sd.Survey_ZorR = double.Parse(digit);
-                            sd.Survey_RorT = double.Parse(tempreture);
-                            sd.SurveyDate = DateTime.Parse(date + " " + time, culture, DateTimeStyles.NoCurrentDateDefault);
-                            if (sd.SurveyDate.CompareTo(maxDatetime)>0)//与最大的日期做对比
+                            sd.Survey_ZorR = double.Parse(row.GetCell(2).ToString());//频率/基准电阻
+                            sd.Survey_RorT = double.Parse(row.GetCell(3).ToString());//温度
+                            sd.Remark = row.GetCell(6) == null ? "" : row.GetCell(6).ToString();
+                            sd.SurveyDate = DateTime.Parse(date + " " + row.GetCell(1).ToString(), culture, DateTimeStyles.NoCurrentDateDefault);
+                            if(flag)
                             {
-                                pd.Datas.Add(sd);
+                                if(sd.SurveyDate.CompareTo(maxDatetime)>0)
+                                {
+                                      pd.Datas.Add(sd);
+                                }
+                            }
+                            else
+                            {
+                                    pd.Datas.Add(sd);
                             }
                         }
-                        catch 
+                        catch
                         {
                             ErrorMsg err = new ErrorMsg();
                             err.PointNumber = psheet.SheetName;
-                            err.ErrorRow = j;
+                            err.ErrorRow = rowcn;
                             errors.Add(err);
                             continue;
                         }
                     }
+                    datas.Add(pd);
                 }
                
             }
@@ -106,24 +125,54 @@ namespace LoadDataCalc
                     dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
                     dr["Temperature"] = surveydata.Survey_RorT;
                     dr["Frequency"] = surveydata.Survey_ZorR;
-                    dr["Remark"] ="";                   
+                    dr["Remark"] =surveydata.Remark;                   
                     dr["UpdateTime"] = DateTime.Now;
                     dt.Rows.Add(dr);
                 }
             }
 
-
-            
-
-
+            sqlhelper.BulkCopy(dt);
             return datas.Count;
         }
         /// <summary>把计算后的结果数据写入数据库
         /// </summary>
         /// <returns></returns>
-        public override int WriteResultToDB()
+        public override int WriteResultToDB(List<PointSurveyData> datas)
         {
-            return 0;
+            DataTable dt = new DataTable();
+            dt.TableName = "Result_Leakage_Pressure";
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("Temperature");
+            dt.Columns.Add("loadReading");
+            dt.Columns.Add("ResultReading");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            int id = (int)sqlhelper.SelectFirst("select max(ID) as sid  from Survey_Leakage_Pressure ");
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
+                    dr["Temperature"] = surveydata.Tempreture;
+                    dr["loadReading"] = surveydata.LoadReading;
+                    dr["ResultReading"] = surveydata.ResultReading;
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dt.Rows.Add(dr);
+                }
+            }
+
+            sqlhelper.BulkCopy(dt);
+            return datas.Count;
         }
 
         public  Fiducial_Leakage_PressureProcess()

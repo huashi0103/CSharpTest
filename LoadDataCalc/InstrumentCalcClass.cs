@@ -528,17 +528,26 @@ namespace LoadDataCalc
     /// </summary>
     public class Fiducial_Leakage_Pressure : BaseInstrument
     {
-        public Fiducial_Leakage_Pressure()
+        public Fiducial_Leakage_Pressure():base()
         {
             base.InsType = InstrumentType.Fiducial_Leakage_Pressure;
         }
         public override double DifBlock(ParamData param,SurveyData data, params double[] expand)
         {
-            return base.DifBlock(param,data,expand);
+
+            double result = param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) - param.RorT);
+            data.ResultReading = result * 102.0408 *param.MpaToKpa;//最终结果水头ResultReading  Kpa
+            data.Tempreture = param.TemperatureRead * (data.Survey_RorT - param.ZeroR);//温度
+            data.LoadReading = result;//渗透压力LoadReading
+            return result;
         }
         public override double ShakeString(ParamData param,SurveyData data, params double[] expand)
         {
-            return base.ShakeString(param,data,expand);
+            double result = param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT);
+            data.ResultReading = result * 102.0408 * param.MpaToKpa;//这里要乘以系数每种仪器不一样
+            data.Tempreture = data.Survey_RorT;
+            data.LoadReading = result;
+            return result;
         }
         public override double AutoDefined(ParamData param,SurveyData data, string expression)
         {
@@ -547,7 +556,20 @@ namespace LoadDataCalc
 
         public override ParamData GetParam(string Survey_point_Number, string tablename=null)
         {
-            return base.GetParam(Survey_point_Number,this.InsType.GetDescription());
+            ParamData pd = base.GetParam(Survey_point_Number, this.InsType.ToString());
+            if (pd != null)
+            {
+                string sql = @"select Instrument_Span from {0} where Survey_point_Number='{1}'";
+                sql = string.Format(sql, this.InsType.ToString(), Survey_point_Number);
+                var SqlHelper = CSqlServerHelper.GetInstance();
+                var dt = SqlHelper.SelectData(sql);
+                var result = SqlHelper.SelectFirst(sql);
+                if (result != null)
+                {
+                    pd.MpaToKpa = result.ToString().ToLower().Contains("mpa") ? 1 : 0.001;
+                }
+            }
+            return pd;
         }
 
     }

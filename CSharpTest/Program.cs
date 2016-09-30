@@ -26,45 +26,49 @@ namespace CSharpTest
             //}
 
             //Console.WriteLine("导出OK");
-            //string root = @"D:\WORK\Project\苗尾\昆明院苗尾监测资料\内观资料";
-            //Action<string> fileaction = (dir) => {
-            //    var files = Directory.GetFiles(dir, "*.xls");
-            //    foreach (var file in files)
-            //    {
-            //        string filename = Path.GetFileName(file);
-            //        if (file.Contains("渗压计"))
-            //        {
-            //            Console.WriteLine(file);
-            //        }
-            //    }
-            //};
-            //Action<string> newAction = null;
-            //newAction = (dir) => {
-            //    fileaction(dir);
-            //    var dirs = Directory.GetDirectories(dir);
-            //    if (dirs.Length > 0)
-            //    {
-            //        foreach (var d in dirs)
-            //        {
-            //            //Console.WriteLine(d);
-            //            newAction(d);
-            //        }
-            //    }
-            //    else
-            //    {
-            //        return;
-            //    }
-            //};
-            //newAction(root);
+            List<string> list = new List<string>();
+            string root = @"D:\WORK\Project\苗尾\昆明院苗尾监测资料\内观资料";
+            Action<string> fileaction = (dir) =>
+            {
+                var files = Directory.GetFiles(dir, "*.xls");
+                foreach (var file in files)
+                {
+                    string filename = Path.GetFileName(file);
+                    if (filename.Contains("渗压计"))
+                    {
+                        Console.WriteLine(file);
+                        list.Add(file);
+                    }
+                }
+            };
+            Action<string> newAction = null;
+            newAction = (dir) =>
+            {
+                fileaction(dir);
+                var dirs = Directory.GetDirectories(dir);
+                if (dirs.Length > 0)
+                {
+                    foreach (var d in dirs)
+                    {
+                        //Console.WriteLine(d);
+                        newAction(d);
+                    }
+                }
+                else
+                {
+                    return;
+                }
+            };
+            newAction(root);
             //CXML xml = new CXML();
             //string path = @"D:\WORK\Project\苗尾\typelist.xml";
             //xml.readxml(path);
             //CExcel.test();
-            //NExcel.test();
-            string myDateTimeValue = "2/16/2015 12:15";
-            DateTime myDateTime = DateTime.Parse(myDateTimeValue, CultureInfo.CurrentCulture, DateTimeStyles.AssumeLocal);
-
-            Console.WriteLine("1) myDateTime       = {0}", myDateTime.TimeOfDay.ToString());
+            //string path = @"D:\WORK\Project\苗尾\昆明院苗尾监测资料\内观资料\PD45探洞（渗压计）\PD45探洞渗压计.xls";
+            foreach (var file in list)
+            {
+                NExcel.test(file);
+            }
 
             //CSqlServer.test();
             //CAccessClass.Test();

@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.IO;
+using System.Threading;
+using System.Reflection;
 
 namespace LoadDataCalc
 {
@@ -24,31 +26,68 @@ namespace LoadDataCalc
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            comboType.SelectedIndex = 0;
-            string root=@"D:\WORK\Project\苗尾\昆明院苗尾监测资料\内观资料";
-            loadData = LoadDataClass.GetInstance();
-            loadData.DataRoot = root;
-            loadData.Init();
-
-            loadTypes();
-            btnLoad.Click += new EventHandler((o, es) => {
-                loadFiles = loadData.GetFiles(comboType.Text);
-                listFiles.Items.Clear();
-                foreach (var file in loadFiles)
+            Status("初始化...");
+            Thread loadThread = new Thread(() =>
+            {
+                loadData = LoadDataClass.GetInstance();
+                int res = loadData.Init();
+                if (res != 3)
                 {
-                    listFiles.Items.Add(Path.GetFileName(file));
+                    Status(String.Format("加载失败,{0}", res.ToString()));
                 }
-            });
-            listFiles.SelectedIndexChanged += new EventHandler((o, es) => {
-                if (listFiles.SelectedIndex < 0 || listFiles.SelectedIndex >= loadFiles.Count) return;
-                textBox1.Text = loadFiles[listFiles.SelectedIndex];
-            });
-            btnRead.Click += new EventHandler((o, es) => {
+                else
+                {
+                    Status("初始化成功");
+                }
+                if (this.IsDisposed) return;
+                this.Invoke(new EventHandler(delegate {
+                    loadTypes();
+                    comboType.SelectedIndex = 0;
+                    toolStripProgressLoad.Visible = false;
+                    this.Text = loadData.ProjectName;
+                
+                }));
 
+            });
+            loadThread.Start();
+
+
+            btnRead.Click += new EventHandler((o, es) => {
+                btnRead.Enabled = false;
+                Status("读取数据");
+                toolStripProgressLoad.Visible = true;
+                Action callback = () => {
+                    if (this.IsDisposed) return;
+                    this.Invoke(new EventHandler(delegate{
+                        
+                        btnRead.Enabled = true;
+                        loaddatagridview(loadData.SurveyDataCach);
+                        toolStripProgressLoad.Visible = false;
+                        Status("处理完成");
+                        ErrorMsg.OpenLog(1);
+                    }));
+                };
+                Thread thread = new Thread((cb) => {
+                    var type = InsDic["渗压计"];
+                    loadData.ReadData(type);
+                    Status("计算数据");
+                    loadData.Calc(type);
+                    Action call = cb as Action;
+                    call();
+                });
+                thread.Start(callback);
             });
         }
 
-        private void loadTypes()
+       void Status(string msg)
+        {
+            if (this.IsDisposed) return;
+            this.Invoke(new EventHandler(delegate{
+                
+                statuslbl.Text = msg;
+            }));
+        }
+        void loadTypes()
         {
             InsDic.Clear();
             foreach (int myCode in Enum.GetValues(typeof(InstrumentType)))
@@ -59,22 +98,51 @@ namespace LoadDataCalc
             }
             comboType.Items.Clear();
             foreach (var ins in loadData.Instruments) {
-                comboType.Items.Add(ins);
-                        
+                comboType.Items.Add(ins.InsName);         
             }
         }
-
-        private void btncalc_Click(object sender, EventArgs e)
+        void loaddatagridview(List<PointSurveyData> datas)
         {
-            var type=InsDic["渗压计"];
-            var calc=CalcFactoryClass.CreateInstCalc(type);
-            ParamData  param=new ParamData();
-            param.Gorf = 2;
-            param.Korb = 2;
-            param.ZeroR = 2;
-            param.ZorR = 2;
-            SurveyData data = new SurveyData();
-            this.textBox1.Text = calc.DifBlock(param,data).ToString();
+            DataTable dt = new DataTable();
+            dt.TableName = "Survey_Leakage_Pressure";
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("Temperature");
+            dt.Columns.Add("Frequency");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("UpdateTime");
+            dt.Columns.Add("Tresult");
+            dt.Columns.Add("loadreading");
+            dt.Columns.Add("resultreading");
+            int id = 0;
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
+                    dr["Temperature"] = surveydata.Survey_RorT;
+                    dr["Frequency"] = surveydata.Survey_ZorR;
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dr["Tresult"] = surveydata.Tempreture;
+                    dr["loadreading"] = surveydata.LoadReading;
+                    dr["resultreading"] = surveydata.ResultReading;
+
+                    dt.Rows.Add(dr);
+                }
+            }
+            this.dataGridView1.DataSource = dt;
+            Type type = dataGridView1.GetType();
+            PropertyInfo pi = type.GetProperty("DoubleBuffered",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            pi.SetValue(dataGridView1, true, null);
            
         }
     }

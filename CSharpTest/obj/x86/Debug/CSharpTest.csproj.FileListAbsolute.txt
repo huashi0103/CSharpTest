@@ -6,7 +6,6 @@ D:\workspace\CSharpTest\CSharpTest\bin\Debug\CSharpTest.exe.config
 D:\workspace\CSharpTest\CSharpTest\bin\Debug\NPOI.dll
 D:\workspace\CSharpTest\CSharpTest\bin\Debug\ICSharpCode.SharpZipLib.dll
 D:\workspace\CSharpTest\CSharpTest\bin\Debug\NPOI.xml
-D:\workspace\CSharpTest\CSharpTest\obj\x86\Debug\CSharpTest.csprojResolveAssemblyReference.cache
 D:\workspace\CSharpTest\CSharpTest\bin\Debug\NPOI.OOXML.dll
 D:\workspace\CSharpTest\CSharpTest\bin\Debug\NPOI.OpenXml4Net.dll
 D:\workspace\CSharpTest\CSharpTest\bin\Debug\NPOI.OpenXmlFormats.dll

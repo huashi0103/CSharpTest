@@ -6,7 +6,6 @@ D:\workspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.csproj.GenerateR
 D:\workspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.exe
 D:\workspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.pdb
 D:\workspace\CSharpTest\LoadDataCalc\bin\Debug\LoadDataCalc.exe.config
-D:\workspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.csprojResolveAssemblyReference.cache
 D:\workspace\CSharpTest\LoadDataCalc\bin\Debug\NPOI.dll
 D:\workspace\CSharpTest\LoadDataCalc\bin\Debug\NPOI.xml
 D:\workspace\CSharpTest\LoadDataCalc\bin\Debug\NPOI.OOXML.dll

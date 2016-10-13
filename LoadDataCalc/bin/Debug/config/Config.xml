@@ -1,13 +1,15 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <ProConfig ProjectName="苗尾">
-  <DataRoot>D:\WORK\Project\苗尾\昆明院苗尾监测资料\内观资料</DataRoot>
-  <DataBase>Data Source =SLAMDUNKZM\MSSQLSERVER2012;Network Library = DBMSSOCN;Initial Catalog = MWDatabase;User ID = {0};Password = {1};</DataBase>
+  <DataRoot>D:\AWORK\苗尾\昆明院苗尾监测资料\内观资料</DataRoot>
+  <DataBase>Data Source =127.0.0.1;Network Library = DBMSSOCN;Initial Catalog = MWDatabase;User ID = sa;Password = sa;</DataBase>
   <Instruments>
     <Ins Name="单点位移计">
-      <KeyWord>单点位移计</KeyWord>
+      <KeyWord>位移计</KeyWord>
     </Ins>
     <Ins Name="固定测斜仪">
       <KeyWord>固定测斜仪</KeyWord>
+      <KeyWord>测斜仪</KeyWord>
+      <KeyWord>测斜孔</KeyWord>
     </Ins>
     <Ins Name="土压力计">
       <KeyWord>土压力计</KeyWord>
@@ -22,7 +24,8 @@
       <KeyWord>应变计</KeyWord>
     </Ins>
     <Ins Name="应变计组">
-      <KeyWord>应变计组</KeyWord>	
+      <KeyWord>两向应变计</KeyWord>
+      <KeyWord>五向应变计</KeyWord>
     </Ins>
     <Ins Name="无应力计">
       <KeyWord>无应力计</KeyWord>

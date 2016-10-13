@@ -22,3 +22,9 @@ D:\workspace\CSharpTest\WinDraw\bin\Debug\cadObjArx.dll
 D:\workspace\CSharpTest\WinDraw\bin\Debug\cadObjArx.pdb
 D:\workspace\CSharpTest\cadObjArx\obj\x86\Debug\cadObjArx.FormToolsForCass.resources
 D:\workspace\CSharpTest\cadObjArx\obj\x86\Debug\cadObjArx.csproj.GenerateResource.Cache
+D:\wokspace\CSharpTest\cadObjArx\obj\x86\Debug\cadObjArx.csprojResolveAssemblyReference.cache
+D:\wokspace\CSharpTest\cadObjArx\obj\x86\Debug\cadObjArx.csproj.ResolveComReference.cache
+D:\wokspace\CSharpTest\cadObjArx\obj\x86\Debug\cadObjArx.FormToolsForCass.resources
+D:\wokspace\CSharpTest\cadObjArx\obj\x86\Debug\cadObjArx.csproj.GenerateResource.Cache
+D:\wokspace\CSharpTest\cadObjArx\obj\x86\Debug\cadObjArx.dll
+D:\wokspace\CSharpTest\cadObjArx\obj\x86\Debug\cadObjArx.pdb

@@ -27,7 +27,7 @@ namespace CSharpTest
 
             //Console.WriteLine("导出OK");
             List<string> list = new List<string>();
-            string root = @"D:\WORK\Project\苗尾\昆明院苗尾监测资料\内观资料";
+            string root = @"D:\AWORK\苗尾\昆明院苗尾监测资料\内观资料";
             Action<string> fileaction = (dir) =>
             {
                 var files = Directory.GetFiles(dir, "*.xls");

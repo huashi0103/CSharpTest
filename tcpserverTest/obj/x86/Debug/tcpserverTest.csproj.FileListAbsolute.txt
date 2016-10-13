@@ -12,3 +12,10 @@ D:\workspace\CSharpTest\tcpserverTest\obj\x86\Debug\tcpserverTest.Properties.Res
 D:\workspace\CSharpTest\tcpserverTest\obj\x86\Debug\tcpserverTest.csproj.GenerateResource.Cache
 D:\workspace\CSharpTest\tcpserverTest\obj\x86\Debug\tcpserverTest.exe
 D:\workspace\CSharpTest\tcpserverTest\obj\x86\Debug\tcpserverTest.pdb
+D:\wokspace\CSharpTest\tcpserverTest\bin\Debug\tcpserverTest.exe
+D:\wokspace\CSharpTest\tcpserverTest\bin\Debug\tcpserverTest.pdb
+D:\wokspace\CSharpTest\tcpserverTest\obj\x86\Debug\tcpserverTest.Form1.resources
+D:\wokspace\CSharpTest\tcpserverTest\obj\x86\Debug\tcpserverTest.Properties.Resources.resources
+D:\wokspace\CSharpTest\tcpserverTest\obj\x86\Debug\tcpserverTest.csproj.GenerateResource.Cache
+D:\wokspace\CSharpTest\tcpserverTest\obj\x86\Debug\tcpserverTest.exe
+D:\wokspace\CSharpTest\tcpserverTest\obj\x86\Debug\tcpserverTest.pdb

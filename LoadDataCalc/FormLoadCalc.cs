@@ -17,7 +17,13 @@ namespace LoadDataCalc
         private LoadDataClass loadData;
         private List<string> loadFiles = new List<string>();
 
+        /// <summary> 所有仪器名词典
+        /// </summary>
         private Dictionary<string, InstrumentType> InsDic = new Dictionary<string, InstrumentType>();
+        /// <summary>各仪器列表
+        /// </summary>
+        private Dictionary<string, List<string>> Files = new Dictionary<string, List<string>>();
+        private Thread threadLoad = null;
 
         public FormLoadCalc()
         {
@@ -39,44 +45,64 @@ namespace LoadDataCalc
                 {
                     Status("初始化成功");
                 }
+                Files = Config.ReadFileList();
                 if (this.IsDisposed) return;
                 this.Invoke(new EventHandler(delegate {
                     loadTypes();
                     comboType.SelectedIndex = 0;
                     toolStripProgressLoad.Visible = false;
-                    this.Text = loadData.ProjectName;
-                
+                    this.Text = Config.ProjectName;
                 }));
-
             });
             loadThread.Start();
+            btnRead.Click += new EventHandler(btnRead_Click);
+            btnWrite.Click += (o, eg) => {
+                if (MessageBox.Show("确定写入数据库?", "提示", MessageBoxButtons.OKCancel) == 
+                    System.Windows.Forms.DialogResult.Cancel) return;
+                loadData.Wirte();
+                Status(String.Format("写入数据库完成"));
+            };
+            btnConfig.Click += (o, eg) => {
+                FormConfigFilePath fcf = new FormConfigFilePath();
+                fcf.ShowDialog();
+                Files = Config.ReadFileList();
+            };
+        }
 
-
-            btnRead.Click += new EventHandler((o, es) => {
-                btnRead.Enabled = false;
-                Status("读取数据");
-                toolStripProgressLoad.Visible = true;
-                Action callback = () => {
-                    if (this.IsDisposed) return;
-                    this.Invoke(new EventHandler(delegate{
-                        
-                        btnRead.Enabled = true;
-                        loaddatagridview(loadData.SurveyDataCach);
-                        toolStripProgressLoad.Visible = false;
-                        Status("处理完成");
-                        ErrorMsg.OpenLog(1);
-                    }));
-                };
-                Thread thread = new Thread((cb) => {
-                    var type = InsDic["渗压计"];
-                    loadData.ReadData(type);
-                    Status("计算数据");
-                    loadData.Calc(type);
-                    Action call = cb as Action;
-                    call();
-                });
-                thread.Start(callback);
+        void btnRead_Click(object sender, EventArgs e)
+        {
+            btnWrite.Enabled = false;
+            btnConfig.Enabled = false;
+            btnRead.Enabled = false;
+            Status("读取数据");
+            toolStripProgressLoad.Visible = true;
+            Action callback = () =>
+            {
+                if (this.IsDisposed) return;
+                this.Invoke(new EventHandler(delegate
+                {
+                    loaddatagridview(loadData.SurveyDataCach);
+                    toolStripProgressLoad.Visible = false;
+                    Status("处理完成");
+                    btnConfig.Enabled = true;
+                    btnRead.Enabled = true;
+                    btnWrite.Enabled = true;
+                    ErrorMsg.OpenLog(1);
+                    
+                }));
+            };
+            string insname = comboType.Text;
+            threadLoad = new Thread((cb) =>
+            {
+                var type = InsDic[insname];
+                loadData.ReadData(type,Files[insname]);
+                Status("计算数据");
+                loadData.Calc(type);
+                Action call = cb as Action;
+                call();
             });
+            threadLoad.Start(callback);
+           
         }
 
        void Status(string msg)
@@ -87,7 +113,7 @@ namespace LoadDataCalc
                 statuslbl.Text = msg;
             }));
         }
-        void loadTypes()
+       void loadTypes()
         {
             InsDic.Clear();
             foreach (int myCode in Enum.GetValues(typeof(InstrumentType)))
@@ -97,11 +123,11 @@ namespace LoadDataCalc
                 InsDic.Add(insname, (InstrumentType)myCode);
             }
             comboType.Items.Clear();
-            foreach (var ins in loadData.Instruments) {
+            foreach (var ins in Config.Instruments) {
                 comboType.Items.Add(ins.InsName);         
             }
         }
-        void loaddatagridview(List<PointSurveyData> datas)
+       void loaddatagridview(List<PointSurveyData> datas)
         {
             DataTable dt = new DataTable();
             dt.TableName = "Survey_Leakage_Pressure";

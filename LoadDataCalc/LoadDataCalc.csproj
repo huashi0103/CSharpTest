@@ -63,6 +63,12 @@
     <Compile Include="CExcel.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="CSqlServer.cs" />
+    <Compile Include="FormConfigFilePath.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormConfigFilePath.Designer.cs">
+      <DependentUpon>FormConfigFilePath.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormLoadCalc.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -75,6 +81,9 @@
     <Compile Include="MultiInstrumentCalcClass.cs.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="FormConfigFilePath.resx">
+      <DependentUpon>FormConfigFilePath.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormLoadCalc.resx">
       <DependentUpon>FormLoadCalc.cs</DependentUpon>
     </EmbeddedResource>

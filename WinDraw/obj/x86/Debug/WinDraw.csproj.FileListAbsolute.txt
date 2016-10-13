@@ -34,3 +34,10 @@ D:\workspace\CSharpTest\WinDraw\bin\Debug\NPOI.OpenXmlFormats.dll
 D:\workspace\CSharpTest\WinDraw\bin\Debug\NPOI.OpenXml4Net.dll
 D:\workspace\CSharpTest\WinDraw\bin\Debug\NPOI.OOXML.xml
 D:\workspace\CSharpTest\WinDraw\bin\Debug\NPOI.OpenXml4Net.xml
+D:\wokspace\CSharpTest\WinDraw\obj\x86\Debug\WinDraw.csprojResolveAssemblyReference.cache
+D:\wokspace\CSharpTest\WinDraw\obj\x86\Debug\WinDraw.csproj.ResolveComReference.cache
+D:\wokspace\CSharpTest\WinDraw\obj\x86\Debug\WinDraw.Form1.resources
+D:\wokspace\CSharpTest\WinDraw\obj\x86\Debug\WinDraw.Properties.Resources.resources
+D:\wokspace\CSharpTest\WinDraw\obj\x86\Debug\WinDraw.csproj.GenerateResource.Cache
+D:\wokspace\CSharpTest\WinDraw\obj\x86\Debug\WinDraw.exe
+D:\wokspace\CSharpTest\WinDraw\obj\x86\Debug\WinDraw.pdb

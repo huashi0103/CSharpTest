@@ -16,6 +16,7 @@ namespace LoadDataCalc
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new FormLoadCalc());
+            //Application.Run(new FormConfigFilePath());
         }
     }
 }

@@ -31,7 +31,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -58,7 +58,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -85,7 +85,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -112,7 +112,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -139,7 +139,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -166,7 +166,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -193,7 +193,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -220,7 +220,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -247,7 +247,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -274,7 +274,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -301,7 +301,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -328,7 +328,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -357,7 +357,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -384,7 +384,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -411,7 +411,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -438,7 +438,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -465,7 +465,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -492,7 +492,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -519,7 +519,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -597,7 +597,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -624,7 +624,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -651,7 +651,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -678,7 +678,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -705,7 +705,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -732,7 +732,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -759,7 +759,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -786,7 +786,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -813,7 +813,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -840,7 +840,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -867,7 +867,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -894,7 +894,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -921,7 +921,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -948,7 +948,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -975,7 +975,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -1002,7 +1002,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -1029,7 +1029,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -1056,7 +1056,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -1083,7 +1083,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -1112,7 +1112,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -1139,7 +1139,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -1166,7 +1166,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -1193,7 +1193,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -1220,7 +1220,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -1247,7 +1247,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -1274,7 +1274,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -1301,7 +1301,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -1328,7 +1328,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -1355,7 +1355,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 
@@ -1382,7 +1382,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.GetDescription());
+            return base.GetParam(Survey_point_Number, this.InsType.ToString());
         }
     }
 }

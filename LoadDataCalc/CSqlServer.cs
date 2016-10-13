@@ -61,21 +61,18 @@ namespace LoadDataCalc
         /// <returns></returns>
         public object SelectFirst(string sql, params SqlParameter[] pms)
         {
-            DataTable dt = new DataTable();
             try
             {
                 sqlConnection.Open();
                 SqlCommand cmd = new SqlCommand(sql, sqlConnection);
                 cmd.Parameters.AddRange(pms);
-                cmd.ExecuteScalar();
+                return cmd.ExecuteScalar();
             }
             finally
             {
                 sqlConnection.Close();
             }
 
-            return dt;
-            
         }
 
         /// <summary>
@@ -115,7 +112,7 @@ namespace LoadDataCalc
                     bulk.DestinationTableName = dt.TableName;
                     for (int i = 0; i < dt.Columns.Count; i++)
                     {
-                        bulk.ColumnMappings.Add(dt.Columns[0].ColumnName, dt.Columns[0].ColumnName);
+                        bulk.ColumnMappings.Add(dt.Columns[i].ColumnName,dt.Columns[i].ColumnName);
                     }
                     bulk.WriteToServer(dt);
                 }

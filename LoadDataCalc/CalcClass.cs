@@ -12,7 +12,7 @@ using System.Reflection;
 
 namespace LoadDataCalc
 {
-    /// <summary>仪器构造类
+    /// <summary>仪器计算方法构造类
     /// </summary>
     public class CalcFactoryClass
     {
@@ -45,7 +45,8 @@ namespace LoadDataCalc
         public virtual double DifBlock(ParamData param,SurveyData data,params double[] expand)
         {
             //Gorf*(Survey_ZorR-ZorR)+Korb*(TemperatureRead*(Survey_RorT-ZeroR)-RorT)
-            double result = param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) - param.RorT);
+            double result =param.Gorf * (data.Survey_ZorR - param.ZorR) +
+                param.Korb * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) - param.TemperatureRead * (param.RorT - param.ZeroR));
             data.ResultReading = result;//这里要乘以系数
             data.Tempreture = param.TemperatureRead * (data.Survey_RorT - param.ZeroR);
             data.LoadReading = result;
@@ -117,15 +118,11 @@ namespace LoadDataCalc
                     pd.RorT = Convert.ToDouble(dt.Rows[0][4]);
                 }
                 string instype = dt.Rows[0][0].ToString();
-                if (instype == "振弦式")
-                {
-                    pd.InsCalcType = CalcType.ShakeString;
-                }
-                else if (instype == "差阻式")
+                pd.TemperatureRead = Convert.ToDouble(dt.Rows[0][5]);
+                pd.ZeroR = Convert.ToDouble(dt.Rows[0][6]);
+                if (instype.Contains("差阻") || (pd.TemperatureRead != 1 && pd.ZeroR>0))//默认是振弦
                 {
                     pd.InsCalcType = CalcType.DifBlock;
-                    pd.TemperatureRead = Convert.ToDouble(dt.Rows[0][5]);
-                    pd.ZeroR = Convert.ToDouble(dt.Rows[0][6]);
                 }
                 return pd;
             }
@@ -184,7 +181,17 @@ namespace LoadDataCalc
         /// 数据为MPA时为1  数据为KPA时为0.001
         /// </summary>
         public double MpaToKpa = 1;
-       
+        /// <summary>
+        /// 钢板计钢板模数
+        /// </summary>
+        public double Elastic_Modulus_E = 0.205;
+
+        /// <summary>
+        /// 多点位移计的参数
+        /// </summary>
+        public Dictionary<string, ParamData> MParamData = new Dictionary<string, ParamData>();
+
+
         public static string[] ParamList = new[] { "Gorf", "Korb", "ZorR", "RorT", "TemperatureRead", "ZeroR", "Survey_ZorR", "Survey_RorT" };
 
         /// <summary>根据变量名获取变量值
@@ -210,6 +217,7 @@ namespace LoadDataCalc
         /// 当前测点的测量数据
         /// </summary>
         public List<SurveyData> Datas = new List<SurveyData>();
+
         /// <summary>是否计算成功
         /// </summary>
         public bool IsCalc = false;
@@ -254,6 +262,14 @@ namespace LoadDataCalc
         /// </summary>
         public string Remark = "";
 
+        /// <summary> 深度，多点位移计
+        /// </summary>
+        public double Drill_Depth;
+
+        /// <summary>多点仪器的数据,词典中的测点数据用来存测值，其他字段不存值
+        /// </summary>
+        public Dictionary<string, SurveyData> MultiDatas = new Dictionary<string, SurveyData>();
+
 
         public static string[] ParamList = new[] {"Survey_ZorR", "Survey_RorT" };
 
@@ -265,14 +281,6 @@ namespace LoadDataCalc
         {
             return this.GetType().GetField(ParamName).GetValue(this).ToString();
         }
-    }
-
-    /// <summary>
-    /// 多点参数类
-    /// </summary>
-    public class MultiSurveyParamData : ParamData
-    {
-        
     }
 
     public enum CalcType

@@ -1,7 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <ProConfig ProjectName="DefaultProject">
   <DataRoot>D:\workspace\CSharpTest\LoadDataCalc\bin\Debug</DataRoot>
-  <DataBase>Data Source = 10.6.179.9,1433;Network Library = DBMSSOCN;Initial Catalog = MWDatabase;User ID = {0};Password = {1};</DataBase>
+  <DataBase>Data Source = 10.6.179.9,1433;Network Library = DBMSSOCN;Initial Catalog = MWDatabase;User ID = sa;Password = sa;</DataBase>
+   <ProCode>XJB</ProCode>
   <Instruments>
     <Ins>未知</Ins>
     <Ins>钢丝位移计</Ins>

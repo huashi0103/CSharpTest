@@ -26,7 +26,7 @@ namespace LoadDataCalc
         /// <returns></returns>
         public override void ReadData(string path, out  List<PointSurveyData> datas, out List<ErrorMsg> errors)
         {
-            DataInfo index = new DataInfo() { TableName=this.SurveyTableName,DateIndex=0,TimeIndex=1,ZoRIndex=2,
+            DataInfo index = new DataInfo() { TableName=Config.InsCollection[this.Instrument_Name].Measure_Table,DateIndex=0,TimeIndex=1,ZoRIndex=2,
             RorTIndex=3,RemarkIndex=6};
             base.LoadData(path, index, out datas, out errors);
                    
@@ -36,14 +36,14 @@ namespace LoadDataCalc
         /// <returns></returns>
         public override int WriteSurveyToDB(List<PointSurveyData> datas)
         {
-            return base.WriteSurveyToDB(datas, SurveyTableName);
+            return base.WriteSurveyToDB(datas, Config.InsCollection[this.Instrument_Name].Measure_Table);
         }
         /// <summary>把计算后的结果数据写入数据库
         /// </summary>
         /// <returns></returns>
         public override int WriteResultToDB(List<PointSurveyData> datas)
         {
-            return base.WriteResultToDB(datas, ResultTableName);
+            return base.WriteResultToDB(datas, Config.InsCollection[this.Instrument_Name].Result_Table);
         }
 
         public  Fiducial_Leakage_PressureProcess()
@@ -51,8 +51,7 @@ namespace LoadDataCalc
             base.InsType = InstrumentType.Fiducial_Leakage_Pressure;
             base.ErrorLimitRT = 10;
             base.ErrorLimitZR = 10;
-            base.SurveyTableName = "Survey_Leakage_Pressure";
-            base.ResultTableName = "Result_Leakage_Pressure";
+            base.Instrument_Name = "渗压计";
         }
     }
 
@@ -67,15 +66,14 @@ namespace LoadDataCalc
             base.InsType = InstrumentType.Fiducial_Single_Displacement;
             base.ErrorLimitRT = 10;
             base.ErrorLimitZR = 10;
-            base.SurveyTableName = "Survey_Single_Displacement";
-            base.ResultTableName = "Result_Single_Displacement";
+            base.Instrument_Name = "单点位移计";
 
         }
         public override void ReadData(string path, out List<PointSurveyData> datas, out List<ErrorMsg> errors)
         {
             DataInfo index = new DataInfo()
             {
-                TableName = this.SurveyTableName,
+                TableName = Config.InsCollection[this.Instrument_Name].Measure_Table,
                 DateIndex = 0,
                 TimeIndex = 1,
                 ZoRIndex = 2,
@@ -105,15 +103,14 @@ namespace LoadDataCalc
             base.InsType = InstrumentType.Fiducial_Measure_Aperture;
             base.ErrorLimitRT = 10;
             base.ErrorLimitZR = 10;
-            base.SurveyTableName = "Survey_Measure_Aperture";
-            base.ResultTableName = "Result_Measure_Aperture";
+            base.Instrument_Name = "测缝计";
         }
 
         public override void ReadData(string path, out List<PointSurveyData> datas, out List<ErrorMsg> errors)
         {
             DataInfo index = new DataInfo()
             {
-                TableName = this.SurveyTableName,
+                TableName = Config.InsCollection[this.Instrument_Name].Measure_Table,
                 DateIndex = 0,
                 TimeIndex = 1,
                 ZoRIndex = 2,
@@ -124,11 +121,11 @@ namespace LoadDataCalc
         }
         public override int WriteResultToDB(List<PointSurveyData> datas)
         {
-            return base.WriteResultToDB(datas, ResultTableName);
+            return base.WriteResultToDB(datas, Config.InsCollection[this.Instrument_Name].Result_Table);
         }
         public override int WriteSurveyToDB(List<PointSurveyData> datas)
         {
-            return base.WriteResultToDB(datas, SurveyTableName);
+            return base.WriteResultToDB(datas, Config.InsCollection[this.Instrument_Name].Measure_Table);
         }
     }
 
@@ -139,14 +136,14 @@ namespace LoadDataCalc
             base.InsType = InstrumentType.Fiducial_Aperture;
             base.ErrorLimitRT = 10;
             base.ErrorLimitZR = 10;
-            base.SurveyTableName = "Survey_Aperture";
+            base.Instrument_Name = "裂缝计";
 
         }
         public override void ReadData(string path, out List<PointSurveyData> datas, out List<ErrorMsg> errors)
         {
             DataInfo index = new DataInfo()
             {
-                TableName = this.SurveyTableName,
+                TableName = Config.InsCollection[this.Instrument_Name].Measure_Table,
                 DateIndex = 0,
                 TimeIndex = 1,
                 ZoRIndex = 2,
@@ -172,14 +169,14 @@ namespace LoadDataCalc
             base.InsType = InstrumentType.Fiducial_Steel_Bar;
             base.ErrorLimitRT = 10;
             base.ErrorLimitZR = 10;
-            base.SurveyTableName = "Survey_Steel_Bar";
+            base.Instrument_Name = "钢筋计";
 
         }
         public override void ReadData(string path, out List<PointSurveyData> datas, out List<ErrorMsg> errors)
         {
             DataInfo index = new DataInfo()
             {
-                TableName = this.SurveyTableName,
+                TableName = Config.InsCollection[this.Instrument_Name].Measure_Table,
                 DateIndex = 0,
                 TimeIndex = 1,
                 ZoRIndex = 2,

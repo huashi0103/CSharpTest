@@ -18,11 +18,7 @@ namespace LoadDataCalc
             get { return dataRoot; }
             set
             {
-                if (Directory.Exists(value))
-                {
-                    dataRoot = value;
-                }
-                else { throw new Exception("路径不存在"); }
+                  dataRoot = value;
             }
         }
         private  static string dataRoot = "";
@@ -44,7 +40,17 @@ namespace LoadDataCalc
         public static  string DataBase = "";
         //程序集目录
         private  static string Assemblydir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        /// <summary>
+        /// 项目编码//构造数据处理类
+        /// </summary>
+        public static string ProCode = "";
+        /// <summary>
+        /// 误差限制默认为20
+        /// </summary>
+        public static double LimitZ = 20;
+        public static double LimitT = 20;
 
+        public static InsTableCollection InsCollection = new InsTableCollection();
 
         /// <summary>从默认路径加载配置文件
         /// </summary>
@@ -65,6 +71,8 @@ namespace LoadDataCalc
                 DataRoot = dataroot.InnerText;
                 var database = root.SelectSingleNode("DataBase");
                 DataBase = database.InnerText;
+                var DataProCode = root.SelectSingleNode("ProCode");
+                ProCode = DataProCode.InnerText;
                 var Instrumentents = root.SelectSingleNode("Instruments");
                 var list = Instrumentents.ChildNodes;
                 foreach (var node in list)
@@ -80,6 +88,7 @@ namespace LoadDataCalc
                     }
                     Instruments.Add(ins);
                 }
+                loadIns();
                 return true;
             }
             catch
@@ -87,6 +96,30 @@ namespace LoadDataCalc
                 return false;
             }
         }
+
+        private static void loadIns()
+        {
+            string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string path = dir + "\\config\\InsConfig.xml";
+            XmlDocument xml = new XmlDocument();
+            xml.Load(path);
+            var root = xml.DocumentElement;
+            var inslist = root.ChildNodes;
+            List<InsTableInfo> list = new List<InsTableInfo>();
+            foreach (var node in inslist)
+            {
+                var ent = node as XmlElement;
+                InsTableInfo info = new InsTableInfo();
+                info.Instrument_Name = ent.GetAttribute("Instrument_Name");
+                info.Measure_Table = ent.GetAttribute("Measure_Table");
+                info.Monitor_Name = ent.GetAttribute("Monitor_Name");
+                info.Result_Table = ent.GetAttribute("Result_Table");
+                info.Fiducial_Table = ent.GetAttribute("Fiducial_Table");
+                list.Add(info);
+            }
+            InsCollection.InsTables = list;
+        }
+
         /// <summary>
         /// 保存,只有修改路径时有调用
         /// </summary>
@@ -105,6 +138,11 @@ namespace LoadDataCalc
             element = xml.CreateElement("DataBase");
             element.InnerText = DataBase;
             root.AppendChild(element);
+
+            element = xml.CreateElement("ProCode");
+            element.InnerText = ProCode;
+            root.AppendChild(element);
+
             element = xml.CreateElement("Instruments");
             root.AppendChild(element);
             if (Instruments.Count == 0)
@@ -157,7 +195,10 @@ namespace LoadDataCalc
             element.InnerText = dir;
             root.AppendChild(element);
             element = xml.CreateElement("DataBase");
-            element.InnerText = "Data Source = 10.6.179.44,1433;Network Library = DBMSSOCN;Initial Catalog = MWDatabase;User ID = {0};Password = {1};";
+            element.InnerText = "Data Source = 10.6.179.44,1433;Network Library = DBMSSOCN;Initial Catalog = MWDatabase;User ID = sa;Password = sa;";
+            element = xml.CreateElement("ProCode");
+            element.InnerText = ProCode;
+            root.AppendChild(element);
             element = xml.CreateElement("Instruments");
             root.AppendChild(element);
             foreach (int myCode in Enum.GetValues(typeof(InstrumentType)))
@@ -247,4 +288,56 @@ namespace LoadDataCalc
         public string InsName;
         public List<string> KeyWord = new List<string>();
     }
+    public class InsTableInfo
+    {
+        public string Instrument_Name;
+        public string Fiducial_Table;
+        public string Measure_Table;
+        public string Monitor_Name;
+        public string Result_Table;
+
+    }
+    public class InsTableCollection
+    {
+        public List<InsTableInfo> InsTables = new List<InsTableInfo>();
+        public InsTableInfo this[string Instrument_Name]
+        {
+            get { return InsTables.Where(ins => ins.Instrument_Name == Instrument_Name).First(); }
+        }
+        public InsTableInfo GetFromFiducial(string Fiducial_Table)
+        {
+            return InsTables.Where(ins => ins.Fiducial_Table == Fiducial_Table).First();
+        }
+        public InsTableInfo GetFromMeasure(string Measure_Table)
+        {
+            return InsTables.Where(ins => ins.Measure_Table == Measure_Table).First();
+        }
+        public InsTableInfo GetFromResult(string Result_Table)
+        {
+            return InsTables.Where(ins => ins.Result_Table == Result_Table).First();
+        }
+    }
+
+    public static class DataUtils
+    {
+        public static  bool CheckDateTime(DateTime dt)
+        {
+            var maxDt = DateTime.Now;
+            var minDt = new DateTime(1990,1,1,0,0,0);
+            return (dt.CompareTo(maxDt) < 0 && dt.CompareTo(minDt) > 0);
+        }
+        public static bool CheckContainStr(string ChkStr,params string[] keys)
+        {
+            if (keys.Length ==0) return true;
+            foreach (string key in keys)
+            {
+                if (ChkStr.Contains(key))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+    
 }

@@ -5,3 +5,10 @@ D:\workspace\test\tcpserverTest\obj\x86\Release\tcpserverTest.Properties.Resourc
 D:\workspace\test\tcpserverTest\obj\x86\Release\tcpserverTest.csproj.GenerateResource.Cache
 D:\workspace\test\tcpserverTest\obj\x86\Release\tcpserverTest.exe
 D:\workspace\test\tcpserverTest\obj\x86\Release\tcpserverTest.pdb
+D:\wokspace\CSharpTest\tcpserverTest\bin\Release\tcpserverTest.exe
+D:\wokspace\CSharpTest\tcpserverTest\bin\Release\tcpserverTest.pdb
+D:\wokspace\CSharpTest\tcpserverTest\obj\x86\Release\tcpserverTest.Form1.resources
+D:\wokspace\CSharpTest\tcpserverTest\obj\x86\Release\tcpserverTest.Properties.Resources.resources
+D:\wokspace\CSharpTest\tcpserverTest\obj\x86\Release\tcpserverTest.csproj.GenerateResource.Cache
+D:\wokspace\CSharpTest\tcpserverTest\obj\x86\Release\tcpserverTest.exe
+D:\wokspace\CSharpTest\tcpserverTest\obj\x86\Release\tcpserverTest.pdb

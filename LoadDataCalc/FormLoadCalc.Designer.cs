@@ -34,7 +34,7 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripProgressLoad = new System.Windows.Forms.ToolStripProgressBar();
             this.statuslbl = new System.Windows.Forms.ToolStripStatusLabel();
-            this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
+            this.numericLimit = new System.Windows.Forms.NumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label2 = new System.Windows.Forms.Label();
@@ -42,7 +42,7 @@
             this.btnWrite = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.statusStrip1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericLimit)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -121,17 +121,22 @@
             this.statuslbl.Size = new System.Drawing.Size(39, 21);
             this.statuslbl.Text = "状态";
             // 
-            // numericUpDown1
+            // numericLimit
             // 
-            this.numericUpDown1.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.numericUpDown1.Location = new System.Drawing.Point(104, 46);
-            this.numericUpDown1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.numericUpDown1.Name = "numericUpDown1";
-            this.numericUpDown1.Size = new System.Drawing.Size(118, 28);
-            this.numericUpDown1.TabIndex = 5;
-            this.numericUpDown1.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.numericUpDown1.Value = new decimal(new int[] {
+            this.numericLimit.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.numericLimit.Location = new System.Drawing.Point(104, 46);
+            this.numericLimit.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.numericLimit.Minimum = new decimal(new int[] {
             10,
+            0,
+            0,
+            0});
+            this.numericLimit.Name = "numericLimit";
+            this.numericLimit.Size = new System.Drawing.Size(118, 28);
+            this.numericLimit.TabIndex = 5;
+            this.numericLimit.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numericLimit.Value = new decimal(new int[] {
+            20,
             0,
             0,
             0});
@@ -156,7 +161,7 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 126F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 717F));
-            this.tableLayoutPanel1.Controls.Add(this.numericUpDown1, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this.numericLimit, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.comboType, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 0);
@@ -222,7 +227,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericLimit)).EndInit();
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
@@ -239,7 +244,7 @@
         private System.Windows.Forms.ToolStripProgressBar toolStripProgressLoad;
         private System.Windows.Forms.ToolStripStatusLabel statuslbl;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.NumericUpDown numericUpDown1;
+        private System.Windows.Forms.NumericUpDown numericLimit;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button btnConfig;

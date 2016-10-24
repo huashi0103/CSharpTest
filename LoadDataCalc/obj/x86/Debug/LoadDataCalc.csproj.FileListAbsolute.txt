@@ -14,6 +14,10 @@ D:\workspace\CSharpTest\LoadDataCalc\bin\Debug\ICSharpCode.SharpZipLib.dll
 D:\workspace\CSharpTest\LoadDataCalc\bin\Debug\NPOI.OpenXmlFormats.dll
 D:\workspace\CSharpTest\LoadDataCalc\bin\Debug\NPOI.OOXML.xml
 D:\workspace\CSharpTest\LoadDataCalc\bin\Debug\NPOI.OpenXml4Net.xml
+D:\wokspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.FormConfigFilePath.resources
+D:\wokspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.FormLoadCalc.resources
+D:\wokspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.Properties.Resources.resources
+D:\wokspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.csproj.GenerateResource.Cache
 D:\wokspace\CSharpTest\LoadDataCalc\bin\Debug\LoadDataCalc.exe.config
 D:\wokspace\CSharpTest\LoadDataCalc\bin\Debug\LoadDataCalc.exe
 D:\wokspace\CSharpTest\LoadDataCalc\bin\Debug\LoadDataCalc.pdb
@@ -25,10 +29,6 @@ D:\wokspace\CSharpTest\LoadDataCalc\bin\Debug\NPOI.OpenXmlFormats.dll
 D:\wokspace\CSharpTest\LoadDataCalc\bin\Debug\NPOI.xml
 D:\wokspace\CSharpTest\LoadDataCalc\bin\Debug\NPOI.OOXML.xml
 D:\wokspace\CSharpTest\LoadDataCalc\bin\Debug\NPOI.OpenXml4Net.xml
-D:\wokspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.csprojResolveAssemblyReference.cache
-D:\wokspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.FormLoadCalc.resources
-D:\wokspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.Properties.Resources.resources
-D:\wokspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.csproj.GenerateResource.Cache
 D:\wokspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.exe
 D:\wokspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.pdb
-D:\wokspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.FormConfigFilePath.resources
+D:\wokspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.csprojResolveAssemblyReference.cache

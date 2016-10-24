@@ -39,11 +39,32 @@ namespace LoadDataCalc
             btnPath.Click += new EventHandler(btnPath_Click);
             listviewFiles.MouseClick += new MouseEventHandler(listviewFiles_MouseClick);
             treeViewDir.MouseClick += new MouseEventHandler(treeViewDir_MouseClick);
+            listviewFiles.MouseDoubleClick += new MouseEventHandler(listviewFiles_MouseDoubleClick);
+            treeViewDir.MouseDoubleClick += new MouseEventHandler(treeViewDir_MouseDoubleClick);
             btnSave.Click+=new EventHandler(delegate{
                 Config.WriteFilesList(Files);
                 status("保存成功");
             });
             
+        }
+
+        void treeViewDir_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button != System.Windows.Forms.MouseButtons.Left) return;
+            Point ClickPoint = new Point(e.X, e.Y);
+            TreeNode CurrentNode = treeViewDir.GetNodeAt(ClickPoint);
+            treeViewDir.SelectedNode = CurrentNode;
+            if (treeViewDir.SelectedNode == null || treeViewDir.SelectedNode.Tag == null) return;
+            string path = (string)CurrentNode.Tag;
+            System.Diagnostics.Process.Start(path);
+        }
+
+        void listviewFiles_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button != System.Windows.Forms.MouseButtons.Left) return;
+            if (listviewFiles.SelectedItems.Count == 0) return;
+            string path = listviewFiles.SelectedItems[0].Text;
+            System.Diagnostics.Process.Start(path);
         }
 
         void treeViewDir_MouseClick(object sender, MouseEventArgs e)
@@ -57,20 +78,7 @@ namespace LoadDataCalc
             strip.Items.Add("添加", null, (o, es) =>
             {
                 string file = (string)treeViewDir.SelectedNode.Tag;
-                ListViewGroup owngroup = null;
-                foreach (ListViewGroup group in listviewFiles.Groups)
-                {
-                    if (group.Header == comboType.Text)
-                    {
-                        owngroup = group;
-                        break;
-                    }
-                }
-                if (owngroup == null)
-                {
-                    owngroup = new ListViewGroup(comboType.Text);
-                    listviewFiles.Groups.Add(owngroup);
-                }
+                ListViewGroup owngroup = GetGroup(comboType.Text);
                 if (!owngroup.Items.ContainsKey(file))
                 {
                     ListViewItem item = new ListViewItem(file, owngroup);
@@ -82,6 +90,24 @@ namespace LoadDataCalc
             });
             strip.Show(treeViewDir, e.Location);
            
+        }
+        ListViewGroup GetGroup(string insname)
+        {
+            ListViewGroup owngroup = null;
+            foreach (ListViewGroup group in listviewFiles.Groups)
+            {
+                if (group.Header == insname)
+                {
+                    owngroup = group;
+                    break;
+                }
+            }
+            if (owngroup == null)
+            {
+                owngroup = new ListViewGroup(comboType.Text);
+                listviewFiles.Groups.Add(owngroup);
+            }
+            return owngroup;
         }
 
         void listviewFiles_MouseClick(object sender, MouseEventArgs e)
@@ -102,13 +128,37 @@ namespace LoadDataCalc
                 }
                 listviewFiles.EndUpdate();
             });
+            strip.Items.Add("添加", null, (o, es) =>
+            {
+                listviewFiles.BeginUpdate();
+
+                foreach (ListViewItem item in listviewFiles.SelectedItems)
+                {
+                    string insname = item.Group.Header;
+                    string targetinsname = this.comboType.Text;
+                    if (insname == targetinsname) continue;
+                    Files[insname].Remove(item.Text);
+                    Files[targetinsname].Add(item.Text);
+                    ListViewGroup owngroup = GetGroup(targetinsname);
+                    if (owngroup.Items.ContainsKey(item.Name))
+                    {
+                        listviewFiles.Items.Remove(item);
+                        continue;
+                    }
+                    item.Group = owngroup;
+                }
+                listviewFiles.EndUpdate();
+            });
+
             strip.Show(listviewFiles,e.Location);
             
         }
 
         void btnPath_Click(object sender, EventArgs e)
         {
+            fileCount = 0;
             FolderBrowserDialog fbd = new FolderBrowserDialog();
+            fbd.SelectedPath = Config.DataRoot;
             if(fbd.ShowDialog()==System.Windows.Forms.DialogResult.OK)
             {
                 if (Config.DataRoot != fbd.SelectedPath)
@@ -122,6 +172,7 @@ namespace LoadDataCalc
         }
         void btnChekAll_Click(object sender, EventArgs e)
         {
+            discernFilCount = 0;
             Files = new Dictionary<string, List<string>>();
             foreach (string insname in comboType.Items)
             {
@@ -160,11 +211,27 @@ namespace LoadDataCalc
             statuslbl.Text = ss;
            
         }
+        void getFiles(List<string> list,string path,string pattern)
+        {
+            DirectoryInfo di = new DirectoryInfo(path);
+            var allfiles = di.GetFiles(pattern);
+            foreach (FileInfo fi in allfiles)
+            {
+                if ((fi.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden)
+                {
+                    list.Add(fi.FullName);
+                }
+
+            }
+        }
         void getDir(string path,TreeNode node)
         {
             List<string> list = new List<string>();
-            list.AddRange(Directory.GetFiles(path, "*.xls"));
-            list.AddRange(Directory.GetFiles(path, "*.xlsx"));
+            getFiles(list, path, "*.xls");
+            getFiles(list, path, "*.xlsx");
+
+            //list.AddRange(Directory.GetFiles(path, "*.xls"));
+            //list.AddRange(Directory.GetFiles(path, "*.xlsx"));
             foreach (string file in list)
             {
                 TreeNode nd = new TreeNode();
@@ -179,7 +246,7 @@ namespace LoadDataCalc
                 foreach (var d in dirs)
                 {
                     TreeNode nd = new TreeNode();
-                    nd.Text = d;
+                    nd.Text = d.Split('\\').Last();
                     node.Nodes.Add(nd);
                     getDir(d,nd);
                 }

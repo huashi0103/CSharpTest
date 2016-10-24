@@ -10,7 +10,7 @@ namespace LoadDataCalc
 {
     public  class CSqlServerHelper
     {
-        private static SqlConnection sqlConnection = null;
+       //private static SqlConnection sqlConnection = null;
         private static CSqlServerHelper cSqlServer=null;
         public static string Connectionstr = "";
         private CSqlServerHelper()
@@ -24,7 +24,7 @@ namespace LoadDataCalc
             if (cSqlServer == null)
             {
                 cSqlServer = new CSqlServerHelper();
-                sqlConnection = new SqlConnection(Connectionstr);
+                //sqlConnection = new SqlConnection(Connectionstr);
             }
             return cSqlServer;
  
@@ -37,6 +37,7 @@ namespace LoadDataCalc
         public DataTable SelectData(string sql, params SqlParameter[] pms)
         {
             DataTable dt = new DataTable();
+            var sqlConnection = new SqlConnection(Connectionstr);
             try
             {
                 sqlConnection.Open();
@@ -61,6 +62,7 @@ namespace LoadDataCalc
         /// <returns></returns>
         public object SelectFirst(string sql, params SqlParameter[] pms)
         {
+            var sqlConnection = new SqlConnection(Connectionstr);
             try
             {
                 sqlConnection.Open();
@@ -83,6 +85,7 @@ namespace LoadDataCalc
         /// <returns></returns>
         public int InsertDelUpdate(string sql, params SqlParameter[] parameters)
         {
+            var sqlConnection = new SqlConnection(Connectionstr);
             int result = 0;
             try
             {
@@ -103,6 +106,7 @@ namespace LoadDataCalc
         /// <param name="dt">插入的数据,根据dt的表名和列名进行匹配</param>
         public bool BulkCopy(DataTable dt)
         {
+            var sqlConnection = new SqlConnection(Connectionstr);
             try
             {
                 sqlConnection.Open();
@@ -133,6 +137,7 @@ namespace LoadDataCalc
         /// <returns></returns>
         public bool Check()
         {
+            var sqlConnection = new SqlConnection(Connectionstr);
             try
             {
                 sqlConnection.Open();

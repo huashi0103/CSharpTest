@@ -548,11 +548,13 @@ namespace LoadDataCalc
             if (data.Survey_ZorR > 5000)
             {
                 result = (param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT)) * param.MpaToKpa;
+                data.Survey_ZorRMoshu = data.Survey_ZorR;
             }
             else
             {
                 result =(param.Gorf * (Math.Pow(data.Survey_ZorR,2)/1000  - param.ZorR) +
                     param.Korb * (data.Survey_RorT- param.RorT))*param.MpaToKpa;
+                data.Survey_ZorRMoshu = Math.Pow(data.Survey_ZorR, 2) / 1000;
             }
             data.ResultReading = result * 102.0408;//这里要乘以系数每种仪器不一样
             data.Tempreture = data.Survey_RorT;
@@ -963,6 +965,7 @@ namespace LoadDataCalc
         {
             //Gorf*(Survey_ZorR-ZorR)+Korb*(Survey_RorT-RorT)
             double result = param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT);
+            data.Survey_ZorRMoshu = data.Survey_ZorR;
             data.ResultReading = result*param.Elastic_Modulus_E;//这里要乘以系数每种仪器不一样
             data.Tempreture = data.Survey_RorT;
             data.LoadReading = result * param.Elastic_Modulus_E;

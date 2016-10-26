@@ -36,10 +36,10 @@ namespace LoadDataCalc
             Thread loadThread = new Thread(() =>
             {
                 loadData = LoadDataClass.GetInstance();
-                int res = loadData.Init();
-                if (res != 3)
+                string res = loadData.Init();
+                if (res != "OK")
                 {
-                    Status(String.Format("加载失败,{0}", res.ToString()));
+                    Status(String.Format("加载失败,{0}", res));
                 }
                 else
                 {
@@ -81,7 +81,6 @@ namespace LoadDataCalc
     
         }
 
-       
         void btnRead_Click(object sender, EventArgs e)
         {
            string insname = comboType.Text;
@@ -115,6 +114,10 @@ namespace LoadDataCalc
                 var type = InsDic[insname];
                 loadData.ClearCach();
                 loadData.ReadData(type,Files[insname]);
+                string path = Environment.CurrentDirectory + "\\templist.xml";
+                MultiDisplacementCalc mcalc = new MultiDisplacementCalc();
+                //var list=mcalc.GetCalclist(loadData.SurveyDataCach);
+                //mcalc.Wirtexml(list, path);
                 Status("计算数据");
                 loadData.Calc(type);
                 Action call = cb as Action;
@@ -156,6 +159,11 @@ namespace LoadDataCalc
             dt.Columns.Add("Observation_Time");
             dt.Columns.Add("Temperature");
             dt.Columns.Add("Frequency");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("UpdateTime");
+            dt.Columns.Add("Tresult");
+            dt.Columns.Add("loadreading");
+            dt.Columns.Add("resultreading");
             if (flag)
             {
                 dt.Columns.Add("F1");
@@ -171,12 +179,6 @@ namespace LoadDataCalc
                 dt.Columns.Add("R5");
                 dt.Columns.Add("R6");
             }
-            dt.Columns.Add("Remark");
-            dt.Columns.Add("UpdateTime");
-            dt.Columns.Add("Tresult");
-            dt.Columns.Add("loadreading");
-            dt.Columns.Add("resultreading");
-
             int id = 0;
             foreach (PointSurveyData pd in datas)
             {

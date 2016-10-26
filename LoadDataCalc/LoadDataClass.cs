@@ -52,21 +52,21 @@ namespace LoadDataCalc
         /// 0-写默认模板 1-读取配置文件，2-初始化数据库 3-全部完成
         /// </summary>
         /// <returns></returns>
-        public int Init()
+        public string Init()
         {
-            int res = 0;
+            string res = "";
             try
             {
                 Config.WriteDifaultConfig();//写一个默认模板
-                res = 1;
+                res = "读取项目配置文件";
                 //读取本项目配置文件
                 if (!Config.LoadConfig()) return res;
-                res = 2;
+                res = "初始化数据库";
                 CSqlServerHelper.Connectionstr = Config.DataBase;
                 sqlhelper = CSqlServerHelper.GetInstance();
                 if (sqlhelper.Check())
                 {
-                    res = 3;
+                    res = "OK";
                 }
             }
             catch
@@ -106,6 +106,16 @@ namespace LoadDataCalc
                             {
                                 refiles.Add(file);
                             }
+                        }
+                        else if (insname == "无应力计")
+                        {
+                            string[] multikey = Config.Instruments.Where(x => x.InsName == "应变计组").FirstOrDefault().KeyWord.ToArray();
+                            string[] multikey1 = Config.Instruments.Where(x => x.InsName == "应变计").FirstOrDefault().KeyWord.ToArray();
+                            if (!DataUtils.CheckContainStr(filename, multikey) && !DataUtils.CheckContainStr(filename, multikey1))
+                            {
+                                refiles.Add(file);
+                            }
+ 
                         }
                         else
                         {
@@ -197,6 +207,7 @@ namespace LoadDataCalc
                         ErrorMsgCach.Add(file, msgs);
                     }
                 }
+            
             });
             if (instype==InstrumentType.Fiducial_Strain_Gauge)
             {
@@ -204,6 +215,7 @@ namespace LoadDataCalc
             }
             if (StatusAction != null) StatusAction("读取完成,正在写入日志文件");
             ErrorMsg.Log(ErrorMsgCach);
+            ErrorMsg.LogSheetErr(process.ErrorSheetName);
         }
         public void ReadDataExpand(List<string> files)
         {
@@ -342,6 +354,8 @@ namespace LoadDataCalc
         /// 测点缓存//每次读数据从数据库查询一次，所有文件读完清空
         /// </summary>
         public List<string> SurveyNumberCach = new List<string>();
+
+        public List<string> ErrorSheetName = new List<string>();
 
         private static object lockobject = new object();
 
@@ -485,7 +499,12 @@ namespace LoadDataCalc
             for (int i = 0; i < workbook.NumberOfSheets; i++)
             {
                 var psheet = workbook.GetSheetAt(i);
-                if (!CheckName(psheet.SheetName)) continue;
+                if (!CheckName(psheet.SheetName))
+                {
+                    ErrorSheetName.Add(psheet.SheetName);
+                    continue;
+                    
+                }
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
                 PointSurveyData pd = new PointSurveyData();
                 pd.SurveyPoint = psheet.SheetName;
@@ -553,6 +572,7 @@ namespace LoadDataCalc
                 datas.Add(pd);
             }
             workbook.Close();
+           
         }
 
         private bool ReadRow(IRow row, DataInfo info, SurveyData sd,out string err,bool last=false)
@@ -738,7 +758,8 @@ namespace LoadDataCalc
        public int ErrorRow;
        public string Exception = "";
        private static string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-       private static string temp= dir + "\\log\\temp_error.log";
+       public static string temp= dir + "\\log\\temp_error.log";
+       public static string tempsheeterror = dir + "\\log\\sheet_error.log";
        /// <summary>
        /// 写文件，默认程序目录下新建当天文件，每天一个
        /// </summary>
@@ -760,7 +781,7 @@ namespace LoadDataCalc
        public static void Log(Dictionary<string, List<ErrorMsg>> ErrorMsgCach)
        {
            string filepath = dir + "\\log\\" + DateTime.Now.ToString("yyyyMMdd") + ".log";
-           using (StreamWriter sw = new StreamWriter(filepath, true, Encoding.UTF8))
+           using (StreamWriter sw = new StreamWriter(filepath,true, Encoding.UTF8))
            {
                foreach (var dic in ErrorMsgCach)
                {
@@ -770,10 +791,11 @@ namespace LoadDataCalc
                        sw.WriteLine(msg.ToString());
                    }
                }
+               
            }
 
            //临时日志文件,每次刷新
-           using (StreamWriter sw = new StreamWriter(temp, true, Encoding.UTF8))
+           using (StreamWriter sw = new StreamWriter(temp, false, Encoding.UTF8))
            {
                foreach (var dic in ErrorMsgCach)
                {
@@ -786,7 +808,20 @@ namespace LoadDataCalc
            }
 
        }
-      
+       /// <summary>
+       /// 记下没有读取的sheetname名
+       /// </summary>
+       /// <param name="sheetnames"></param>
+       public static void LogSheetErr(List<string> sheetnames)
+       {
+           using (StreamWriter sw = new StreamWriter(tempsheeterror, false, Encoding.UTF8))
+           {
+               foreach (string sheetname in sheetnames)
+               {
+                   sw.WriteLine(sheetname);
+               }
+           }
+       }
        /// <summary>
        /// 打开日志文件
        /// </summary>
@@ -799,6 +834,10 @@ namespace LoadDataCalc
                    if (File.Exists(temp))
                    {
                        Process.Start(new ProcessStartInfo("notepad", temp));
+                   }
+                   if (File.Exists(tempsheeterror))
+                   {
+                       Process.Start(new ProcessStartInfo("notepad", tempsheeterror));
                    }
                    break;
                case 2:
@@ -833,7 +872,7 @@ namespace LoadDataCalc
        /// <summary>
        ///多点位移计起始列
        /// </summary>
-       public int Findex = 1;
+       public int Findex = -1;
 
    }
 

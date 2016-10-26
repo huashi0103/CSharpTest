@@ -281,7 +281,11 @@ namespace LoadDataCalc
             for (int i = 0; i < workbook.NumberOfSheets; i++)
             {
                 var psheet = workbook.GetSheetAt(i);
-                if (!CheckName(psheet.SheetName + "x")) continue;
+                if (!CheckName(psheet.SheetName + "x"))
+                {
+                    ErrorSheetName.Add(psheet.SheetName);
+                    continue;
+                }
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
                 PointSurveyData pd = new PointSurveyData();
                 PointSurveyData pd1 = new PointSurveyData();
@@ -528,7 +532,11 @@ namespace LoadDataCalc
                     surveyname2 = temp[0].Split('-')[0] + "-" + temp[1];
                 }
 
-                if (!CheckName(surveyname1)) continue;
+                if (!CheckName(surveyname1))
+                {
+                    ErrorSheetName.Add(psheet.SheetName);
+                    continue;
+                }
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
                 PointSurveyData pd = new PointSurveyData();
                 PointSurveyData pd1 = new PointSurveyData();
@@ -977,7 +985,11 @@ namespace LoadDataCalc
             for (int i = 0; i < workbook.NumberOfSheets; i++)
             {
                 var psheet = workbook.GetSheetAt(i);
-                if (!CheckName(psheet.SheetName)) continue;
+                if (!CheckName(psheet.SheetName))
+                {
+                    ErrorSheetName.Add(psheet.SheetName);
+                    continue;
+                }
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
                 PointSurveyData pd = new PointSurveyData();
                 pd.SurveyPoint = psheet.SheetName;
@@ -1048,6 +1060,8 @@ namespace LoadDataCalc
                 }
                 datas.Add(pd);
             }
+            workbook.Close();
+           
         }
 
         protected override DataInfo GetInfo(ISheet psheet, string filePath = null)
@@ -1060,6 +1074,7 @@ namespace LoadDataCalc
             info.Findex = -1;
             bool flag = true;
             int TCount = 0;
+            int TempIndex = -1;
             int count = psheet.LastRowNum > 15 ? 15 : psheet.LastRowNum;
             for (int j = 0; j < count; j++)//读取前10行
             {
@@ -1087,6 +1102,7 @@ namespace LoadDataCalc
                     }
                     else if (cellstr.Contains("备注")) info.RemarkIndex = pyhindex;
                     laststr = cellstr;
+                    if (cellstr.Contains("模数值")) TempIndex = pyhindex;
                 }
             }
             if (flag && info.TimeIndex > 0)
@@ -1106,6 +1122,11 @@ namespace LoadDataCalc
                     info.Findex = info.TimeIndex > 0 ? info.TimeIndex + 1 : info.DateIndex;
                 }
             }
+            else
+            {
+                info.Findex = (info.TimeIndex < 0 && TempIndex > 0) ? TempIndex : -1;
+
+            }
             return info;
             
         }
@@ -1123,17 +1144,18 @@ namespace LoadDataCalc
             for (int i = 0; i < dt.Rows.Count; i++)
             {
                 string serialnum = (string)dt.Rows[i][0];
-                bool flag = true;
-                for (int j = list.Count-1; j>=0; j--)
-                {
-                    if (Compare(serialnum, list[j]))
-                    {
-                        list.Insert(j, serialnum);
-                        flag = false;
-                        break;
-                    }
-                }
-                if (flag) list.Add(serialnum);
+                list.Add(serialnum);
+                //bool flag = true;
+                //for (int j = list.Count-1; j>=0; j--)
+                //{
+                //    if (Compare(serialnum, list[j]))
+                //    {
+                //        list.Insert(j, serialnum);
+                //        flag = false;
+                //        break;
+                //    }
+                //}
+                //if (flag) list.Add(serialnum);
                 
             }
             return list;
@@ -1194,7 +1216,8 @@ namespace LoadDataCalc
                         double.TryParse(row.GetCell(info.RorTIndex).ToString(), out sd.Survey_RorT);
                     }
                     int mid = info.TimeIndex > 0 ? info.RorTIndex - info.TimeIndex : info.RorTIndex - info.DateIndex;
-                    int firstindex = (mid > 1) ? info.TimeIndex > 0 ? info.TimeIndex : info.DateIndex : info.RorTIndex;
+                    int firstindex = (mid > 1) ? (info.TimeIndex > 0 ? info.TimeIndex : info.DateIndex) : info.RorTIndex;
+                    if (info.Findex > 0) firstindex = info.Findex-1;
                     for (int i = 0; i < info.Sum; i++)
                     {
                         SurveyData temp = new SurveyData();
@@ -1202,13 +1225,17 @@ namespace LoadDataCalc
                         if (row.GetCell(firstindex + 1 + i) != null)
                         {
                             //频率/基准电阻
-                            flag = double.TryParse(row.GetCell(firstindex + 1 + i).ToString(), out temp.Survey_ZorR);
+                            if (double.TryParse(row.GetCell(firstindex + 1 + i).ToString(), out temp.Survey_ZorR))
+                            {
+                                flag = true;
+                            }
                         }
                         sd.MultiDatas.Add(seriallist[i], temp);//成不成功都添加//吧位子占了
                     }
                 }
                 else//有多列温度只读一列
                 {
+                    flag = false;
                     bool tflag = false;
                     int firstindex = info.Findex+1;
                     for (int i = 0; i < info.Sum; i++)
@@ -1217,7 +1244,10 @@ namespace LoadDataCalc
                         if (row.GetCell(firstindex + i * 2) != null)
                         {
                             //频率/基准电阻
-                            flag = double.TryParse(row.GetCell(firstindex + i * 2).ToString(), out temp.Survey_ZorR);
+                            if (double.TryParse(row.GetCell(firstindex + i * 2).ToString(), out temp.Survey_ZorR))
+                            {
+                                flag = true;
+                            }
                         }
                         sd.MultiDatas.Add(seriallist[i], temp);
                         if (!tflag && row.GetCell(firstindex + i * 2+1) != null)
@@ -1315,7 +1345,7 @@ namespace LoadDataCalc
             if (filename == "应变计")//特殊，应变计和无应力计在一个sheet中
             {
                 DataInfo index = new DataInfo() { DateIndex = 0, ZoRIndex = 4, RorTIndex = 5, RemarkIndex = 7 };
-                LoadData(path, index, out datas, out errors);
+                LoadDataExpand(path, index, out datas, out errors);
             }
             else
             {
@@ -1335,7 +1365,11 @@ namespace LoadDataCalc
                 var psheet = workbook.GetSheetAt(i);
                 string sqlGetNonPoint = "select Nonstress_Number from Fiducial_Strain_Gauge where Survey_Point_Number=@Survey_Point_Number";
                 var resnumber = sqlhelper.SelectFirst(sqlGetNonPoint, new SqlParameter("@Survey_point_Number", psheet.SheetName));
-                if (resnumber == DBNull.Value) continue;
+                if (resnumber == DBNull.Value)
+                {
+                    ErrorSheetName.Add(psheet.SheetName);
+                    continue;
+                }
                 string number = (string)resnumber;
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
                 PointSurveyData pd = new PointSurveyData();
@@ -1500,7 +1534,11 @@ namespace LoadDataCalc
             for (int i = 0; i < workbook.NumberOfSheets; i++)
             {
                 var psheet = workbook.GetSheetAt(i);
-                if (!CheckName(psheet.SheetName)) continue;
+                if (!CheckName(psheet.SheetName))
+                {
+                    ErrorSheetName.Add(psheet.SheetName);
+                    continue;
+                }
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
                 PointSurveyData pd = new PointSurveyData();
                 pd.SurveyPoint = psheet.SheetName;

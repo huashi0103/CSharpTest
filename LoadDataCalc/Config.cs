@@ -50,6 +50,8 @@ namespace LoadDataCalc
         public static double LimitZ = 20;
         public static double LimitT = 20;
 
+        public static MultiDisplacementCalc MultiDisplacementCalcs =new MultiDisplacementCalc();
+
         public static InsTableCollection InsCollection = new InsTableCollection();
 
         /// <summary>从默认路径加载配置文件
@@ -89,6 +91,7 @@ namespace LoadDataCalc
                     Instruments.Add(ins);
                 }
                 loadIns();
+                loadcalcs();
                 return true;
             }
             catch
@@ -118,6 +121,11 @@ namespace LoadDataCalc
                 list.Add(info);
             }
             InsCollection.InsTables = list;
+        }
+        private static void loadcalcs()
+        {
+            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\config\\templist.xls";
+            MultiDisplacementCalcs.loadexcel(path);
         }
 
         /// <summary>
@@ -260,7 +268,10 @@ namespace LoadDataCalc
             try
             {
                 XmlDocument xml = new XmlDocument();
-                xml.Load(path);
+                XmlReaderSettings settings = new XmlReaderSettings();
+                settings.IgnoreComments = true;
+                XmlReader reader = XmlReader.Create(path, settings);
+                xml.Load(reader);
                 var root = xml.DocumentElement;
                 var nodes = root.ChildNodes;
                 foreach (XmlNode node in nodes)

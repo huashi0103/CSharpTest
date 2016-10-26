@@ -45,8 +45,12 @@ namespace LoadDataCalc
         public virtual double DifBlock(ParamData param,SurveyData data,params double[] expand)
         {
             //Gorf*(Survey_ZorR-ZorR)+Korb*(TemperatureRead*(Survey_RorT-ZeroR)-RorT)
-            double result =param.Gorf * (data.Survey_ZorR - param.ZorR) +
-                param.Korb * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) - param.TemperatureRead * (param.RorT - param.ZeroR));
+            double result = 0;
+            if (Math.Abs(data.Survey_ZorR) > 1)
+            {
+                result = param.Gorf * (data.Survey_ZorR - param.ZorR) +
+                    param.Korb * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) - param.TemperatureRead * (param.RorT - param.ZeroR));
+            }
             data.ResultReading = result;//这里要乘以系数
             data.Tempreture = param.TemperatureRead * (data.Survey_RorT - param.ZeroR);
             data.LoadReading = result;
@@ -60,7 +64,21 @@ namespace LoadDataCalc
         public virtual double ShakeString(ParamData param,SurveyData data,params double[] expand)
         {
             //Gorf*(Survey_ZorR-ZorR)+Korb*(Survey_RorT-RorT)
-            double result = param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT);
+            double result = 0;
+            if (Math.Abs(data.Survey_ZorR) > 1)
+            {
+                if (data.Survey_ZorR > 5000)
+                {
+                    result = param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT);
+                    data.Survey_ZorRMoshu = data.Survey_ZorR;
+                }
+                else
+                {
+                    result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) / 1000 - param.ZorR) +
+                        param.Korb * (data.Survey_RorT - param.RorT);
+                    data.Survey_ZorRMoshu = Math.Pow(data.Survey_ZorR, 2) / 1000;
+                }
+            }
             data.ResultReading = result;//这里要乘以系数每种仪器不一样
             data.Tempreture = data.Survey_RorT;
             data.LoadReading = result;
@@ -185,6 +203,10 @@ namespace LoadDataCalc
         /// 钢板计钢板模数
         /// </summary>
         public double Elastic_Modulus_E = 0.205;
+        /// <summary>
+        /// 多点仪器的第二列
+        /// </summary>
+        public string Ins_Serial;
 
         /// <summary>
         /// 多点位移计的参数
@@ -228,7 +250,7 @@ namespace LoadDataCalc
     public class SurveyData
     {
         /// <summary>
-        /// ZorR 对应的测值
+        /// ZorR 对应的测值//该值为直接读取的值，可能为频率或者模数
         /// </summary>
         public double Survey_ZorR;
         /// <summary>
@@ -269,7 +291,10 @@ namespace LoadDataCalc
         /// <summary>多点仪器的数据,词典中的测点数据用来存测值，其他字段不存值
         /// </summary>
         public Dictionary<string, SurveyData> MultiDatas = new Dictionary<string, SurveyData>();
-
+        /// <summary>
+        /// 改制为模数，当时直接读取的值为模数时，与Survey_ZorR相同，否则为平方后/1000的值
+        /// </summary>
+        public double Survey_ZorRMoshu;
 
         public static string[] ParamList = new[] {"Survey_ZorR", "Survey_RorT" };
 

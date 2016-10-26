@@ -40,19 +40,23 @@
     </Reference>
     <Reference Include="NPOI, Version=2.1.3.1, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>NPOI 2.2.0.0\dotnet4\NPOI.dll</HintPath>
+      <HintPath>DLLS\NPOI.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="NPOI.OOXML, Version=2.1.3.1, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>NPOI 2.2.0.0\dotnet4\NPOI.OOXML.dll</HintPath>
+      <HintPath>DLLS\NPOI.OOXML.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="NPOI.OpenXml4Net, Version=2.1.3.1, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>NPOI 2.2.0.0\dotnet4\NPOI.OpenXml4Net.dll</HintPath>
+      <HintPath>DLLS\NPOI.OpenXml4Net.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="NPOI.OpenXmlFormats, Version=2.1.3.1, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>NPOI 2.2.0.0\dotnet4\NPOI.OpenXmlFormats.dll</HintPath>
+      <HintPath>DLLS\NPOI.OpenXmlFormats.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -86,6 +90,7 @@
     <Compile Include="InstrumentProcess.cs" />
     <Compile Include="InstrumentProcessXJB.cs" />
     <Compile Include="LoadDataClass.cs" />
+    <Compile Include="MultiDisplacementCalc.cs" />
     <Compile Include="MultiInstrumentCalcClass.cs.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -116,6 +121,33 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="DLLS\ICSharpCode.SharpZipLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DLLS\NPOI.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DLLS\NPOI.OOXML.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DLLS\NPOI.OOXML.XML">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DLLS\NPOI.OpenXml4Net.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DLLS\NPOI.OpenXml4Net.XML">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DLLS\NPOI.OpenXmlFormats.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DLLS\NPOI.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

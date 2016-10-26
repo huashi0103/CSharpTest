@@ -70,26 +70,27 @@ namespace CSharpTest
             //{
             //    NExcel.test(file);
             //}
-            List<int> a = new List<int> { 1231,0,2,100,2,4,53,23,123,4,53,7,9};
-            List<int> b = new List<int>();
-            for (int i = 0; i < a.Count; i++)
-            {
-                bool flag = true;
-                for (int j = 0; j < b.Count; j++)
-                {
-                    if (a[i] > b[j])
-                    {
-                        b.Insert(j,a[i]);
-                        flag = false;
-                        break;
-                    }
-                }
-                if(flag)b.Add(a[i]);
-            }
-            foreach (int v in b)
-            {
-                Console.WriteLine(v);
-            }
+            //List<int> a = new List<int> { 1231, 0, 2, 100, 2, 4, 53, 23, 123, 4, 53, 7, 9 };
+            //List<int> b = new List<int>();
+            //for (int i = 0; i < a.Count; i++)
+            //{
+            //    bool flag = true;
+            //    for (int j = 0; j < b.Count; j++)
+            //    {
+            //        if (a[i] > b[j])
+            //        {
+            //            b.Insert(j, a[i]);
+            //            flag = false;
+            //            break;
+            //        }
+            //    }
+            //    if (flag) b.Add(a[i]);
+            //}
+            //foreach (int v in b)
+            //{
+            //    Console.WriteLine(v);
+            //}
+            Console.WriteLine(Convert.ToInt16("0.0"));
             //string r = Regex.Replace(DateTime.Now.TimeOfDay.ToString(), @"\.\d+$", string.Empty);
             //var ts = TimeSpan.Parse(r);
             //Console.WriteLine(ts.ToString());

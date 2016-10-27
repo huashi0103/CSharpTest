@@ -31,21 +31,6 @@ namespace LoadDataCalc
             base.LoadData(path, index, out datas, out errors);
                    
         }
-        /// <summary>把测量数据写入到数据库
-        /// </summary>
-        /// <returns></returns>
-        public override int WriteSurveyToDB(List<PointSurveyData> datas)
-        {
-            return base.WriteSurveyToDB(datas, Config.InsCollection[this.Instrument_Name].Measure_Table);
-        }
-        /// <summary>把计算后的结果数据写入数据库
-        /// </summary>
-        /// <returns></returns>
-        public override int WriteResultToDB(List<PointSurveyData> datas)
-        {
-            return base.WriteResultToDB(datas, Config.InsCollection[this.Instrument_Name].Result_Table);
-        }
-
         public  Fiducial_Leakage_PressureProcess()
         {
             base.InsType = InstrumentType.Fiducial_Leakage_Pressure;
@@ -82,14 +67,6 @@ namespace LoadDataCalc
             };
             base.LoadData(path, index, out datas, out errors);
         }
-        public override int WriteResultToDB(List<PointSurveyData> datas)
-        {
-            throw new NotImplementedException();
-        }
-        public override int WriteSurveyToDB(List<PointSurveyData> datas)
-        {
-            throw new NotImplementedException();
-        }
     
     }
 
@@ -119,14 +96,6 @@ namespace LoadDataCalc
             };
             base.LoadData(path, index, out datas, out errors);
         }
-        public override int WriteResultToDB(List<PointSurveyData> datas)
-        {
-            return base.WriteResultToDB(datas, Config.InsCollection[this.Instrument_Name].Result_Table);
-        }
-        public override int WriteSurveyToDB(List<PointSurveyData> datas)
-        {
-            return base.WriteResultToDB(datas, Config.InsCollection[this.Instrument_Name].Measure_Table);
-        }
     }
 
     public class Fiducial_ApertureProcess : ProcessData
@@ -152,14 +121,6 @@ namespace LoadDataCalc
             };
             base.LoadData(path, index, out datas, out errors);
         }
-        public override int WriteResultToDB(List<PointSurveyData> datas)
-        {
-            throw new NotImplementedException();
-        }
-        public override int WriteSurveyToDB(List<PointSurveyData> datas)
-        {
-            throw new NotImplementedException();
-        }
  
     }
     public class Fiducial_Steel_BarProcess : ProcessData
@@ -184,14 +145,6 @@ namespace LoadDataCalc
                 RemarkIndex = 5
             };
             base.LoadData(path, index, out datas, out errors);
-        }
-        public override int WriteResultToDB(List<PointSurveyData> datas)
-        {
-            throw new NotImplementedException();
-        }
-        public override int WriteSurveyToDB(List<PointSurveyData> datas)
-        {
-            throw new NotImplementedException();
         }
     }
 }

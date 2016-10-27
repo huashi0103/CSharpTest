@@ -32,7 +32,7 @@ namespace LoadDataCalc
 
     /// <summary>仪器基类
     /// </summary>
-    public  class BaseInstrument
+    public abstract class BaseInstrument
    {
         /// <summary>仪器类型
         /// </summary>
@@ -123,22 +123,22 @@ namespace LoadDataCalc
             {
                 ParamData pd = new ParamData();
                 pd.SurveyPoint = Survey_point_Number;
-                if (dt.Rows[0][1] == null || dt.Rows[0][3]==null) return null;//G和Z必须有
-                pd.Gorf = Convert.ToDouble(dt.Rows[0][1]);
-                pd.ZorR = Convert.ToDouble(dt.Rows[0][3]);
-                if (dt.Rows[0][2] == null)
+                if (dt.Rows[0]["Calculate_Coeffi_G"] == null || dt.Rows[0]["Benchmark_Resist_Ratio"] == null) return null;//G和Z必须有
+                pd.Gorf = Convert.ToDouble(dt.Rows[0]["Calculate_Coeffi_G"]);
+                pd.ZorR = Convert.ToDouble(dt.Rows[0]["Benchmark_Resist_Ratio"]);
+                if (dt.Rows[0]["Tempera_Revise_K"] == null)
                 {
                     pd.Korb = 0;
                 }
                 else
                 {
-                    pd.Korb = Convert.ToDouble(dt.Rows[0][2]);
-                    pd.RorT = Convert.ToDouble(dt.Rows[0][4]);
+                    pd.Korb = Convert.ToDouble(dt.Rows[0]["Tempera_Revise_K"]);
+                    pd.RorT = Convert.ToDouble(dt.Rows[0]["Benchmark_Resist"]);
                 }
-                string instype = dt.Rows[0][0].ToString();
-                pd.TemperatureRead = Convert.ToDouble(dt.Rows[0][5]);
-                pd.ZeroR = Convert.ToDouble(dt.Rows[0][6]);
-                if (instype.Contains("差阻") || (pd.TemperatureRead != 1 && pd.ZeroR>0))//默认是振弦
+                string instype = dt.Rows[0]["Instrument_Type"].ToString();
+                pd.TemperatureRead = Convert.ToDouble(dt.Rows[0]["Temperature_Read"]);
+                pd.ZeroR = Convert.ToDouble(dt.Rows[0]["Zero_Resistance"]);
+                if (instype.Contains("差阻") || (pd.TemperatureRead != 1 && pd.ZeroR > 0))//默认是振弦
                 {
                     pd.InsCalcType = CalcType.DifBlock;
                 }
@@ -149,8 +149,81 @@ namespace LoadDataCalc
                 return null;
             }
         }
-        
+
+        public virtual int WriteSurveyToDB(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Measure_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("Temperature");
+            dt.Columns.Add("Frequency");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
+                    dr["Temperature"] = Math.Round(surveydata.Survey_RorT, 4);
+                    dr["Frequency"] = Math.Round(surveydata.Survey_ZorRMoshu,4);
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+        public virtual int WriteResultToDB(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Result_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("Temperature");
+            dt.Columns.Add("loadReading");
+            dt.Columns.Add("ResultReading");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from  " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
+                    dr["Temperature"] = Math.Round(surveydata.Tempreture,2);
+                    dr["loadReading"] = Math.Round(surveydata.LoadReading,4);
+                    dr["ResultReading"] = Math.Round(surveydata.ResultReading,4);
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
     }
+
 
     /// <summary> 单点参数类
     /// </summary>
@@ -212,6 +285,23 @@ namespace LoadDataCalc
         /// 多点位移计的参数
         /// </summary>
         public Dictionary<string, ParamData> MParamData = new Dictionary<string, ParamData>();
+        /// <summary>
+        /// 锚索测力计计划荷载
+        /// </summary>
+        public double Plan_Loading;
+        /// <summary>
+        /// 锚索测力计最大荷载
+        /// </summary>
+        public double MAX_Loading;
+        /// <summary>
+        /// 锚索测力计锁定荷载
+        /// </summary>
+        public double Lock_Value;
+
+        /// <summary>
+        /// 混凝土膨胀系数//应变计专用
+        /// </summary>
+        public double Concrete_Expansion_ac;
 
 
         public static string[] ParamList = new[] { "Gorf", "Korb", "ZorR", "RorT", "TemperatureRead", "ZeroR", "Survey_ZorR", "Survey_RorT" };
@@ -268,7 +358,7 @@ namespace LoadDataCalc
         public double Tempreture;
 
         /// <summary>
-        /// 第一个计算结果
+        /// 第一个计算结果,多点位移计的成果值
         /// </summary>
         public double LoadReading;
         /// <summary>
@@ -292,9 +382,13 @@ namespace LoadDataCalc
         /// </summary>
         public Dictionary<string, SurveyData> MultiDatas = new Dictionary<string, SurveyData>();
         /// <summary>
-        /// 改制为模数，当时直接读取的值为模数时，与Survey_ZorR相同，否则为平方后/1000的值
+        /// 模数，当直接读取的值为模数时，与Survey_ZorR相同，否则为平方后/1000的值
         /// </summary>
         public double Survey_ZorRMoshu;
+
+        public double AfterLock;
+        public double PlanLock;
+        public double ResultLock;
 
         public static string[] ParamList = new[] {"Survey_ZorR", "Survey_RorT" };
 

@@ -90,7 +90,7 @@ namespace CSharpTest
             //{
             //    Console.WriteLine(v);
             //}
-            Console.WriteLine(Convert.ToInt16("0.0"));
+            Console.WriteLine("Sb1-2与Nb1-2".Split('与')[0]);
             //string r = Regex.Replace(DateTime.Now.TimeOfDay.ToString(), @"\.\d+$", string.Empty);
             //var ts = TimeSpan.Parse(r);
             //Console.WriteLine(ts.ToString());

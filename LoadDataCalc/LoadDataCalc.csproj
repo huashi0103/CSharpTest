@@ -86,14 +86,15 @@
     <Compile Include="FormLoadCalc.Designer.cs">
       <DependentUpon>FormLoadCalc.cs</DependentUpon>
     </Compile>
-    <Compile Include="InstrumentCalcClass.cs" />
+    <Compile Include="InstrumentCalc.cs" />
     <Compile Include="InstrumentProcess.cs" />
     <Compile Include="InstrumentProcessXJB.cs" />
     <Compile Include="LoadDataClass.cs" />
     <Compile Include="MultiDisplacementCalc.cs" />
-    <Compile Include="MultiInstrumentCalcClass.cs.cs" />
+    <Compile Include="MultiInstrumentCalc.cs.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WriteToDb.cs" />
     <EmbeddedResource Include="FormConfigFilePath.resx">
       <DependentUpon>FormConfigFilePath.cs</DependentUpon>
     </EmbeddedResource>

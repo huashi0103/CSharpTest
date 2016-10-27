@@ -135,10 +135,7 @@ namespace LoadDataCalc
         //数据缓存,缓存应变计对应的无应力计数据
         public List<PointSurveyData> SurveyDataCachExpand = new List<PointSurveyData>();
      
-
-        /// <summary> 当前处理仪器类
-        /// </summary>
-        private ProcessData process = null;
+        private BaseInstrument inscalc = null;
 
         /// <summary> 清空缓存数据
         /// </summary>
@@ -186,7 +183,7 @@ namespace LoadDataCalc
         {
             string temppath = Assemblydir + "\\log\\temp_error.log";
             if (File.Exists(temppath)) File.Delete(temppath);//临时文件每次读取清空
-            process = ProcessFactory.CreateInstance(instype);
+            ProcessData process = ProcessFactory.CreateInstance(instype);
             if (process == null) return;
             process.StatusAction = this.StatusAction;
             process.ErrorLimitZR = Config.LimitZ;
@@ -217,9 +214,13 @@ namespace LoadDataCalc
             ErrorMsg.Log(ErrorMsgCach);
             ErrorMsg.LogSheetErr(process.ErrorSheetName);
         }
+        /// <summary>
+        /// 读应变计把无应力计也读了
+        /// </summary>
+        /// <param name="files"></param>
         public void ReadDataExpand(List<string> files)
         {
-            process = ProcessFactory.CreateInstance(InstrumentType.Fiducial_Nonstress);
+            ProcessData process = ProcessFactory.CreateInstance(InstrumentType.Fiducial_Nonstress);
             if (process == null) return;
             process.StatusAction = this.StatusAction;
             process.ErrorLimitZR = Config.LimitZ;
@@ -245,14 +246,12 @@ namespace LoadDataCalc
  
         }
 
-
-
         /// <summary>
         /// 计算
         /// </summary>
         public void Calc(InstrumentType instype, string expression=null)
         {
-            BaseInstrument inscalc = CalcFactoryClass.CreateInstCalc(instype);
+            inscalc = CalcFactoryClass.CreateInstCalc(instype);
             foreach (var pd in SurveyDataCach)
             {
 
@@ -297,11 +296,10 @@ namespace LoadDataCalc
         /// <returns></returns>
         public void Wirte(InstrumentType instype)
         {
-            process = ProcessFactory.CreateInstance(instype);
-            if (process == null) return;
-            int result= process.WriteSurveyToDB(SurveyDataCach);
+            if (inscalc == null) return;
+            int result = inscalc.WriteSurveyToDB(SurveyDataCach);
             ErrorMsg.Log(String.Format("写入{0}行测值",result));
-            result=process.WriteResultToDB(SurveyDataCach);
+            result = inscalc.WriteResultToDB(SurveyDataCach);
             ErrorMsg.Log(String.Format("写入{0}行成果值", result));
             
         }
@@ -364,15 +362,7 @@ namespace LoadDataCalc
         /// <param name="path"></param>
         /// <returns></returns>
         public abstract  void ReadData(string path, out List<PointSurveyData> datas,out List<ErrorMsg>errors);
-        /// <summary>把测量数据写入到数据库
-        /// </summary>
-        /// <returns></returns>
-        public abstract int WriteSurveyToDB(List<PointSurveyData> datas);
-        /// <summary>把计算后的结果数据写入数据库
-        /// </summary>
-        /// <returns></returns>
-        public abstract int WriteResultToDB(List<PointSurveyData> datas);
-       
+
        /// <summary> 获取数据索引
         /// </summary>
         /// <param name="psheet"></param>
@@ -652,87 +642,6 @@ namespace LoadDataCalc
             }
             return SurveyNumberCach.Contains(name);
         }
-        /// <summary> 写测值数据
-        /// </summary>
-        /// <param name="datas"></param>
-        /// <param name="TableName"></param>
-        /// <returns></returns>
-        protected int WriteSurveyToDB(List<PointSurveyData> datas,String TableName)
-        {
-            DataTable dt = new DataTable();
-            dt.TableName = TableName;
-            dt.Columns.Add("ID");
-            dt.Columns.Add("Survey_point_Number");
-            dt.Columns.Add("Observation_Date");
-            dt.Columns.Add("Observation_Time");
-            dt.Columns.Add("Temperature");
-            dt.Columns.Add("Frequency");
-            dt.Columns.Add("Remark");
-            dt.Columns.Add("UpdateTime");
-            var sqlhelper = CSqlServerHelper.GetInstance();
-            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from "+TableName);
-            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
-            foreach (PointSurveyData pd in datas)
-            {
-                foreach (var surveydata in pd.Datas)
-                {
-                    id++;
-                    DataRow dr = dt.NewRow();
-                    dr["ID"] = id;
-                    dr["Survey_point_Number"] = pd.SurveyPoint;
-                    dr["Observation_Date"] = surveydata.SurveyDate;
-                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
-                    dr["Temperature"] = surveydata.Survey_RorT;
-                    dr["Frequency"] = surveydata.Survey_ZorR;
-                    dr["Remark"] = surveydata.Remark;
-                    dr["UpdateTime"] = DateTime.Now;
-                    dt.Rows.Add(dr);
-                }
-            }
-            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
-        }
-
-       /// <summary>写结果数据
-       /// </summary>
-       /// <param name="datas"></param>
-       /// <param name="TableName"></param>
-       /// <returns></returns>
-        protected int WriteResultToDB(List<PointSurveyData> datas, String TableName)
-        {
-            DataTable dt = new DataTable();
-            dt.TableName = TableName;
-            dt.Columns.Add("ID");
-            dt.Columns.Add("Survey_point_Number");
-            dt.Columns.Add("Observation_Date");
-            dt.Columns.Add("Observation_Time");
-            dt.Columns.Add("Temperature");
-            dt.Columns.Add("loadReading");
-            dt.Columns.Add("ResultReading");
-            dt.Columns.Add("Remark");
-            dt.Columns.Add("UpdateTime");
-            var sqlhelper = CSqlServerHelper.GetInstance();
-            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from  " + TableName);
-            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
-            foreach (PointSurveyData pd in datas)
-            {
-                foreach (var surveydata in pd.Datas)
-                {
-                    id++;
-                    DataRow dr = dt.NewRow();
-                    dr["ID"] = id;
-                    dr["Survey_point_Number"] = pd.SurveyPoint;
-                    dr["Observation_Date"] = surveydata.SurveyDate;
-                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
-                    dr["Temperature"] = Convert.ToDecimal(surveydata.Tempreture);
-                    dr["loadReading"] = Convert.ToDecimal(surveydata.LoadReading);
-                    dr["ResultReading"] = Convert.ToDecimal(surveydata.ResultReading);
-                    dr["Remark"] = surveydata.Remark;
-                    dr["UpdateTime"] = DateTime.Now;
-                    dt.Rows.Add(dr);
-                }
-            }
-            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
-        }
    }
 
    /// <summary>
@@ -870,9 +779,14 @@ namespace LoadDataCalc
        public int NRorTIndex = 3;
        public int Sum = 4;
        /// <summary>
-       ///多点位移计起始列
+       ///多点位移计起始列,应变计组的起始列
        /// </summary>
        public int Findex = -1;
+       /// <summary>
+       /// 应变计组的电阻比总列数，与数据库中的向数做对比,
+       /// 确定是否包含无应力计的数据
+       /// </summary>
+       public int FCount = 0;
 
    }
 

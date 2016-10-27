@@ -150,7 +150,7 @@ namespace LoadDataCalc
         }
        void loaddatagridview(List<PointSurveyData> datas)
         {
-            bool flag = comboType.Text == "多点位移计" || comboType.Text == "锚索测力计";
+            bool flag = comboType.Text == "多点位移计" || comboType.Text == "锚索测力计"||comboType.Text=="应变计组";
             DataTable dt = new DataTable();
             dt.TableName = "Survey_Leakage_Pressure";
             dt.Columns.Add("ID");
@@ -199,11 +199,16 @@ namespace LoadDataCalc
                     dr["resultreading"] = surveydata.ResultReading;
                     if (flag)
                     {
+                        dr["resultreading"] = surveydata.AfterLock;
                         int i = 1;
                         foreach (var v in surveydata.MultiDatas)
                         {
                             dr["F" + i.ToString()] = v.Value.Survey_ZorR;
                             dr["R" + i.ToString()] = v.Value.LoadReading;
+                            if (comboType.Text == "应变计组")
+                            {
+                                dr["R" + i.ToString()] = v.Value.Survey_RorT;
+                            }
                             i++;
                         }
                     }

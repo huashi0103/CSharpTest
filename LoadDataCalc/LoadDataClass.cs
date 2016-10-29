@@ -29,7 +29,9 @@ namespace LoadDataCalc
         private CSqlServerHelper sqlhelper = null;
         //程序集目录
         private string Assemblydir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        //状态委托
         public Action<string> StatusAction;
+        //数据锁
         private object DataLock = new object();
 
         private LoadDataClass()
@@ -129,10 +131,15 @@ namespace LoadDataCalc
  
         }
         
-        //数据缓存
+        /// <summary>
+        ///         //数据缓存
+        /// </summary>
         public List<PointSurveyData> SurveyDataCach = new List<PointSurveyData>();
         public Dictionary<string, List<ErrorMsg>> ErrorMsgCach = new Dictionary<string, List<ErrorMsg>>();
-        //数据缓存,缓存应变计对应的无应力计数据
+
+        /// <summary>
+        ///数据缓存,缓存应变计对应的无应力计数据
+        /// </summary>
         public List<PointSurveyData> SurveyDataCachExpand = new List<PointSurveyData>();
      
         private BaseInstrument inscalc = null;
@@ -181,8 +188,10 @@ namespace LoadDataCalc
         /// <param name="instype"></param>
         public void ReadData(InstrumentType instype,List<string>files)
         {
-            string temppath = Assemblydir + "\\log\\temp_error.log";
-            if (File.Exists(temppath)) File.Delete(temppath);//临时文件每次读取清空
+            //临时文件每次读取清空
+            if (File.Exists(ErrorMsg.temp)) File.Delete(ErrorMsg.temp);
+            if (File.Exists(ErrorMsg.tempsheeterror)) File.Delete(ErrorMsg.tempsheeterror);
+
             ProcessData process = ProcessFactory.CreateInstance(instype);
             if (process == null) return;
             process.StatusAction = this.StatusAction;
@@ -203,47 +212,45 @@ namespace LoadDataCalc
                     {
                         ErrorMsgCach.Add(file, msgs);
                     }
+                    
                 }
             
             });
-            if (instype==InstrumentType.Fiducial_Strain_Gauge)
+            //应变计和应变计组同时也读一遍无应力计的数据
+            if (instype==InstrumentType.Fiducial_Strain_Gauge||instype==InstrumentType.Fiducial_Strain_Group)
             {
-                ReadDataExpand(files);
+                SurveyDataCachExpand = process.NonStressDataCach;
             }
             if (StatusAction != null) StatusAction("读取完成,正在写入日志文件");
             ErrorMsg.Log(ErrorMsgCach);
             ErrorMsg.LogSheetErr(process.ErrorSheetName);
         }
+
         /// <summary>
-        /// 读应变计把无应力计也读了
+        ///  //清理NPOI生成tmp文件
         /// </summary>
-        /// <param name="files"></param>
-        public void ReadDataExpand(List<string> files)
+        public void ClearDirTmp()
         {
-            ProcessData process = ProcessFactory.CreateInstance(InstrumentType.Fiducial_Nonstress);
-            if (process == null) return;
-            process.StatusAction = this.StatusAction;
-            process.ErrorLimitZR = Config.LimitZ;
-            process.ErrorLimitZR = Config.LimitT;
-            files.AsParallel().ForAll((file) =>
+            var files = Directory.GetFiles(Assemblydir,"*.tmp");
+            foreach (string file in files)
             {
-                List<PointSurveyData> datas = new List<PointSurveyData>();
-                List<ErrorMsg> msgs = new List<ErrorMsg>();
-                process.ReadData(file, out datas, out msgs);
-                lock (DataLock)
+                File.Delete(file);
+            }
+        }
+
+        //获取应变计和应变机组对应的无应力计数据
+        private SurveyData GetNonStressSurveyData(PointSurveyData pd, SurveyData sd)
+        {
+            if (pd == null) return null;
+            foreach (var nsd in pd.Datas)
+            {
+                if (nsd.SurveyDate.Date == sd.SurveyDate.Date)
                 {
-                    SurveyDataCachExpand.AddRange(datas);
-                    if (ErrorMsgCach.Keys.Contains(file))
-                    {
-                        ErrorMsgCach[file].AddRange(msgs);
-                    }
-                    else
-                    {
-                        ErrorMsgCach.Add(file, msgs);
-                    }
+                    return nsd;
                 }
-            });
- 
+            }
+            return null;
+            
         }
 
         /// <summary>
@@ -252,44 +259,63 @@ namespace LoadDataCalc
         public void Calc(InstrumentType instype, string expression=null)
         {
             inscalc = CalcFactoryClass.CreateInstCalc(instype);
+            List<string> Errors = new List<string>();
             foreach (var pd in SurveyDataCach)
             {
-
                 ParamData param = inscalc.GetParam(pd.SurveyPoint, instype.ToString());
+                PointSurveyData NonStressPoint = new PointSurveyData();
+                if (instype == InstrumentType.Fiducial_Strain_Gauge || instype == InstrumentType.Fiducial_Strain_Group)
+                {
+                   NonStressPoint= SurveyDataCachExpand.Where(p => p.SurveyPoint == param.NonStressNumber).FirstOrDefault();
+                   if (NonStressPoint == null || NonStressPoint.Datas.Count < 1)
+                   {
+                       Errors.Add(String.Format("PARAM:{0},{1}", pd.SurveyPoint, "找不到对应的无应力计数据"));
+                   }
+                }
                 if (param == null)
                 {
-                    ErrorMsg.Log(String.Format("PARAM:{0}",pd.SurveyPoint));//保存读取参数的错误
+                    Errors.Add(String.Format("PARAM:{0}", pd.SurveyPoint));//保存读取参数的错误
                     pd.IsCalc = false;
                     continue;
                 }
-                if (expression != null)
+                if (expression != null)param.InsCalcType = CalcType.AutoDefine;
+                foreach (SurveyData sd in pd.Datas)
                 {
-                    param.InsCalcType = CalcType.AutoDefine;
-                }
+                    sd.Survey_ZorRMoshu = sd.Survey_ZorR;
+                    if (instype == InstrumentType.Fiducial_Strain_Gauge || instype == InstrumentType.Fiducial_Strain_Group)
+                    {
+                        if (NonStressPoint == null || NonStressPoint.Datas.Count < 1)
+                        {
+                            continue;
+                        }
+                        var nondata = GetNonStressSurveyData(NonStressPoint, sd);
+                        if (nondata != null)
+                        {
+                            sd.NonStressSurveyData = nondata;
+                            if (instype == InstrumentType.Fiducial_Strain_Group)
+                            {//应变机组中的所有应变计都以无应力计为基准
+                                foreach (var dic in sd.MultiDatas)
+                                {
+                                    dic.Value.NonStressSurveyData = nondata;
+                                }
+                            }
 
-                switch (param.InsCalcType)
-                {
-                    case CalcType.DifBlock:
-                        foreach (SurveyData sd in pd.Datas)
-                        {
-                            inscalc.DifBlock(param, sd);
+                            //计算无应力计
+                            Fiducial_Nonstress fn = new Fiducial_Nonstress();
+                            ParamData nonpd = fn.GetParam(param.NonStressNumber, "Fiducial_Nonstress");
+                            fn.FuncDic[nonpd.InsCalcType](nonpd, sd.NonStressSurveyData, null);
                         }
-                        break;
-                    case CalcType.ShakeString:
-                        foreach (SurveyData sd in pd.Datas)
+                        else
                         {
-                            inscalc.ShakeString(param, sd);
+                            Errors.Add(String.Format("PARAM:{0},{1},{2}", pd.SurveyPoint,sd.SurveyDate.Date.ToString(), "找不到对应的无应力计数据"));
                         }
-                        break;
-                    case CalcType.AutoDefine:
-                        foreach (SurveyData sd in pd.Datas)
-                        {
-                            inscalc.AutoDefined(param, sd, expression);
-                        }
-                        break;
+                    }
+
+                    inscalc.FuncDic[param.InsCalcType](param, sd,expression);
                 }
                 pd.IsCalc = true;
             }
+            ErrorMsg.Log(Errors);
         }
         /// <summary>写数据
         /// </summary>
@@ -352,10 +378,14 @@ namespace LoadDataCalc
         /// 测点缓存//每次读数据从数据库查询一次，所有文件读完清空
         /// </summary>
         public List<string> SurveyNumberCach = new List<string>();
-
+        /// <summary>没有读取的sheet名
+        /// </summary>
         public List<string> ErrorSheetName = new List<string>();
-
-        private static object lockobject = new object();
+       /// <summary>
+       /// 读取应变计和应变机组的无应力计数据缓存
+       /// </summary>
+        public List<PointSurveyData> NonStressDataCach = new List<PointSurveyData>();
+        public List<string> NonNumberDataCach = new List<string>();
 
         /// <summary> 从excel文件中读取数据
         /// </summary>
@@ -586,7 +616,10 @@ namespace LoadDataCalc
                     {
                         time = row.GetCell(info.TimeIndex).ToString();
                     }
-                    sd.SurveyDate = DateTime.Parse(date + " " + time, CultureInfo.CurrentCulture, DateTimeStyles.NoCurrentDateDefault);
+                    if (DateTime.TryParse(date + " " + time, CultureInfo.CurrentCulture, DateTimeStyles.NoCurrentDateDefault, out  sd.SurveyDate))
+                    {
+                        sd.SurveyDate = cell.DateCellValue;
+                    }
                 }
                 else
                 {
@@ -637,15 +670,29 @@ namespace LoadDataCalc
                 var dt = sqlhelper.SelectData(sql);
                 for (int i = 0; i < dt.Rows.Count; i++)
                 {
-                    SurveyNumberCach.Add((string)dt.Rows[i][0]);
+                    SurveyNumberCach.Add(dt.Rows[i][0].ToString().ToUpper());
                 }
             }
-            return SurveyNumberCach.Contains(name);
+            return SurveyNumberCach.Contains(name.ToUpper());
+        }
+
+        protected bool CheckNonStress(string number)
+        {
+            if (NonNumberDataCach.Count == 0)
+            {
+                var sqlhelper = CSqlServerHelper.GetInstance();
+                string sql = "select Survey_point_Number from Fiducial_Nonstress";
+                var dt = sqlhelper.SelectData(sql);
+                for (int i = 0; i < dt.Rows.Count; i++)
+                {
+                    NonNumberDataCach.Add(dt.Rows[i][0].ToString().ToUpper());
+                }
+            }
+            return NonNumberDataCach.Contains(number.ToUpper());
         }
    }
 
-   /// <summary>
-   /// 处理数据类的工厂类
+   /// <summary>处理数据类的工厂类
    /// </summary>
    public class ProcessFactory
    {
@@ -658,7 +705,6 @@ namespace LoadDataCalc
        }
    }
     
-
    /// <summary>日志类
    /// </summary>
    public class ErrorMsg
@@ -704,7 +750,7 @@ namespace LoadDataCalc
            }
 
            //临时日志文件,每次刷新
-           using (StreamWriter sw = new StreamWriter(temp, false, Encoding.UTF8))
+           using (StreamWriter sw = new StreamWriter(temp, true, Encoding.UTF8))
            {
                foreach (var dic in ErrorMsgCach)
                {
@@ -717,13 +763,35 @@ namespace LoadDataCalc
            }
 
        }
+       public static void Log(List<string> ErrorMsgCach)
+       {
+           string filepath = dir + "\\log\\" + DateTime.Now.ToString("yyyyMMdd") + ".log";
+           using (StreamWriter sw = new StreamWriter(filepath, true, Encoding.UTF8))
+           {
+               foreach (var msg in ErrorMsgCach)
+               {
+                     sw.WriteLine(msg);
+               }
+
+           }
+
+           //临时日志文件,每次刷新
+           using (StreamWriter sw = new StreamWriter(temp, true, Encoding.UTF8))
+           {
+               foreach (var dic in ErrorMsgCach)
+               {
+                   sw.WriteLine(dic);
+               }
+           }
+
+       }
        /// <summary>
        /// 记下没有读取的sheetname名
        /// </summary>
        /// <param name="sheetnames"></param>
        public static void LogSheetErr(List<string> sheetnames)
        {
-           using (StreamWriter sw = new StreamWriter(tempsheeterror, false, Encoding.UTF8))
+           using (StreamWriter sw = new StreamWriter(tempsheeterror, true, Encoding.UTF8))
            {
                foreach (string sheetname in sheetnames)
                {

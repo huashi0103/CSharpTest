@@ -78,6 +78,17 @@ namespace LoadDataCalc
 
         }
 
+        private bool CheckFile(string filename,params string[] insname)
+        {
+            foreach(string ins in insname)
+            {
+                string[] multikey = Config.Instruments.Where(x => x.InsName == ins).FirstOrDefault().KeyWord.ToArray();
+                if (DataUtils.CheckContainStr(filename, multikey)) return true;
+            }
+            return false;
+      
+        }
+
         /// <summary>
         /// 获取包含关键词的文件，关键词为空，返回所有文件
         /// </summary>
@@ -103,21 +114,23 @@ namespace LoadDataCalc
                     {
                         if (insname == "应变计")
                         {
-                            string[] multikey= Config.Instruments.Where(x => x.InsName == "应变计组").FirstOrDefault().KeyWord.ToArray();
-                            if (!DataUtils.CheckContainStr(filename, multikey))
-                            {
-                                refiles.Add(file);
-                            }
+                            if (!CheckFile(filename, "应变计组")) refiles.Add(file);
                         }
                         else if (insname == "无应力计")
                         {
-                            string[] multikey = Config.Instruments.Where(x => x.InsName == "应变计组").FirstOrDefault().KeyWord.ToArray();
-                            string[] multikey1 = Config.Instruments.Where(x => x.InsName == "应变计").FirstOrDefault().KeyWord.ToArray();
-                            if (!DataUtils.CheckContainStr(filename, multikey) && !DataUtils.CheckContainStr(filename, multikey1))
-                            {
-                                refiles.Add(file);
-                            }
- 
+                            if (!CheckFile(filename, "应变计组", "应变计")) refiles.Add(file);
+                        }
+                        else if (insname == "测斜仪")
+                        {
+                            if (!CheckFile(filename,"固定测斜仪")) refiles.Add(file);
+                        }
+                        else if (insname == "单点位移计")
+                        {
+                            if (!CheckFile(filename, "多点位移计", "引张线式水平位移计")) refiles.Add(file);
+                        }
+                        else if (insname == "锚杆应力计")
+                        {
+                            if (!CheckFile(filename, "多点锚杆应力计")) refiles.Add(file);
                         }
                         else
                         {
@@ -191,18 +204,19 @@ namespace LoadDataCalc
             //临时文件每次读取清空
             if (File.Exists(ErrorMsg.temp)) File.Delete(ErrorMsg.temp);
             if (File.Exists(ErrorMsg.tempsheeterror)) File.Delete(ErrorMsg.tempsheeterror);
-
+           
             ProcessData process = ProcessFactory.CreateInstance(instype);
             if (process == null) return;
             process.StatusAction = this.StatusAction;
             process.ErrorLimitZR = Config.LimitZ;
             process.ErrorLimitZR = Config.LimitT;
-            files.AsParallel().ForAll((file) => {
+            //files.AsParallel().ForAll((file) => {
+            foreach (string file in files){
                 List<PointSurveyData> datas = new List<PointSurveyData>();
                 List<ErrorMsg> msgs = new List<ErrorMsg>();
-                process.ReadData(file, out datas, out msgs);
                 lock (DataLock)
                 {
+                    process.ReadData(file, out datas, out msgs);
                     SurveyDataCach.AddRange(datas);
                     if (ErrorMsgCach.Keys.Contains(file))
                     {
@@ -212,10 +226,11 @@ namespace LoadDataCalc
                     {
                         ErrorMsgCach.Add(file, msgs);
                     }
-                    
+
                 }
-            
-            });
+            }
+            //});
+
             //应变计和应变计组同时也读一遍无应力计的数据
             if (instype==InstrumentType.Fiducial_Strain_Gauge||instype==InstrumentType.Fiducial_Strain_Group)
             {
@@ -224,6 +239,20 @@ namespace LoadDataCalc
             if (StatusAction != null) StatusAction("读取完成,正在写入日志文件");
             ErrorMsg.Log(ErrorMsgCach);
             ErrorMsg.LogSheetErr(process.ErrorSheetName);
+#if TEST
+            using (StreamWriter sw = new StreamWriter(Environment.CurrentDirectory + @"\test.csv",false,Encoding.UTF8))
+            {
+                foreach (var dic in process.PointCach)
+                {
+                    if (dic.Value.Count == 0) sw.WriteLine("," + dic.Key);
+                    foreach (var p in dic.Value)
+                    {
+                        sw.WriteLine(p+","+dic.Key);
+                    }
+
+                }
+            }
+#endif
         }
 
         /// <summary>
@@ -264,7 +293,7 @@ namespace LoadDataCalc
             {
                 ParamData param = inscalc.GetParam(pd.SurveyPoint, instype.ToString());
                 PointSurveyData NonStressPoint = new PointSurveyData();
-                if (instype == InstrumentType.Fiducial_Strain_Gauge || instype == InstrumentType.Fiducial_Strain_Group)
+                if (param.IsHasNonStress && (instype == InstrumentType.Fiducial_Strain_Gauge || instype == InstrumentType.Fiducial_Strain_Group))
                 {
                    NonStressPoint= SurveyDataCachExpand.Where(p => p.SurveyPoint == param.NonStressNumber).FirstOrDefault();
                    if (NonStressPoint == null || NonStressPoint.Datas.Count < 1)
@@ -282,7 +311,7 @@ namespace LoadDataCalc
                 foreach (SurveyData sd in pd.Datas)
                 {
                     sd.Survey_ZorRMoshu = sd.Survey_ZorR;
-                    if (instype == InstrumentType.Fiducial_Strain_Gauge || instype == InstrumentType.Fiducial_Strain_Group)
+                    if (param.IsHasNonStress && (instype == InstrumentType.Fiducial_Strain_Gauge || instype == InstrumentType.Fiducial_Strain_Group))
                     {
                         if (NonStressPoint == null || NonStressPoint.Datas.Count < 1)
                         {
@@ -365,333 +394,7 @@ namespace LoadDataCalc
 
     /// <summary> 读写数据基类，项目涉及的仪器类型都要继承实现该类
     /// </summary>
-   public  abstract class  ProcessData
-    {
-       public Action<string> StatusAction = null;
-        /// <summary>仪器类型
-        /// </summary>
-        public InstrumentType InsType { get; set; }
-        public double ErrorLimitZR = 20;
-        public double ErrorLimitRT = 20;
-        public string Instrument_Name = "";
-        /// <summary>
-        /// 测点缓存//每次读数据从数据库查询一次，所有文件读完清空
-        /// </summary>
-        public List<string> SurveyNumberCach = new List<string>();
-        /// <summary>没有读取的sheet名
-        /// </summary>
-        public List<string> ErrorSheetName = new List<string>();
-       /// <summary>
-       /// 读取应变计和应变机组的无应力计数据缓存
-       /// </summary>
-        public List<PointSurveyData> NonStressDataCach = new List<PointSurveyData>();
-        public List<string> NonNumberDataCach = new List<string>();
-
-        /// <summary> 从excel文件中读取数据
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public abstract  void ReadData(string path, out List<PointSurveyData> datas,out List<ErrorMsg>errors);
-
-       /// <summary> 获取数据索引
-        /// </summary>
-        /// <param name="psheet"></param>
-        /// <returns></returns>
-        protected  virtual DataInfo GetInfo(ISheet psheet,string filePath=null)
-        {
-            DataInfo info = new DataInfo();
-            info.TableName = Config.InsCollection[this.Instrument_Name].Measure_Table;
-            //这两个可能没有
-            info.TimeIndex = -1;
-            info.RemarkIndex = -1;
-            bool flag = true;
-            bool Zflag = true;
-            int count = psheet.LastRowNum > 10 ? 10 : psheet.LastRowNum;
-            for (int j = 0; j < count; j++)//读取前10行
-            {
-                IRow row = psheet.GetRow(j);
-                if (row == null) continue;
-                string laststr = "";
-                for (int c = 0; c < row.Cells.Count; c++)
-                {
-                    var cellstr = row.Cells[c].ToString();
-                    int pyhindex = row.Cells[c].ColumnIndex;
-                    if (DataUtils.CheckContainStr(cellstr, "观测日期", "日期"))
-                    {
-                        flag = false;
-                        info.DateIndex = pyhindex;
-                    }
-                    else if(DataUtils.CheckContainStr(cellstr,"观测时间","时间"))info.TimeIndex = pyhindex;
-                    else if (DataUtils.CheckContainStr(cellstr, "电阻比", "频模", "频率", "模数"))
-                    {
-                        info.ZoRIndex = pyhindex;
-                        Zflag = false;
-                    }
-                    else if (DataUtils.CheckContainStr(cellstr, "电阻值", "温度电阻")) info.RorTIndex = pyhindex;
-                    else if (cellstr.Contains("备注")) info.RemarkIndex = pyhindex;
-
-                    if (DataUtils.CheckContainStr(laststr, "频率", "频模", "模数"))
-                    {
-                        if (cellstr.Contains("温度")) info.RorTIndex = pyhindex;
-                    }
-
-                    laststr = cellstr;
-                }
-            }
-            if (flag&&info.TimeIndex>0)
-            {
-                info.DateIndex = info.TimeIndex;
-                info.TimeIndex = -1;
-            }
-            return info;
-        }
-       /// <summary>
-       /// 获取测值表中最大日期
-       /// </summary>
-       /// <returns></returns>
-        protected bool GetMaxDate(string surveyNumber, out DateTime maxDatetime)
-        {
-            var sqlhelper = CSqlServerHelper.GetInstance();
-            maxDatetime = new DateTime();
-            string sql = String.Format("select max(Observation_Date) from {0} where Survey_point_Number=@Survey_point_Number",
-                Config.InsCollection[this.Instrument_Name].Measure_Table);
-            var result = sqlhelper.SelectFirst(sql, new SqlParameter("@Survey_point_Number", surveyNumber));
-            bool flag = (result != DBNull.Value);
-            if (flag) maxDatetime = (DateTime)result;
-            return flag;
-        }
-
-       /// <summary>检查数据正确性
-        /// </summary>
-        /// <param name="sd"></param>
-        /// <param name="lastsd"></param>
-        /// <param name="tablename"></param>
-        /// <param name="err"></param>
-        /// <returns></returns>
-        protected virtual bool CheckData(SurveyData sd, SurveyData lastsd, DataInfo info, out ErrorMsg err,string Survey_point_name)
-        {
-            err = new ErrorMsg();
-            if (sd.Remark.Contains("已复测")) return true;
-            if (lastsd==null) return true;//上一行数据为空不处理
-            //先跟上一次的数据做比较，不超过限值直接return
-            if (Math.Abs(sd.Survey_RorT - lastsd.Survey_RorT) <Config.LimitT &&
-                Math.Abs(sd.Survey_ZorR - lastsd.Survey_ZorR) < Config.LimitZ) return true;
-            //超过限值跟上一个月同一天作比较
-            var sqlhelper = CSqlServerHelper.GetInstance();
-            DateTime dt = sd.SurveyDate.Date.AddMonths(-1);
-            string sql = "select * from {0} where Survey_point_Number='{1}' and Observation_Date>='{2}' and Observation_Date<'{3}'";
-            var table = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name,dt.ToString(),dt.AddDays(1).ToString()));
-            if (table.Rows.Count > 0)
-            {
-                double srt = Convert.ToDouble(table.Rows[0]["Temperature"]);
-                double szr = Convert.ToDouble(table.Rows[0]["Frequency"]);
-                if (Math.Abs(sd.Survey_RorT - lastsd.Survey_RorT) < Config.LimitT &&
-                    Math.Abs(sd.Survey_ZorR - lastsd.Survey_ZorR) < Config.LimitZ) return true;
-            }
-            //跟上一年的同一天做对比
-            dt = sd.SurveyDate.Date.AddYears(-1);
-            table=sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, dt.ToString(), dt.AddDays(1).ToString()));
-            if (table.Rows.Count > 0)
-            {
-                double srt = Convert.ToDouble(table.Rows[0]["Temperature"]);
-                double szr = Convert.ToDouble(table.Rows[0]["Frequency"]);
-                if (Math.Abs(sd.Survey_RorT - lastsd.Survey_RorT) < Config.LimitT &&
-                    Math.Abs(sd.Survey_ZorR - lastsd.Survey_ZorR) < Config.LimitZ) return true;
-            }
-            err.Exception = "数据误差超限";
-            return false;
-
-        }
-       
-       /// <summary> 读取数据
-       /// </summary>
-       /// <param name="path"></param>
-       /// <param name="info"></param>
-       /// <param name="datas"></param>
-       /// <param name="errors"></param>
-        protected void LoadData(string path,DataInfo info, out  List<PointSurveyData> datas, out List<ErrorMsg> errors)
-        {
-            datas = new List<PointSurveyData>();
-            errors = new List<ErrorMsg>();
-            IFormatProvider culture = CultureInfo.CurrentCulture;
-            var workbook = WorkbookFactory.Create(path);
-            var sqlhelper = CSqlServerHelper.GetInstance();
-            for (int i = 0; i < workbook.NumberOfSheets; i++)
-            {
-                var psheet = workbook.GetSheetAt(i);
-                if (!CheckName(psheet.SheetName))
-                {
-                    ErrorSheetName.Add(psheet.SheetName);
-                    continue;
-                    
-                }
-                if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
-                PointSurveyData pd = new PointSurveyData();
-                pd.SurveyPoint = psheet.SheetName;
-                info = GetInfo(psheet,path);
-
-                DateTime maxDatetime = new DateTime();
-                string sql = String.Format("select max(Observation_Date) from {0} where Survey_point_Number=@Survey_point_Number", info.TableName);
-                var result=sqlhelper.SelectFirst(sql,new SqlParameter("@Survey_point_Number", pd.SurveyPoint));
-                bool flag = (result != DBNull.Value);
-                if (flag) maxDatetime = (DateTime)result;
-                
-                SurveyData lastsd = null;
-                int count = psheet.LastRowNum;
-                for (int j = count - 1; j>0; j--)
-                {
-                    try
-                    {
-                        IRow row = psheet.GetRow(j);
-                        if (row == null) continue;
-                        var cell = row.GetCell(info.DateIndex);
-                        if (cell == null || String.IsNullOrEmpty(cell.ToString()) || cell.CellType != CellType.Numeric) continue;
-                        SurveyData sd = new SurveyData();
-                        string errmsg = null;
-                        if (!ReadRow(row, info, sd, out  errmsg))//读当前行
-                        {
-                            if (errmsg != null)
-                            {
-                                ErrorMsg err = new ErrorMsg() { PointNumber = psheet.SheetName, ErrorRow = j + 1, Exception = errmsg };
-                                errors.Add(err);
-                            }
-                            continue;
-                        }
-                        lastsd = new SurveyData();
-                        IRow lastrow = psheet.GetRow(j - 1);
-                        if (!ReadRow(lastrow, info, lastsd, out errmsg, true)) lastsd = null;
-
-                        if (flag)
-                        {
-                            if (sd.SurveyDate.CompareTo(maxDatetime) > 0)
-                            {
-                                ErrorMsg msg;
-                                if (CheckData(sd, lastsd, info, out msg,pd.SurveyPoint))
-                                {
-                                    pd.Datas.Add(sd);
-                                }
-                                else
-                                {
-                                    msg.ErrorRow = j + 1;
-                                    msg.PointNumber = pd.SurveyPoint;
-                                    errors.Add(msg);
-                                }
-                                continue;
-                            }
-                            break;
-                        }
-                        pd.Datas.Add(sd);
-                    }
-                    catch (Exception ex)
-                    {
-                        ErrorMsg err = new ErrorMsg() { PointNumber = psheet.SheetName, ErrorRow = j + 1, Exception = ex.Message };
-                        errors.Add(err);
-                        continue;
-                    }
-                }
-                datas.Add(pd);
-            }
-            workbook.Close();
-           
-        }
-
-        private bool ReadRow(IRow row, DataInfo info, SurveyData sd,out string err,bool last=false)
-        {
-            err = null;
-            try
-            {
-                if (row==null) return false;
-                var cell = row.GetCell(info.DateIndex);
-                if (cell == null || cell.CellType != CellType.Numeric || !HSSFDateUtil.IsCellDateFormatted(cell)) return false;
-                if (info.TimeIndex>0&&row.GetCell(info.TimeIndex) != null &&
-                    row.GetCell(info.TimeIndex).ToString() != "")
-                {
-                    var date = cell.DateCellValue.ToString("MM/dd/yyyy");
-                    string time;
-                    if (row.GetCell(info.TimeIndex).CellType == CellType.Numeric)
-                    {
-                        time = row.GetCell(info.TimeIndex).DateCellValue.TimeOfDay.ToString();
-                    }
-                    else
-                    {
-                        time = row.GetCell(info.TimeIndex).ToString();
-                    }
-                    if (DateTime.TryParse(date + " " + time, CultureInfo.CurrentCulture, DateTimeStyles.NoCurrentDateDefault, out  sd.SurveyDate))
-                    {
-                        sd.SurveyDate = cell.DateCellValue;
-                    }
-                }
-                else
-                {
-                    sd.SurveyDate = cell.DateCellValue;
-                }
-                if (row.GetCell(info.ZoRIndex) == null || String.IsNullOrEmpty(row.GetCell(info.ZoRIndex).ToString().Trim()))
-                {
-                    //err = "测值为空";//不提示认为没测
-                    sd = null;
-                    return false;
-                }
-                else
-                {
-                    if (!double.TryParse(row.GetCell(info.ZoRIndex).ToString(), out sd.Survey_ZorR))//频率/基准电阻
-                    {
-                        err = "测值异常";
-                        sd = null;
-                        return false;
-                    }
-                }
-                if(row.GetCell(info.RorTIndex)!=null&&!String.IsNullOrEmpty(row.GetCell(info.RorTIndex).ToString()))
-                {
-                   double.TryParse(row.GetCell(info.RorTIndex).ToString(), out sd.Survey_RorT);//温度
-                }
-                if (info.RemarkIndex > 0) sd.Remark = row.GetCell(info.RemarkIndex) == null ? "" : row.GetCell(info.RemarkIndex).ToString();
-                if (!DataUtils.CheckDateTime(sd.SurveyDate))
-                {
-                    err = "观测日期有误";
-                    sd = null;
-                    return false;
-                }
-                return true;
-            }
-            catch(Exception ex)
-            {
-                sd = null;
-                if (!last) throw ex;
-                return false;
-            }
-        }
-         
-        protected bool CheckName(string name)
-        {
-            if (SurveyNumberCach.Count == 0)
-            {
-                var sqlhelper = CSqlServerHelper.GetInstance();
-                string sql = String.Format("select Survey_point_Number from {0}", Config.InsCollection[this.Instrument_Name].Fiducial_Table);
-                var dt = sqlhelper.SelectData(sql);
-                for (int i = 0; i < dt.Rows.Count; i++)
-                {
-                    SurveyNumberCach.Add(dt.Rows[i][0].ToString().ToUpper());
-                }
-            }
-            return SurveyNumberCach.Contains(name.ToUpper());
-        }
-
-        protected bool CheckNonStress(string number)
-        {
-            if (NonNumberDataCach.Count == 0)
-            {
-                var sqlhelper = CSqlServerHelper.GetInstance();
-                string sql = "select Survey_point_Number from Fiducial_Nonstress";
-                var dt = sqlhelper.SelectData(sql);
-                for (int i = 0; i < dt.Rows.Count; i++)
-                {
-                    NonNumberDataCach.Add(dt.Rows[i][0].ToString().ToUpper());
-                }
-            }
-            return NonNumberDataCach.Contains(number.ToUpper());
-        }
-   }
-
+  
    /// <summary>处理数据类的工厂类
    /// </summary>
    public class ProcessFactory
@@ -789,13 +492,17 @@ namespace LoadDataCalc
        /// 记下没有读取的sheetname名
        /// </summary>
        /// <param name="sheetnames"></param>
-       public static void LogSheetErr(List<string> sheetnames)
+       public static void LogSheetErr(Dictionary<string, List<string>> sheetnames)
        {
            using (StreamWriter sw = new StreamWriter(tempsheeterror, true, Encoding.UTF8))
            {
-               foreach (string sheetname in sheetnames)
+               foreach (var dic in sheetnames)
                {
-                   sw.WriteLine(sheetname);
+                   sw.WriteLine(String.Format("FILE:{0},{1}", DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss"), dic.Key));
+                   foreach (string sheetname in dic.Value)
+                   {
+                       sw.WriteLine(sheetname);
+                   }
                }
            }
        }
@@ -833,7 +540,7 @@ namespace LoadDataCalc
     /// <summary>单点仪器 数据在excel中的索引列
     /// 多点数据列记录的为起始列
     /// </summary>
-   public class DataInfo
+   public class DataInfo:ICloneable
    {
        public string TableName = "";
        public int DateIndex = 0;
@@ -856,7 +563,11 @@ namespace LoadDataCalc
        /// </summary>
        public int FCount = 0;
 
-   }
+        public object  Clone()
+        {
+            return this.MemberwiseClone();
+        }
+}
 
 
 }

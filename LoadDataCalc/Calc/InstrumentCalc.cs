@@ -348,6 +348,19 @@ namespace LoadDataCalc
                 data.Tempreture = data.Survey_RorT;
                 return data.LoadReading;
             }
+            else if (Config.ProCode == "MW")
+            {
+                double result = 0;
+                if (Math.Abs(data.Survey_ZorR) > 1)
+                {
+                    result = param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT);
+                    data.Survey_ZorRMoshu = data.Survey_ZorR;
+                }
+                data.ResultReading = result;//这里要乘以系数每种仪器不一样
+                data.Tempreture = data.Survey_RorT;
+                data.LoadReading = result;
+ 
+            }
             return base.ShakeString(param,data,expand);
         }
         public override double AutoDefined(ParamData param,SurveyData data, string expression)
@@ -857,22 +870,23 @@ namespace LoadDataCalc
                 ParamData pd = new ParamData();
                 pd.SurveyPoint = Survey_point_Number;
                 if (dt.Rows[0]["Calculate_Coeffi_G"] == null || dt.Rows[0]["Benchmark_Resist_Ratio"] == null) return null;//G和Z必须有
-                pd.Gorf = Convert.ToDouble(dt.Rows[0]["Calculate_Coeffi_G"]);
-                pd.ZorR = Convert.ToDouble(dt.Rows[0]["Benchmark_Resist_Ratio"]);
-                pd.Concrete_Expansion_ac = Convert.ToDouble(dt.Rows[0]["Concrete_Expansion_ac"]);
-                 pd.NonStressNumber = dt.Rows[0]["Nonstress_Number"].ToString();
+                pd.Gorf =ConvetToData(dt.Rows[0]["Calculate_Coeffi_G"]);
+                pd.ZorR =ConvetToData(dt.Rows[0]["Benchmark_Resist_Ratio"]);
+                pd.Concrete_Expansion_ac =ConvetToData(dt.Rows[0]["Concrete_Expansion_ac"]);
+                pd.NonStressNumber = dt.Rows[0]["Nonstress_Number"].ToString();
+                pd.IsHasNonStress = !String.IsNullOrEmpty(pd.NonStressNumber.Trim());
                 if (dt.Rows[0]["Instru_Expansion_b"] == null)
                 {
                     pd.Korb = 0;
                 }
                 else
                 {
-                    pd.Korb = Convert.ToDouble(dt.Rows[0]["Instru_Expansion_b"]);
-                    pd.RorT = Convert.ToDouble(dt.Rows[0]["Benchmark_Resist"]);
+                    pd.Korb =ConvetToData(dt.Rows[0]["Instru_Expansion_b"]);
+                    pd.RorT =ConvetToData(dt.Rows[0]["Benchmark_Resist"]);
                 }
                 string instype = dt.Rows[0]["Instrument_Type"].ToString();
-                pd.TemperatureRead = Convert.ToDouble(dt.Rows[0]["Temperature_Read"]);
-                pd.ZeroR = Convert.ToDouble(dt.Rows[0]["Zero_Resistance"]);
+                pd.TemperatureRead =ConvetToData(dt.Rows[0]["Temperature_Read"]);
+                pd.ZeroR =ConvetToData(dt.Rows[0]["Zero_Resistance"]);
                 if (instype.Contains("差阻") || (pd.TemperatureRead != 1 && pd.ZeroR > 0))//默认是振弦
                 {
                     pd.InsCalcType = CalcType.DifBlock;
@@ -962,21 +976,21 @@ namespace LoadDataCalc
                 ParamData pd = new ParamData();
                 pd.SurveyPoint = Survey_point_Number;
                 if (dt.Rows[0]["Calculate_Coeffi_G"] == null || dt.Rows[0]["Benchmark_Resist_Ratio"] == null) return null;//G和Z必须有
-                pd.Gorf = Convert.ToDouble(dt.Rows[0]["Calculate_Coeffi_G"]);
-                pd.ZorR = Convert.ToDouble(dt.Rows[0]["Benchmark_Resist_Ratio"]);
-                pd.Concrete_Expansion_ac = Convert.ToDouble(dt.Rows[0]["Concrete_Expansion_ac"]);
+                pd.Gorf =ConvetToData(dt.Rows[0]["Calculate_Coeffi_G"]);
+                pd.ZorR =ConvetToData(dt.Rows[0]["Benchmark_Resist_Ratio"]);
+                pd.Concrete_Expansion_ac =ConvetToData(dt.Rows[0]["Concrete_Expansion_ac"]);
                 if (dt.Rows[0]["Instru_Expansion_b"] == null)
                 {
                     pd.Korb = 0;
                 }
                 else
                 {
-                    pd.Korb = Convert.ToDouble(dt.Rows[0]["Instru_Expansion_b"]);
-                    pd.RorT = Convert.ToDouble(dt.Rows[0]["Benchmark_Resist"]);
+                    pd.Korb =ConvetToData(dt.Rows[0]["Instru_Expansion_b"]);
+                    pd.RorT =ConvetToData(dt.Rows[0]["Benchmark_Resist"]);
                 }
                 string instype = dt.Rows[0]["Instrument_Type"].ToString();
-                pd.TemperatureRead = Convert.ToDouble(dt.Rows[0]["Temperature_Read"]);
-                pd.ZeroR = Convert.ToDouble(dt.Rows[0]["Zero_Resistance"]);
+                pd.TemperatureRead =ConvetToData(dt.Rows[0]["Temperature_Read"]);
+                pd.ZeroR =ConvetToData(dt.Rows[0]["Zero_Resistance"]);
                 if (instype.Contains("差阻") || (pd.TemperatureRead != 1 && pd.ZeroR > 0))//默认是振弦
                 {
                     pd.InsCalcType = CalcType.DifBlock;
@@ -1162,8 +1176,9 @@ namespace LoadDataCalc
         {
             return 1;
         }
-        public override double ShakeString(ParamData param,SurveyData data, params double[] expand)
+        public override double ShakeString(ParamData paramd,SurveyData data, params double[] expand)
         {
+            var param = paramd as Anchor_CableParam;
             double result = 0;
             int count = 0;
             double value = 0;
@@ -1217,26 +1232,26 @@ namespace LoadDataCalc
             if (dt.Rows.Count < 1) return null;
             try
             {
-                ParamData pd = new ParamData();
+                Anchor_CableParam pd = new Anchor_CableParam();
                 pd.SurveyPoint = Survey_point_Number;
                 if (dt.Rows[0]["Calculate_Coeffi_G"] == null || dt.Rows[0]["Benchmark_Resist_Ratio"] == null) return null;//G和Z必须有
-                pd.Gorf = Convert.ToDouble(dt.Rows[0]["Calculate_Coeffi_G"]);
-                pd.ZorR = Convert.ToDouble(dt.Rows[0]["Benchmark_Resist_Ratio"]);
-                pd.Plan_Loading = Convert.ToDouble(dt.Rows[0]["Plan_Loading"]);
-                pd.MAX_Loading = Convert.ToDouble(dt.Rows[0]["MAX_Loading"]);
-                pd.Lock_Value = Convert.ToDouble(dt.Rows[0]["Lock_Value"]);
+                pd.Gorf =ConvetToData(dt.Rows[0]["Calculate_Coeffi_G"]);
+                pd.ZorR =ConvetToData(dt.Rows[0]["Benchmark_Resist_Ratio"]);
+                pd.Plan_Loading =ConvetToData(dt.Rows[0]["Plan_Loading"]);
+                pd.MAX_Loading =ConvetToData(dt.Rows[0]["MAX_Loading"]);
+                pd.Lock_Value =ConvetToData(dt.Rows[0]["Lock_Value"]);
                 if (dt.Rows[0]["Tempera_Revise_K"] == null)
                 {
                     pd.Korb = 0;
                 }
                 else
                 {
-                    pd.Korb = Convert.ToDouble(dt.Rows[0]["Tempera_Revise_K"]);
-                    pd.RorT = Convert.ToDouble(dt.Rows[0]["Benchmark_Resist"]);
+                    pd.Korb =ConvetToData(dt.Rows[0]["Tempera_Revise_K"]);
+                    pd.RorT =ConvetToData(dt.Rows[0]["Benchmark_Resist"]);
                 }
                 string instype = dt.Rows[0]["Instrument_Type"].ToString();
-                pd.TemperatureRead = Convert.ToDouble(dt.Rows[0]["Temperature_Read"]);
-                pd.ZeroR = Convert.ToDouble(dt.Rows[0]["Zero_Resistance"]);
+                pd.TemperatureRead =ConvetToData(dt.Rows[0]["Temperature_Read"]);
+                pd.ZeroR =ConvetToData(dt.Rows[0]["Zero_Resistance"]);
                 if (instype.Contains("差阻") || (pd.TemperatureRead != 1 && pd.ZeroR > 0))//默认是振弦
                 {
                     pd.InsCalcType = CalcType.DifBlock;
@@ -1453,7 +1468,28 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.ToString());
+            string sql = @"select Instrument_Type,Temperature_Read,Zero_Resistance from {0} where Survey_point_Number='{1}'";
+            sql = string.Format(sql, tablename, Survey_point_Number);
+            var SqlHelper = CSqlServerHelper.GetInstance();
+            var dt = SqlHelper.SelectData(sql);
+            if (dt.Rows.Count < 1) return null;
+            try
+            {
+                ParamData pd = new ParamData();
+                pd.SurveyPoint = Survey_point_Number;
+                string instype = dt.Rows[0]["Instrument_Type"].ToString();
+                pd.TemperatureRead = ConvetToData(dt.Rows[0]["Temperature_Read"]);
+                pd.ZeroR = ConvetToData(dt.Rows[0]["Zero_Resistance"]);
+                if (instype.Contains("差阻") || (pd.TemperatureRead != 1 && pd.ZeroR > 0))//默认是振弦
+                {
+                    pd.InsCalcType = CalcType.DifBlock;
+                }
+                return pd;
+            }
+            catch
+            {
+                return null;
+            }
         }
         public override int WriteSurveyToDB(List<PointSurveyData> datas)
         {
@@ -1890,9 +1926,13 @@ namespace LoadDataCalc
         {
             return base.DifBlock(param,data,expand);
         }
-        public override double ShakeString(ParamData param,SurveyData data, params double[] expand)
+        public override double ShakeString(ParamData param,SurveyData sdata, params double[] expand)
         {
-            return base.ShakeString(param,data,expand);
+            var data = sdata as Survey_Slant_FixedSurveyData;
+            var fparam=param as Survey_Slant_FixedParam;
+            double result = fparam.A_C0 * (fparam.A_US * (data.Reading_A - fparam.A_DS) - fparam.A_US * (fparam.A_BS - fparam.A_DS));
+            data.loadReading_A = data.ResultReading = result;
+            return result;
         }
         public override double AutoDefined(ParamData param,SurveyData data, string expression)
         {
@@ -1900,8 +1940,130 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.ToString());
+        //    public double A_US;
+        //public double A_DS;
+        //public double A_BS;
+        //public double A_C0;
+        //public double A_C1;
+        //public double A_C2;
+        //public double A_C3;
+        //public double A_F0;
+        //public double A_F1;
+        //public double B_US;
+        //public double B_DS;
+        //public double B_BS;
+        //public double B_C0;
+        //public double B_C1;
+        //public double B_C2;
+        //public double B_C3;
+        //public double B_F0;
+        //public double AB_F1;
+        //public double T_US;
+        //public double T_DS;
+        //public double T_BS;
+
+            string sql = @"select Instrument_Type,A_US,A_DS,A_BS,A_C0 from {0} where Survey_point_Number='{1}'";
+            sql = string.Format(sql, tablename, Survey_point_Number);
+            var SqlHelper = CSqlServerHelper.GetInstance();
+            var dt = SqlHelper.SelectData(sql);
+            if (dt.Rows.Count < 1) return null;
+            try
+            {
+                Survey_Slant_FixedParam pd = new Survey_Slant_FixedParam();
+                pd.SurveyPoint = Survey_point_Number;
+                pd.A_US = ConvetToData(dt.Rows[0]["A_US"]);
+                pd.A_DS = ConvetToData(dt.Rows[0]["A_DS"]);
+                pd.A_BS = ConvetToData(dt.Rows[0]["A_BS"]);
+                pd.A_C0 = ConvetToData(dt.Rows[0]["A_C0"]);
+                string instype = dt.Rows[0]["Instrument_Type"].ToString();
+                if (instype.Contains("差阻") || (pd.TemperatureRead != 1 && pd.ZeroR > 0))//默认是振弦
+                {
+                    pd.InsCalcType = CalcType.DifBlock;
+                }
+                return pd;
+            }
+            catch
+            {
+                return null;
+            }
         }
+        public override int WriteResultToDB(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Result_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("Temperature");
+            dt.Columns.Add("loadReading_A");
+            dt.Columns.Add("loadReading_B");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from  " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var sd in pd.Datas)
+                {
+                    var surveydata = sd as Survey_Slant_FixedSurveyData;
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
+                    dr["Temperature"] = Math.Round(surveydata.Tempreture, 2);
+                    dr["loadReading_A"] = Math.Round(surveydata.loadReading_A, 4);
+                    dr["loadReading_B"] = Math.Round(surveydata.loadReading_B, 4);
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+        public override int WriteSurveyToDB(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Measure_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("Temperature");
+            dt.Columns.Add("Reading_A");
+            dt.Columns.Add("Reading_B");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var sd in pd.Datas)
+                {
+                    var surveydata = sd as Survey_Slant_FixedSurveyData;
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
+                    dr["Temperature"] = Math.Round(surveydata.Survey_RorT, 4);
+                    dr["Reading_A"] = Math.Round(surveydata.Reading_A, 4);
+                    dr["Reading_B"] = Math.Round(surveydata.Reading_B, 4);
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+
     }
 
     /// <summary>

@@ -146,8 +146,8 @@ namespace LoadDataCalc
                 ParamData pd = new ParamData();
                 pd.SurveyPoint = Survey_point_Number;
                 if (dt.Rows[0]["Calculate_Coeffi_G"] == null || dt.Rows[0]["Benchmark_Resist_Ratio"] == null) return null;//G和Z必须有
-                pd.Gorf = Convert.ToDouble(dt.Rows[0]["Calculate_Coeffi_G"]);
-                pd.ZorR = Convert.ToDouble(dt.Rows[0]["Benchmark_Resist_Ratio"]);
+                pd.Gorf = ConvetToData(dt.Rows[0]["Calculate_Coeffi_G"]);
+                pd.ZorR = ConvetToData(dt.Rows[0]["Benchmark_Resist_Ratio"]);
 
                 if (dt.Rows[0]["Tempera_Revise_K"] == null)
                 {
@@ -155,12 +155,12 @@ namespace LoadDataCalc
                 }
                 else
                 {
-                    pd.Korb = Convert.ToDouble(dt.Rows[0]["Tempera_Revise_K"]);
-                    pd.RorT = Convert.ToDouble(dt.Rows[0]["Benchmark_Resist"]);
+                    pd.Korb = ConvetToData(dt.Rows[0]["Tempera_Revise_K"]);
+                    pd.RorT = ConvetToData(dt.Rows[0]["Benchmark_Resist"]);
                 }
                 string instype = dt.Rows[0]["Instrument_Type"].ToString();
-                pd.TemperatureRead = Convert.ToDouble(dt.Rows[0]["Temperature_Read"]);
-                pd.ZeroR = Convert.ToDouble(dt.Rows[0]["Zero_Resistance"]);
+                pd.TemperatureRead = ConvetToData(dt.Rows[0]["Temperature_Read"]);
+                pd.ZeroR = ConvetToData(dt.Rows[0]["Zero_Resistance"]);
                 if (instype.Contains("差阻") || (pd.TemperatureRead != 1 && pd.ZeroR > 0))//默认是振弦
                 {
                     pd.InsCalcType = CalcType.DifBlock;
@@ -245,6 +245,18 @@ namespace LoadDataCalc
             }
             return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
         }
+
+        protected double ConvetToData(object obj)
+        {
+            if(obj!=null&&obj!=DBNull.Value)
+            {
+                return Convert.ToDouble(obj);
+            }
+            else
+            {
+                return 0;
+            }
+        }
     }
 
 
@@ -304,22 +316,7 @@ namespace LoadDataCalc
         /// </summary>
         public string Ins_Serial;
 
-        /// <summary>
-        /// 多点位移计的参数
-        /// </summary>
-        public Dictionary<string, ParamData> MParamData = new Dictionary<string, ParamData>();
-        /// <summary>
-        /// 锚索测力计计划荷载
-        /// </summary>
-        public double Plan_Loading;
-        /// <summary>
-        /// 锚索测力计最大荷载
-        /// </summary>
-        public double MAX_Loading;
-        /// <summary>
-        /// 锚索测力计锁定荷载
-        /// </summary>
-        public double Lock_Value;
+        public bool IsHasNonStress = true;
 
         /// <summary>
         /// 混凝土膨胀系数//应变计无应力计专用
@@ -327,7 +324,10 @@ namespace LoadDataCalc
         public double Concrete_Expansion_ac;
 
         public string NonStressNumber;
-
+        /// <summary>
+        /// 多点位移计的参数
+        /// </summary>
+        public Dictionary<string, ParamData> MParamData = new Dictionary<string, ParamData>();
 
         public static string[] ParamList = new[] { "Gorf", "Korb", "ZorR", "RorT", "TemperatureRead", "ZeroR", "Survey_ZorR", "Survey_RorT" };
 
@@ -341,6 +341,50 @@ namespace LoadDataCalc
         }
 
     }
+
+    public class Anchor_CableParam : ParamData
+    {
+        /// <summary>
+        /// 锚索测力计计划荷载
+        /// </summary>
+        public double Plan_Loading;
+        /// <summary>
+        /// 锚索测力计最大荷载
+        /// </summary>
+        public double MAX_Loading;
+        /// <summary>
+        /// 锚索测力计锁定荷载
+        /// </summary>
+        public double Lock_Value;
+    }
+    /// <summary>
+    /// 固定测斜仪参数
+    /// </summary>
+    public class Survey_Slant_FixedParam : ParamData
+    {
+        public double A_US;
+        public double A_DS;
+        public double A_BS;
+        public double A_C0;
+        public double A_C1;
+        public double A_C2;
+        public double A_C3;
+        public double A_F0;
+        public double A_F1;
+        public double B_US;
+        public double B_DS;
+        public double B_BS;
+        public double B_C0;
+        public double B_C1;
+        public double B_C2;
+        public double B_C3;
+        public double B_F0;
+        public double AB_F1;
+        public double T_US;
+        public double T_DS;
+        public double T_BS;
+    }
+    
     /// <summary>
     /// 测点数据
     /// </summary>
@@ -429,7 +473,8 @@ namespace LoadDataCalc
         public double StrainGroup_y;
         public double StrainGroup_z;
         public double StrainGroup_xz;
-
+        
+        
         public static string[] ParamList = new[] {"Survey_ZorR", "Survey_RorT" };
 
         /// <summary>根据变量名获取变量值
@@ -440,6 +485,21 @@ namespace LoadDataCalc
         {
             return this.GetType().GetField(ParamName).GetValue(this).ToString();
         }
+    }
+
+    /// <summary>
+    /// 固定测斜仪测值
+    /// </summary>
+    public class Survey_Slant_FixedSurveyData : SurveyData
+    {
+        public double Reading_A;
+        public double Reading_B;
+        public double loadReading_A;
+        public double loadReading_B;
+        public double This_A;
+        public double This_B;
+        public double Sum_A;
+        public double Sum_B;
     }
 
     public enum CalcType

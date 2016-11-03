@@ -261,7 +261,7 @@ namespace LoadDataCalc
        public void loadexcel(string path)
        {
            var workbook = WorkbookFactory.Create(path);
-           var psheet = workbook.GetSheetAt(0);              
+           var psheet = workbook.GetSheet(Config.ProCode);             
            int count = psheet.LastRowNum;
            for (int i = 1; i<count; i++)
            {

@@ -66,7 +66,10 @@ namespace LoadDataCalc
             try
             {
                 XmlDocument xml = new XmlDocument();
-                xml.Load(path);
+                XmlReaderSettings settings = new XmlReaderSettings();
+                settings.IgnoreComments = true;
+                XmlReader reader = XmlReader.Create(path, settings);
+                xml.Load(reader);
                 var root = xml.DocumentElement;
                 ProjectName = root.Attributes["ProjectName"].Value;
                 var dataroot = root.SelectSingleNode("DataRoot");
@@ -90,6 +93,7 @@ namespace LoadDataCalc
                     }
                     Instruments.Add(ins);
                 }
+                
                 loadIns();
                 loadcalcs();
                 return true;
@@ -285,6 +289,7 @@ namespace LoadDataCalc
                     }
                     files.Add(insname, fs);
                 }
+                reader.Close();
                 return files;
             }
             catch
@@ -339,7 +344,8 @@ namespace LoadDataCalc
         }
         public static bool CheckContainStr(string ChkStr,params string[] keys)
         {
-            if (keys.Length ==0) return true;
+            if (keys == null) return false;
+            if (keys.Length ==0) return false;
             foreach (string key in keys)
             {
                 if (ChkStr.Contains(key))

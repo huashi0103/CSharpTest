@@ -119,7 +119,7 @@ namespace LoadDataCalc
             double result = 0;
             if (res != DBNull.Value)
             {
-                result = Convert.ToDouble(res);
+                result = ConvetToData(res);
             }
             return result;
             
@@ -305,20 +305,20 @@ namespace LoadDataCalc
                     string insSerial = dt.Rows[i][7].ToString();
                     pd.Ins_Serial = insSerial;
                     if (dt.Rows[i][1] == null || dt.Rows[i][3] == null) return null;//G和Z必须有
-                    pd.Gorf = Convert.ToDouble(dt.Rows[i][1]);
-                    pd.ZorR = Convert.ToDouble(dt.Rows[i][3]);
+                    pd.Gorf = ConvetToData(dt.Rows[i][1]);
+                    pd.ZorR = ConvetToData(dt.Rows[i][3]);
                     if (dt.Rows[i][2] == null)
                     {
                         pd.Korb = 0;
                     }
                     else
                     {
-                        pd.Korb = Convert.ToDouble(dt.Rows[i][2]);
-                        pd.RorT = Convert.ToDouble(dt.Rows[i][4]);
+                        pd.Korb = ConvetToData(dt.Rows[i][2]);
+                        pd.RorT = ConvetToData(dt.Rows[i][4]);
                     }
                     string instype = dt.Rows[i][0].ToString();
-                    pd.TemperatureRead = Convert.ToDouble(dt.Rows[i][5]);
-                    pd.ZeroR = Convert.ToDouble(dt.Rows[i][6]);
+                    pd.TemperatureRead = ConvetToData(dt.Rows[i][5]);
+                    pd.ZeroR = ConvetToData(dt.Rows[i][6]);
                     if (instype.Contains("差阻") || (pd.TemperatureRead != 1 && pd.ZeroR > 0))//默认是振弦
                     {
                         pd.InsCalcType = CalcType.DifBlock;
@@ -506,22 +506,22 @@ namespace LoadDataCalc
                     string insSerial = dt.Rows[i]["Instrument_Serial"].ToString();
                     pd.Ins_Serial = insSerial;
                     if (dt.Rows[i]["Calculate_Coeffi_G"] == null || dt.Rows[i]["Benchmark_Resist_Ratio"] == null) return null;//G和Z必须有
-                    pd.Gorf = Convert.ToDouble(dt.Rows[i]["Calculate_Coeffi_G"]);
-                    pd.ZorR = Convert.ToDouble(dt.Rows[i]["Benchmark_Resist_Ratio"]);
+                    pd.Gorf = ConvetToData(dt.Rows[i]["Calculate_Coeffi_G"]);
+                    pd.ZorR = ConvetToData(dt.Rows[i]["Benchmark_Resist_Ratio"]);
 
-                    pd.Concrete_Expansion_ac = Convert.ToDouble(dt.Rows[i]["Concrete_Expansion_ac"]);
+                    pd.Concrete_Expansion_ac = ConvetToData(dt.Rows[i]["Concrete_Expansion_ac"]);
                     if (dt.Rows[i]["Instru_Expansion_b"] == null)
                     {
                         pd.Korb = 0;
                     }
                     else
                     {
-                        pd.Korb = Convert.ToDouble(dt.Rows[i]["Instru_Expansion_b"]);
-                        pd.RorT = Convert.ToDouble(dt.Rows[i]["Benchmark_Resist"]);
+                        pd.Korb = ConvetToData(dt.Rows[i]["Instru_Expansion_b"]);
+                        pd.RorT = ConvetToData(dt.Rows[i]["Benchmark_Resist"]);
                     }
                     string instype = dt.Rows[i]["Instrument_Type"].ToString();
-                    pd.TemperatureRead = Convert.ToDouble(dt.Rows[i]["Temperature_Read"]);
-                    pd.ZeroR = Convert.ToDouble(dt.Rows[i]["Zero_Resistance"]);
+                    pd.TemperatureRead = ConvetToData(dt.Rows[i]["Temperature_Read"]);
+                    pd.ZeroR = ConvetToData(dt.Rows[i]["Zero_Resistance"]);
                     if (instype.Contains("差阻") || (pd.TemperatureRead != 1 && pd.ZeroR > 0))//默认是振弦
                     {
                         pd.InsCalcType = CalcType.DifBlock;

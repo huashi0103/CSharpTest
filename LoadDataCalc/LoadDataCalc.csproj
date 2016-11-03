@@ -21,7 +21,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -71,6 +71,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Calc\CalcClass.cs" />
+    <Compile Include="Process\InstrumentProcessMW.cs" />
+    <Compile Include="Process\ProcessData.cs" />
     <Compile Include="Utils\CExcel.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="Utils\CSqlServer.cs" />

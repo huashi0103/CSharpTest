@@ -259,7 +259,8 @@ namespace LoadDataCalc
                 var psheet = workbook.GetSheetAt(i);
                 if (!CheckName(psheet.SheetName + "x"))
                 {
-                    ErrorSheetName.Add(psheet.SheetName);
+
+                    AddErroSheetname(path, psheet.SheetName);
                     continue;
                 }
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
@@ -493,7 +494,7 @@ namespace LoadDataCalc
 
                 if (!CheckName(surveyname1))
                 {
-                    ErrorSheetName.Add(psheet.SheetName);
+                    AddErroSheetname(path, psheet.SheetName);
                     continue;
                 }
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
@@ -519,7 +520,7 @@ namespace LoadDataCalc
                     {
                         IRow row = psheet.GetRow(j);
                         if (row == null) continue;
-                        var cell = row.GetCell(1);
+                        var cell = row.GetCell(info.DateIndex);
                         if (cell == null || String.IsNullOrEmpty(cell.ToString()) || cell.CellType != CellType.Numeric) continue;
                         IRow lastrow = psheet.GetRow(j - 1);
                         SurveyData sd = new SurveyData();
@@ -905,7 +906,7 @@ namespace LoadDataCalc
                 var psheet = workbook.GetSheetAt(i);
                 if (!CheckName(psheet.SheetName))
                 {
-                    ErrorSheetName.Add(psheet.SheetName);
+                    AddErroSheetname(path, psheet.SheetName);
                     continue;
                 }
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
@@ -1313,7 +1314,7 @@ namespace LoadDataCalc
                     }
                     else
                     {
-                        ErrorSheetName.Add(psheet.SheetName);
+                        AddErroSheetname(path, psheet.SheetName);
                     }
                     continue;
                 }
@@ -1678,7 +1679,7 @@ namespace LoadDataCalc
 
                 if (!CheckName(sheetname))
                 {
-                    ErrorSheetName.Add(psheet.SheetName);
+                    AddErroSheetname(path, psheet.SheetName);
                     continue;
                 }
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
@@ -1842,7 +1843,7 @@ namespace LoadDataCalc
                 var psheet = workbook.GetSheetAt(i);
                 if (!CheckName(psheet.SheetName))
                 {
-                    ErrorSheetName.Add(psheet.SheetName);
+                    AddErroSheetname(path, psheet.SheetName);
                     continue;
                 }
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
@@ -1980,47 +1981,6 @@ namespace LoadDataCalc
             }
             return info;
         }
-        List<string> GetSerial(DataTable dt)
-        {
-            List<string> list = new List<string>();
-            for (int i = 0; i < dt.Rows.Count; i++)
-            {
-                string serialnum = (string)dt.Rows[i][0];
-                bool flag = true;
-                for (int j = list.Count-1; j>=0; j--)
-                {
-                    if (Compare(serialnum, list[j]))
-                    {
-                        list.Insert(j, serialnum);
-                        flag = false;
-                        break;
-                    }
-                }
-                if (flag) list.Add(serialnum);
-                
-            }
-            return list;
-        }
-        bool Compare(string left, string right)
-        {
-            double leftvalue = GetDepth(left);
-            double rightvalue = GetDepth(right);
-            return (leftvalue >=rightvalue);
-        }
-        double GetDepth(string serial)
-        {
-            try
-            {
-                var tempstr = serial.Split('-');
-                int len = tempstr.Length;
-                string str = tempstr[len - 1].Contains('A') ? tempstr[len - 1].Substring(0, len - 1) : tempstr[len - 1];
-                return double.Parse(str);
-            }
-            catch
-            {
-                return 0;
-            }
-        }
         private bool ReadRow(IRow row, DataInfo info, SurveyData sd, out string err, bool last = false)
         {
             err = null;
@@ -2108,14 +2068,14 @@ namespace LoadDataCalc
                 var psheet = workbook.GetSheetAt(i);
                 if (!CheckName(psheet.SheetName))
                 {
-                    if (CheckNonStress(psheet.SheetName))
+                    if (CheckNonStress(psheet.SheetName))//读无应力计
                     {
                         DataInfo tempinfo = base.GetInfo(psheet);
                         ReadNonStressData(psheet, tempinfo, errors,psheet.SheetName);
                     }
                     else
                     {
-                        ErrorSheetName.Add(psheet.SheetName);
+                        AddErroSheetname(path, psheet.SheetName);
                     }
                     continue;
                 }

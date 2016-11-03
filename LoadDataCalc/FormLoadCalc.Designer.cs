@@ -39,8 +39,8 @@
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label2 = new System.Windows.Forms.Label();
             this.btnConfig = new System.Windows.Forms.Button();
-            this.btnWrite = new System.Windows.Forms.Button();
             this.btnShowNonStress = new System.Windows.Forms.Button();
+            this.btnWrite = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericLimit)).BeginInit();
@@ -70,7 +70,7 @@
             "钢筋计",
             "锚杆应力计",
             "锚索测力计"});
-            this.comboType.Location = new System.Drawing.Point(105, 7);
+            this.comboType.Location = new System.Drawing.Point(105, 8);
             this.comboType.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.comboType.Name = "comboType";
             this.comboType.Size = new System.Drawing.Size(116, 26);
@@ -202,17 +202,6 @@
             this.btnConfig.Text = "配置";
             this.btnConfig.UseVisualStyleBackColor = true;
             // 
-            // btnWrite
-            // 
-            this.btnWrite.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnWrite.Location = new System.Drawing.Point(346, 5);
-            this.btnWrite.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.btnWrite.Name = "btnWrite";
-            this.btnWrite.Size = new System.Drawing.Size(107, 30);
-            this.btnWrite.TabIndex = 9;
-            this.btnWrite.Text = "写入数据库";
-            this.btnWrite.UseVisualStyleBackColor = true;
-            // 
             // btnShowNonStress
             // 
             this.btnShowNonStress.Anchor = System.Windows.Forms.AnchorStyles.None;
@@ -224,6 +213,17 @@
             this.btnShowNonStress.Text = "无应力计";
             this.btnShowNonStress.UseVisualStyleBackColor = true;
             this.btnShowNonStress.Visible = false;
+            // 
+            // btnWrite
+            // 
+            this.btnWrite.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.btnWrite.Location = new System.Drawing.Point(346, 5);
+            this.btnWrite.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnWrite.Name = "btnWrite";
+            this.btnWrite.Size = new System.Drawing.Size(107, 30);
+            this.btnWrite.TabIndex = 9;
+            this.btnWrite.Text = "写入数据库";
+            this.btnWrite.UseVisualStyleBackColor = true;
             // 
             // FormLoadCalc
             // 

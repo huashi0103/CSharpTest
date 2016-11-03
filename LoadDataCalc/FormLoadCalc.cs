@@ -166,9 +166,9 @@ namespace LoadDataCalc
                 var type = InsDic[insname];
                 loadData.ClearCach();
                 loadData.ReadData(type,Files[insname]);
-                string path = Environment.CurrentDirectory + "\\templist.xml";
-                MultiDisplacementCalc mcalc = new MultiDisplacementCalc();
-                //var list=mcalc.GetCalclist(loadData.SurveyDataCach);
+                //string path = Environment.CurrentDirectory + "\\templist.xml";
+                //MultiDisplacementCalc mcalc = new MultiDisplacementCalc();
+                //var list = mcalc.GetCalclist(loadData.SurveyDataCach);
                 //mcalc.Wirtexml(list, path);
                 Status("计算数据");
                 loadData.Calc(type);
@@ -176,7 +176,7 @@ namespace LoadDataCalc
                 call();
             });
             threadLoad.Start(callback);
-           
+          
         }
 
        void Status(string msg)

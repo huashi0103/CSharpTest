@@ -114,11 +114,12 @@ namespace LoadDataCalc
                 {
                     bulk.BatchSize = dt.Rows.Count;
                     bulk.DestinationTableName = dt.TableName;
-                    for (int i = 0; i < dt.Columns.Count; i++)
-                    {
-                        bulk.ColumnMappings.Add(dt.Columns[i].ColumnName,dt.Columns[i].ColumnName);
-                    }
+                    //for (int i = 0; i < dt.Columns.Count; i++)
+                    //{
+                    //    bulk.ColumnMappings.Add(dt.Columns[i].ColumnName, dt.Columns[i].ColumnName);
+                    //}
                     bulk.WriteToServer(dt);
+                
                 }
                 return true;
             }

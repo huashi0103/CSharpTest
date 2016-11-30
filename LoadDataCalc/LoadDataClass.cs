@@ -1,5 +1,6 @@
 ﻿/*
  * 读取文件、读数据、写数据
+ * controller
 */
 using System;
 using System.Collections.Generic;
@@ -128,10 +129,6 @@ namespace LoadDataCalc
                         {
                             if (!CheckFile(filename, "多点位移计", "引张线式水平位移计")) refiles.Add(file);
                         }
-                        else if (insname == "锚杆应力计")
-                        {
-                            if (!CheckFile(filename, "多点锚杆应力计")) refiles.Add(file);
-                        }
                         else
                         {
                             refiles.Add(file);
@@ -179,7 +176,6 @@ namespace LoadDataCalc
                 try
                 {
                     fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.None);
-
                 }
                 catch
                 {
@@ -210,10 +206,11 @@ namespace LoadDataCalc
             process.StatusAction = this.StatusAction;
             process.ErrorLimitZR = Config.LimitZ;
             process.ErrorLimitZR = Config.LimitT;
+            process.LoadPointCach(instype);
             //files.AsParallel().ForAll((file) => {
             foreach (string file in files){
                 List<PointSurveyData> datas = new List<PointSurveyData>();
-                List<ErrorMsg> msgs = new List<ErrorMsg>();
+                List<ErrorMsg> msgs = new List<ErrorMsg>(); 
                 lock (DataLock)
                 {
                     process.ReadData(file, out datas, out msgs);
@@ -234,7 +231,7 @@ namespace LoadDataCalc
             //应变计和应变计组同时也读一遍无应力计的数据
             if (instype==InstrumentType.Fiducial_Strain_Gauge||instype==InstrumentType.Fiducial_Strain_Group)
             {
-                SurveyDataCachExpand = process.NonStressDataCach;
+                SurveyDataCachExpand = process.ExpandDataCach;
             }
             if (StatusAction != null) StatusAction("读取完成,正在写入日志文件");
             ErrorMsg.Log(ErrorMsgCach);
@@ -266,34 +263,20 @@ namespace LoadDataCalc
                 File.Delete(file);
             }
         }
-
-        //获取应变计和应变机组对应的无应力计数据
-        private SurveyData GetNonStressSurveyData(PointSurveyData pd, SurveyData sd)
-        {
-            if (pd == null) return null;
-            foreach (var nsd in pd.Datas)
-            {
-                if (nsd.SurveyDate.Date == sd.SurveyDate.Date)
-                {
-                    return nsd;
-                }
-            }
-            return null;
-            
-        }
-
         /// <summary>
         /// 计算
         /// </summary>
         public void Calc(InstrumentType instype, string expression=null)
         {
             inscalc = CalcFactoryClass.CreateInstCalc(instype);
+            inscalc.CalcExpandList = CalcExpand.LoadList(instype);
             List<string> Errors = new List<string>();
+            if (instype == InstrumentType.Fiducial_Multi_Displacement) Config.LoadMultiDisplacementCalcs();
             foreach (var pd in SurveyDataCach)
             {
                 ParamData param = inscalc.GetParam(pd.SurveyPoint, instype.ToString());
                 PointSurveyData NonStressPoint = new PointSurveyData();
-                if (param.IsHasNonStress && (instype == InstrumentType.Fiducial_Strain_Gauge || instype == InstrumentType.Fiducial_Strain_Group))
+                if ((instype == InstrumentType.Fiducial_Strain_Gauge || instype == InstrumentType.Fiducial_Strain_Group)&&param.IsHasNonStress )
                 {
                    NonStressPoint= SurveyDataCachExpand.Where(p => p.SurveyPoint == param.NonStressNumber).FirstOrDefault();
                    if (NonStressPoint == null || NonStressPoint.Datas.Count < 1)
@@ -310,8 +293,9 @@ namespace LoadDataCalc
                 if (expression != null)param.InsCalcType = CalcType.AutoDefine;
                 foreach (SurveyData sd in pd.Datas)
                 {
-                    sd.Survey_ZorRMoshu = sd.Survey_ZorR;
-                    if (param.IsHasNonStress && (instype == InstrumentType.Fiducial_Strain_Gauge || instype == InstrumentType.Fiducial_Strain_Group))
+                    //sd.Survey_ZorRMoshu = sd.Survey_ZorR;
+                    if ((instype == InstrumentType.Fiducial_Strain_Gauge || instype == InstrumentType.Fiducial_Strain_Group)&&
+                        param.IsHasNonStress)
                     {
                         if (NonStressPoint == null || NonStressPoint.Datas.Count < 1)
                         {
@@ -346,31 +330,38 @@ namespace LoadDataCalc
             }
             ErrorMsg.Log(Errors);
         }
-        /// <summary>写数据
+        /// <summary>写测值表
         /// </summary>
         /// <returns></returns>
-        public void Wirte(InstrumentType instype)
+        public bool WirteToSurvey()
         {
-            if (inscalc == null) return;
+            if (inscalc == null) return false;
+            int icount=0;
+            foreach(var pd in SurveyDataCach)
+            {
+                icount += pd.Datas.Count;
+            }
             int result = inscalc.WriteSurveyToDB(SurveyDataCach);
             ErrorMsg.Log(String.Format("写入{0}行测值",result));
-            result = inscalc.WriteResultToDB(SurveyDataCach);
-            ErrorMsg.Log(String.Format("写入{0}行成果值", result));
-            
+            return result == icount;
         }
-        void getFiles(List<string> list, string path, string pattern)
+        /// <summary>
+        /// 写成果表
+        /// </summary>
+        /// <returns></returns>
+        public bool WirteToResult()
         {
-            DirectoryInfo di = new DirectoryInfo(path);
-            var allfiles = di.GetFiles(pattern);
-            foreach (FileInfo fi in allfiles)
+            if (inscalc == null) return false;
+            int icount = 0;
+            foreach (var pd in SurveyDataCach)
             {
-                if ((fi.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden)
-                {
-                    list.Add(fi.FullName);
-                }
-
+                icount += pd.Datas.Count;
             }
+            int  result = inscalc.WriteResultToDB(SurveyDataCach);
+            ErrorMsg.Log(String.Format("写入{0}行成果值", result));
+            return result == icount;
         }
+        
         public void getDir(string path, List<string> FileList)
         {
             getFiles(FileList, path, "*.xls");
@@ -390,11 +381,36 @@ namespace LoadDataCalc
                 return;
             }
         }
+        void getFiles(List<string> list, string path, string pattern)
+        {
+            DirectoryInfo di = new DirectoryInfo(path);
+            var allfiles = di.GetFiles(pattern);
+            foreach (FileInfo fi in allfiles)
+            {
+                if ((fi.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden)
+                {
+                    list.Add(fi.FullName);
+                }
+
+            }
+        }
+        //获取应变计和应变机组对应的无应力计数据
+        SurveyData GetNonStressSurveyData(PointSurveyData pd, SurveyData sd)
+        {
+            if (pd == null) return null;
+            foreach (var nsd in pd.Datas)
+            {
+                if (nsd.SurveyDate.Date == sd.SurveyDate.Date)
+                {
+                    return nsd;
+                }
+            }
+            return null;
+
+        }
+
     }
 
-    /// <summary> 读写数据基类，项目涉及的仪器类型都要继承实现该类
-    /// </summary>
-  
    /// <summary>处理数据类的工厂类
    /// </summary>
    public class ProcessFactory
@@ -407,6 +423,29 @@ namespace LoadDataCalc
            return process; 
        }
    }
+
+   /// <summary>仪器计算方法构造类
+   /// </summary>
+   public class CalcFactoryClass
+   {
+       /// <summary>仪器工厂类
+       /// </summary>
+       /// <param name="type"></param>
+       /// <returns></returns>
+       public static BaseInstrument CreateInstCalc(InstrumentType type)
+       {
+           Assembly ass = Assembly.GetExecutingAssembly();
+           string completeName = "LoadDataCalc."+ type.ToString()+Config.ProCode;
+           var ins = ass.CreateInstance(completeName) as BaseInstrument;
+           if (ins == null)
+           {
+               completeName = "LoadDataCalc." + type.ToString();
+               ins = ass.CreateInstance(completeName) as BaseInstrument;
+           }
+           return ins;
+
+       }
+   }
     
    /// <summary>日志类
    /// </summary>
@@ -415,14 +454,21 @@ namespace LoadDataCalc
        public string PointNumber;
        public int ErrorRow;
        public string Exception = "";
+
        private static string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+       /// <summary>
+       /// 临时日志文件
+       /// </summary>
        public static string temp= dir + "\\log\\temp_error.log";
+       /// <summary>
+       /// 临时得sheet名统计文件
+       /// </summary>
        public static string tempsheeterror = dir + "\\log\\sheet_error.log";
        /// <summary>
        /// 写文件，默认程序目录下新建当天文件，每天一个
        /// </summary>
        /// <param name="msg"></param>
-       public  static void Log(string msg)
+       public static void Log(string msg)
        {
            string filepath = dir + "\\log\\" + DateTime.Now.ToString("yyyyMMdd") + ".log";
            //总日志文件 每天一个
@@ -537,37 +583,6 @@ namespace LoadDataCalc
        }
 
    }
-    /// <summary>单点仪器 数据在excel中的索引列
-    /// 多点数据列记录的为起始列
-    /// </summary>
-   public class DataInfo:ICloneable
-   {
-       public string TableName = "";
-       public int DateIndex = 0;
-       public int TimeIndex = 1;
-       public int ZoRIndex = 2;
-       public int RorTIndex = 3;
-       public int RemarkIndex = 6;
-       /// <summary>应变机组中的无应力计
-       /// </summary>
-       public int NZoRIndex = 2;
-       public int NRorTIndex = 3;
-       public int Sum = 4;
-       /// <summary>
-       ///多点位移计起始列,应变计组的起始列
-       /// </summary>
-       public int Findex = -1;
-       /// <summary>
-       /// 应变计组的电阻比总列数，与数据库中的向数做对比,
-       /// 确定是否包含无应力计的数据
-       /// </summary>
-       public int FCount = 0;
-
-        public object  Clone()
-        {
-            return this.MemberwiseClone();
-        }
-}
-
+  
 
 }

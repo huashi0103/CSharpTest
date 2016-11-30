@@ -25,7 +25,6 @@ namespace LoadDataCalc
         {
             base.LoadData(path, null, out datas, out errors);
         }
-       
         //判断文件格式//渗压计有四种格式
         protected override DataInfo  GetInfo(ISheet psheet, string filePath = null)
         {
@@ -65,7 +64,8 @@ namespace LoadDataCalc
                     {
                         if (DataUtils.CheckContainStr(cellstr,"温度")) info.RorTIndex = pyhindex;
                     }
-
+                    if (DataUtils.CheckContainStr(cellstr, "渗透压力", "水压力", "渗压")) info.Result = pyhindex;
+                  
                     laststr = cellstr;
                 }
             }
@@ -106,7 +106,6 @@ namespace LoadDataCalc
             }
             return info;
         }
-
         public Fiducial_Leakage_PressureProcessXJB()
         {
             base.InsType = InstrumentType.Fiducial_Leakage_Pressure;
@@ -168,6 +167,7 @@ namespace LoadDataCalc
                         if (cellstr.Contains("温度")) info.RorTIndex = pyhindex;
                     }
                     if (cellstr.Contains("备注")) info.RemarkIndex = pyhindex;
+                    if (cellstr.Contains("位移")) info.Result = pyhindex;
                     laststr = cellstr;
                 }
             }
@@ -270,6 +270,9 @@ namespace LoadDataCalc
                 pd.SurveyPoint = psheet.SheetName + "x";
                 pd1.SurveyPoint = psheet.SheetName + "y";
                 pd2.SurveyPoint = psheet.SheetName + "z";
+                pd.ExcelPath = path;
+                pd1.ExcelPath = path;
+                pd2.ExcelPath = path;
 
                 info = new DataInfo() { DateIndex = 0, TimeIndex = 1, ZoRIndex = 2, RorTIndex = 3,RemarkIndex=11};
                 DataInfo infoy = new DataInfo() { DateIndex = 0, TimeIndex = 1, ZoRIndex = 4, RorTIndex = 5, RemarkIndex = 11 };
@@ -325,7 +328,7 @@ namespace LoadDataCalc
                     if (sd.SurveyDate.CompareTo(maxDatetime) > 0)
                     {
                         ErrorMsg msg;
-                        if (CheckData(sd, lastsd, info, out msg, pd.SurveyPoint))
+                        if (CheckData(sd, lastsd, info, pd.Datas, pd.SurveyPoint, out msg))
                         {
                             pd.Datas.Add(sd);
                             return;
@@ -353,26 +356,7 @@ namespace LoadDataCalc
             try
             {
                 var cell = row.GetCell(info.DateIndex);
-                if (info.TimeIndex > 0 && row.GetCell(info.TimeIndex) != null &&
-                    row.GetCell(info.TimeIndex).ToString() != "" &&
-                    info.DateIndex != info.TimeIndex)
-                {
-                    var date = cell.DateCellValue.ToString("MM/dd/yyyy");
-                    string time;
-                    if (row.GetCell(info.TimeIndex).CellType == CellType.Numeric)
-                    {
-                        time = row.GetCell(info.TimeIndex).DateCellValue.TimeOfDay.ToString();
-                    }
-                    else
-                    {
-                        time = row.GetCell(info.TimeIndex).ToString();
-                    }
-                    sd.SurveyDate = DateTime.Parse(date + " " + time, CultureInfo.CurrentCulture, DateTimeStyles.NoCurrentDateDefault);
-                }
-                else
-                {
-                    sd.SurveyDate = cell.DateCellValue;
-                }
+                if (!GetDateTime(row, info, out sd.SurveyDate)) return false; 
                 if (row.GetCell(info.ZoRIndex) == null || String.IsNullOrEmpty(row.GetCell(info.ZoRIndex).ToString().Trim()))
                 {
                     //err = "测值为空";//不提示认为没测
@@ -501,14 +485,15 @@ namespace LoadDataCalc
                 PointSurveyData pd = new PointSurveyData();
                 PointSurveyData pd1 = new PointSurveyData();
                 pd.SurveyPoint = surveyname1;
-                if(Istwo)pd1.SurveyPoint=surveyname2;
+                pd.ExcelPath = path;
+                if (Istwo)
+                {
+                    pd1.SurveyPoint = surveyname2;
+                    pd1.ExcelPath = path;
+                }
 
                 DateTime maxDatetime = new DateTime();
-                string sql = String.Format("select max(Observation_Date) from {0} where Survey_point_Number=@Survey_point_Number",
-                    Config.InsCollection[this.Instrument_Name].Measure_Table);
-                var result = sqlhelper.SelectFirst(sql, new SqlParameter("@Survey_point_Number", pd.SurveyPoint));
-                bool flag = (result != DBNull.Value);
-                if (flag) maxDatetime = (DateTime)result;
+                bool flag=GetMaxDate(pd.SurveyPoint,out maxDatetime);
 
                 DataInfo info = GetInfo(psheet, path); 
                 System.Collections.IEnumerator rows = psheet.GetRowEnumerator();
@@ -545,7 +530,7 @@ namespace LoadDataCalc
                                 if (sd.SurveyDate.CompareTo(maxDatetime) > 0)
                                 {
                                     ErrorMsg msg;
-                                    if (CheckData(sd, lastsd, info, out msg, pd.SurveyPoint))
+                                    if (CheckData(sd, lastsd, info, pd.Datas, pd.SurveyPoint, out msg))
                                     {
                                         pd.Datas.Add(sd);
                                     }
@@ -593,7 +578,7 @@ namespace LoadDataCalc
                                     if (sd.SurveyDate.CompareTo(maxDatetime) > 0)
                                     {
                                         ErrorMsg msg;
-                                        if (CheckData(sd, lastsd, info, out msg, pd.SurveyPoint))
+                                        if (CheckData(sd, lastsd, info, pd.Datas, pd.SurveyPoint, out msg))
                                         {
                                             pd1.Datas.Add(sd);
                                         }
@@ -634,27 +619,7 @@ namespace LoadDataCalc
             try
             {
                 var cell = row.GetCell(info.DateIndex);
-                if (cell == null || cell.CellType != CellType.Numeric || !HSSFDateUtil.IsCellDateFormatted(cell)) return false;
-                if (info.TimeIndex > 0 && row.GetCell(info.TimeIndex) != null &&
-                        row.GetCell(info.TimeIndex).ToString() != "")
-                {
-                    var date = row.GetCell(info.DateIndex).DateCellValue.ToString("MM/dd/yyyy");
-                    string time;
-                    if (row.GetCell(info.TimeIndex).CellType == CellType.Numeric)
-                    {
-                        time = row.GetCell(info.TimeIndex).DateCellValue.TimeOfDay.ToString();
-                    }
-                    else
-                    {
-                        time = row.GetCell(1).ToString();
-                    }
-                    sd.SurveyDate = DateTime.Parse(date + " " + time, CultureInfo.CurrentCulture, DateTimeStyles.NoCurrentDateDefault);
-                }
-                else
-                {
-                    sd.SurveyDate = cell.DateCellValue;
-                }
-
+                if (!GetDateTime(row, info, out sd.SurveyDate)) return false; 
                 if (row.GetCell(info.ZoRIndex) == null || String.IsNullOrEmpty(row.GetCell(info.ZoRIndex).ToString().Trim()))
                 {
                     //err = "测值为空";//不提示认为没测
@@ -700,7 +665,6 @@ namespace LoadDataCalc
             info.TimeIndex = -1;
             info.RemarkIndex = -1;
             IFormatProvider culture = CultureInfo.CurrentCulture;
-            System.Collections.IEnumerator rows = psheet.GetRowEnumerator();
             int count = psheet.LastRowNum;
             bool flag = true;
             bool Zflag = true;
@@ -742,7 +706,7 @@ namespace LoadDataCalc
                         if (cellstr.Contains("温度")) info.RorTIndex = pyhindex;
                     }
                     if (DataUtils.CheckContainStr(cellstr, "电 阻")) info.RorTIndex = pyhindex;//特殊电阻中间带空格
-                 
+                    if (DataUtils.CheckContainStr(cellstr, "应力")) info.Result = pyhindex;//特殊电阻中间带空格
                     laststr = cellstr;
                 }
             }
@@ -824,6 +788,7 @@ namespace LoadDataCalc
                         if (cellstr.Contains("温度")) info.RorTIndex = pyhindex;
                     }
                     if (cellstr.Contains("备注")) info.RemarkIndex = pyhindex;
+                    if (cellstr.Contains("应力")&&!cellstr.Contains("锚杆应力计")) info.Result = pyhindex; 
                     laststr = cellstr;
                 }
             }
@@ -912,6 +877,7 @@ namespace LoadDataCalc
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
                 PointSurveyData pd = new PointSurveyData();
                 pd.SurveyPoint = psheet.SheetName;
+                pd.ExcelPath = path;
                 DataInfo info = GetInfo(psheet);
 
                 DateTime maxDatetime = new DateTime();
@@ -954,7 +920,7 @@ namespace LoadDataCalc
                             if (sd.SurveyDate.CompareTo(maxDatetime) > 0)
                             {
                                 ErrorMsg msg;
-                                if (CheckData(sd, lastsd, info, out msg, pd.SurveyPoint))
+                                if (CheckData(sd, lastsd, info, pd.Datas, pd.SurveyPoint, out msg))
                                 {
                                     pd.Datas.Add(sd);
                                     if (msg != null)
@@ -1056,8 +1022,8 @@ namespace LoadDataCalc
             return info;
             
         }
-        
-        protected override bool CheckData(SurveyData sd, SurveyData lastsd, DataInfo info, out ErrorMsg err, string Survey_point_name)
+
+        protected override bool CheckData(SurveyData sd, SurveyData lastsd, DataInfo info, List<SurveyData> datas, string Survey_point_name, out ErrorMsg err)
         {
             err = new ErrorMsg();
             if (sd.Remark.Contains("已复测")) return true;
@@ -1127,27 +1093,7 @@ namespace LoadDataCalc
             try
             {
                 var cell = row.GetCell(info.DateIndex);
-                if (cell == null ||cell.CellType!=CellType.Numeric|| !HSSFDateUtil.IsCellDateFormatted(cell)) return false;
-                if (info.TimeIndex > 0 && row.GetCell(info.TimeIndex) != null&&
-                    row.GetCell(info.TimeIndex).ToString() != "")
-                {
-                    var timecell = row.GetCell(info.TimeIndex);
-                    var date = cell.DateCellValue.ToString("MM/dd/yyyy");
-                    string time;
-                    if (timecell.CellType == CellType.Numeric)
-                    {
-                        time = timecell.DateCellValue.TimeOfDay.ToString();
-                    }
-                    else
-                    {
-                        time = timecell.ToString();
-                    }
-                    sd.SurveyDate = DateTime.Parse(date + " " + time, CultureInfo.CurrentCulture, DateTimeStyles.NoCurrentDateDefault);
-                }
-                else
-                {
-                    sd.SurveyDate = cell.DateCellValue;
-                }
+                if (!GetDateTime(row, info, out sd.SurveyDate)) return false; 
                 bool flag = false;
                 if (info.RorTIndex > 0)//只有一列温度
                 {
@@ -1308,7 +1254,7 @@ namespace LoadDataCalc
                 }
                 if (!CheckName(sheetname))
                 {
-                    if (CheckNonStress(sheetname))
+                    if (CheckNameExpand(sheetname))
                     {
                         ReadNonStressData(psheet, errors, sheetname);
                     }
@@ -1363,7 +1309,7 @@ namespace LoadDataCalc
                             if (sd.SurveyDate.CompareTo(maxDatetime) > 0)
                             {
                                 ErrorMsg msg;
-                                if (CheckData(sd, lastsd, info, out msg, pd.SurveyPoint))
+                                if (CheckData(sd, lastsd, info, pd.Datas, pd.SurveyPoint, out msg))
                                 {
                                     pd.Datas.Add(sd);
                                 }
@@ -1473,7 +1419,7 @@ namespace LoadDataCalc
                     if (res != DBNull.Value) number = res.ToString();
                 }
             }
-            if (!CheckNonStress(number)) return;
+            if (!CheckNameExpand(number)) return;
             PointSurveyData pd = new PointSurveyData();
             pd.SurveyPoint = number;
             DataInfo info = GetNonInfo(psheet);
@@ -1513,7 +1459,7 @@ namespace LoadDataCalc
                         if (sd.SurveyDate.CompareTo(maxDatetime) > 0)
                         {
                             ErrorMsg msg;
-                            if (CheckData(sd, lastsd, info, out msg, pd.SurveyPoint))
+                            if (CheckData(sd, lastsd, info, pd.Datas, pd.SurveyPoint, out msg))
                             {
                                 pd.Datas.Add(sd);
                             }
@@ -1537,7 +1483,7 @@ namespace LoadDataCalc
                     continue;
                 }
             }
-            NonStressDataCach.Add(pd);
+            ExpandDataCach.Add(pd);
            
         }
         private  DataInfo GetNonInfo(ISheet psheet, string filePath = null)
@@ -1723,7 +1669,7 @@ namespace LoadDataCalc
                             if (sd.SurveyDate.CompareTo(maxDatetime) > 0)
                             {
                                 ErrorMsg msg;
-                                if (CheckData(sd, lastsd, info, out msg, pd.SurveyPoint))
+                                if (CheckData(sd, lastsd, info, pd.Datas, pd.SurveyPoint, out msg))
                                 {
                                     pd.Datas.Add(sd);
                                 }
@@ -1795,7 +1741,7 @@ namespace LoadDataCalc
                         sd = null;
                         return false;
                     }
-                    sd.Survey_ZorRMoshu = sd.Survey_ZorR;
+                    //sd.Survey_ZorRMoshu = sd.Survey_ZorR;
                 }
                 if (row.GetCell(info.RorTIndex) != null && !String.IsNullOrEmpty(row.GetCell(info.RorTIndex).ToString()))
                 {
@@ -1890,7 +1836,7 @@ namespace LoadDataCalc
                             if (sd.SurveyDate.CompareTo(maxDatetime) > 0)
                             {
                                 ErrorMsg msg;
-                                if (CheckData(sd, lastsd, info, out msg, pd.SurveyPoint))
+                                if (CheckData(sd, lastsd, info, pd.Datas, pd.SurveyPoint, out msg))
                                 {
                                     pd.Datas.Add(sd);
                                     if (msg != null)
@@ -1923,7 +1869,7 @@ namespace LoadDataCalc
             }
             workbook.Close();
         }
-        protected override bool CheckData(SurveyData sd, SurveyData lastsd, DataInfo info, out ErrorMsg err, string Survey_point_name)
+        protected override bool CheckData(SurveyData sd, SurveyData lastsd, DataInfo info, List<SurveyData> datas, string Survey_point_name, out ErrorMsg err)
         {
             err = new ErrorMsg();
             if (sd.Remark.Contains("已复测")) return true;
@@ -2068,7 +2014,7 @@ namespace LoadDataCalc
                 var psheet = workbook.GetSheetAt(i);
                 if (!CheckName(psheet.SheetName))
                 {
-                    if (CheckNonStress(psheet.SheetName))//读无应力计
+                    if (CheckNameExpand(psheet.SheetName))//读无应力计
                     {
                         DataInfo tempinfo = base.GetInfo(psheet);
                         ReadNonStressData(psheet, tempinfo, errors,psheet.SheetName);
@@ -2133,7 +2079,7 @@ namespace LoadDataCalc
                             if (sd.SurveyDate.CompareTo(maxDatetime) > 0)
                             {
                                 ErrorMsg msg;
-                                if (CheckData(sd, lastsd, info, out msg, pd.SurveyPoint))
+                                if (CheckData(sd, lastsd, info, pd.Datas, pd.SurveyPoint, out msg))
                                 {
                                     pd.Datas.Add(sd);
                                     if (msg != null)
@@ -2218,7 +2164,7 @@ namespace LoadDataCalc
             
         }
 
-        protected override bool CheckData(SurveyData sd, SurveyData lastsd, DataInfo info, out ErrorMsg err, string Survey_point_name)
+        protected override bool CheckData(SurveyData sd, SurveyData lastsd, DataInfo info,List<SurveyData>datas, string Survey_point_name, out ErrorMsg err)
         {
             err = null;
             if (sd.Remark.Contains("已复测")) return true;
@@ -2320,7 +2266,7 @@ namespace LoadDataCalc
                 info.ZoRIndex = info.Findex;//第一个索引
                 info.RorTIndex = info.Findex + 1;//温度电阻+1
             }
-            if (!CheckNonStress(number)) return;
+            if (!CheckNameExpand(number)) return;
             PointSurveyData pd = new PointSurveyData();
             pd.SurveyPoint = number;
             DateTime maxDatetime = new DateTime();
@@ -2359,7 +2305,7 @@ namespace LoadDataCalc
                         if (sd.SurveyDate.CompareTo(maxDatetime) > 0)
                         {
                             ErrorMsg msg;
-                            if (base.CheckData(sd, lastsd, info, out msg, pd.SurveyPoint))
+                            if (CheckData(sd, lastsd, info, pd.Datas, pd.SurveyPoint, out msg))
                             {
                                 pd.Datas.Add(sd);
                             } 
@@ -2383,7 +2329,7 @@ namespace LoadDataCalc
                     continue;
                 }
             }
-            NonStressDataCach.Add(pd);
+            ExpandDataCach.Add(pd);
 
         }
    
@@ -2431,7 +2377,7 @@ namespace LoadDataCalc
                         sd = null;
                         return false;
                     }
-                    sd.Survey_ZorRMoshu = sd.Survey_ZorR;
+                    //sd.Survey_ZorRMoshu = sd.Survey_ZorR;
                 }
                 if (row.GetCell(info.RorTIndex) != null && !String.IsNullOrEmpty(row.GetCell(info.RorTIndex).ToString()))
                 {

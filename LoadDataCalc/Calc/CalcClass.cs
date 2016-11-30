@@ -8,26 +8,9 @@ using System.Text;
 using System.ComponentModel;
 using System.Reflection;
 using System.Data;
+
 namespace LoadDataCalc
 {
-    /// <summary>仪器计算方法构造类
-    /// </summary>
-    public class CalcFactoryClass
-    {
-        /// <summary>仪器工厂类
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static BaseInstrument CreateInstCalc(InstrumentType type)
-        {
-            Assembly ass = Assembly.GetExecutingAssembly();
-            string completeName ="LoadDataCalc."+type.ToString();
-            var ins = ass.CreateInstance(completeName) as BaseInstrument;
-            return ins; 
-
-        }
-    }
-
     /// <summary>仪器基类
     /// </summary>
     public abstract class BaseInstrument
@@ -36,11 +19,18 @@ namespace LoadDataCalc
         /// 计算方法类型枚举和函数委托枚举字典
         /// </summary>
         public  Dictionary<CalcType, Func<ParamData, SurveyData,string,double>> FuncDic = new Dictionary<CalcType, Func<ParamData, SurveyData,string, double>>();
+        /// <summary>特殊计算方法的缓存
+        /// </summary>
+        public List<CalcExpand> CalcExpandList = new List<CalcExpand>();
+        
         public  BaseInstrument()
         {
             FuncDic.Add(CalcType.DifBlock, DifBlockExpand);
             FuncDic.Add(CalcType.ShakeString, ShakeStringExpand);
-            FuncDic.Add(CalcType.AutoDefine, AutoDefinedExpand);
+            FuncDic.Add(CalcType.AutoDefine, AutoDefined);
+            FuncDic.Add(CalcType.CalcExpand1, Expand1);
+            FuncDic.Add(CalcType.CalcExpand2, Expand2);
+            FuncDic.Add(CalcType.CalcExpand3, Expand3);
         }
 
         /// <summary>仪器类型
@@ -54,10 +44,6 @@ namespace LoadDataCalc
         public double ShakeStringExpand(ParamData param, SurveyData data, string expression)
         {
             return ShakeString(param, data);
-        }
-        public double AutoDefinedExpand(ParamData param, SurveyData data, string expression)
-        {
-            return AutoDefined(param, data, expression);
         }
 
         /// <summary>单点差阻式默认计算方法 
@@ -88,18 +74,28 @@ namespace LoadDataCalc
         {
             //Gorf*(Survey_ZorR-ZorR)+Korb*(Survey_RorT-RorT)
             double result = 0;
+            double Tcorrect = (data.Survey_RorT != 0) ? param.Korb * (data.Survey_RorT - param.RorT) : 0;
             if (Math.Abs(data.Survey_ZorR) > 1)
             {
-                if (data.Survey_ZorR > 5000)
+                if (data.Survey_ZorR>4000)//模数
                 {
-                    result = param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT);
-                    data.Survey_ZorRMoshu = data.Survey_ZorR;
+                    result = param.Gorf * (data.Survey_ZorR - param.ZorR) + Tcorrect;
+                    //data.Survey_ZorRMoshu = data.Survey_ZorR;
                 }
-                else
+                else//频率
                 {
-                    result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) / 1000 - param.ZorR) +
-                        param.Korb * (data.Survey_RorT - param.RorT);
-                    data.Survey_ZorRMoshu = Math.Pow(data.Survey_ZorR, 2) / 1000;
+                   
+                    //录入的是频率或者模数
+                    if (Config.IsMoshu)
+                    {
+
+                        result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) / 1000.0 - param.ZorR) + Tcorrect;
+                    }
+                    else
+                    {
+                        result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) - param.ZorR * param.ZorR) + Tcorrect;
+                    }
+                    //data.Survey_ZorRMoshu = Math.Pow(data.Survey_ZorR, 2) / 1000;
                 }
             }
             data.ResultReading = result;//这里要乘以系数每种仪器不一样
@@ -172,7 +168,10 @@ namespace LoadDataCalc
                 return null;
             }
         }
-
+        /// <summary> 写测值表
+        /// </summary>
+        /// <param name="datas"></param>
+        /// <returns></returns>
         public virtual int WriteSurveyToDB(List<PointSurveyData> datas)
         {
             DataTable dt = new DataTable();
@@ -186,6 +185,7 @@ namespace LoadDataCalc
             dt.Columns.Add("Frequency");
             dt.Columns.Add("Remark");
             dt.Columns.Add("UpdateTime");
+            if(Config.IsAuto) dt.Columns.Add("RecordMethod");
             var sqlhelper = CSqlServerHelper.GetInstance();
             var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
             int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
@@ -198,16 +198,25 @@ namespace LoadDataCalc
                     dr["ID"] = id;
                     dr["Survey_point_Number"] = pd.SurveyPoint;
                     dr["Observation_Date"] = surveydata.SurveyDate;
-                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
-                    dr["Temperature"] = Math.Round(surveydata.Survey_RorT, 4);
-                    dr["Frequency"] = Math.Round(surveydata.Survey_ZorRMoshu,4);
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
+                    dr["Temperature"] = (float)surveydata.Survey_RorT;
+                    dr["Frequency"] = (float)surveydata.Survey_ZorR;
+                    if (Encoding.Default.GetBytes(surveydata.Remark).Length > 60)
+                    {
+                        surveydata.Remark = "";
+                    }
                     dr["Remark"] = surveydata.Remark;
                     dr["UpdateTime"] = DateTime.Now;
+                    if (Config.IsAuto) dr["RecordMethod"] = "人工";
                     dt.Rows.Add(dr);
                 }
             }
             return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
         }
+        /// <summary> 写成果表
+        /// </summary>
+        /// <param name="datas"></param>
+        /// <returns></returns>
         public virtual int WriteResultToDB(List<PointSurveyData> datas)
         {
             DataTable dt = new DataTable();
@@ -222,6 +231,7 @@ namespace LoadDataCalc
             dt.Columns.Add("ResultReading");
             dt.Columns.Add("Remark");
             dt.Columns.Add("UpdateTime");
+            if (Config.IsAuto) dt.Columns.Add("RecordMethod");
             var sqlhelper = CSqlServerHelper.GetInstance();
             var sid = sqlhelper.SelectFirst("select max(ID) as sid  from  " + TableName);
             int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
@@ -234,16 +244,48 @@ namespace LoadDataCalc
                     dr["ID"] = id;
                     dr["Survey_point_Number"] = pd.SurveyPoint;
                     dr["Observation_Date"] = surveydata.SurveyDate;
-                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
                     dr["Temperature"] = Math.Round(surveydata.Tempreture,2);
                     dr["loadReading"] = Math.Round(surveydata.LoadReading,4);
                     dr["ResultReading"] = Math.Round(surveydata.ResultReading,4);
                     dr["Remark"] = surveydata.Remark;
                     dr["UpdateTime"] = DateTime.Now;
+                    if (Config.IsAuto) dr["RecordMethod"] = "人工";
                     dt.Rows.Add(dr);
                 }
             }
             return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+        /// <summary> 扩展方法1 对应CalcExpand1,子类有特殊计算方法才继承
+        /// </summary>
+        /// <param name="param"></param>
+        /// <param name="data"></param>
+        /// <param name="expression"></param>
+        /// <returns></returns>
+        public virtual double Expand1(ParamData param, SurveyData data, string expression)
+        {
+            return 0;
+        }
+        /// <summary> 扩展方法2 对应CalcExpand2
+        /// </summary>
+        /// <param name="param"></param>
+        /// <param name="data"></param>
+        /// <param name="expression"></param>
+        /// <returns></returns>
+        public virtual double Expand2(ParamData param, SurveyData data, string expression)
+        {
+            return 0;
+        }
+
+        /// <summary> 扩展方法3 对应CalcExpand3
+        /// </summary>
+        /// <param name="param"></param>
+        /// <param name="data"></param>
+        /// <param name="expression"></param>
+        /// <returns></returns>
+        public virtual double Expand3(ParamData param, SurveyData data, string expression)
+        {
+            return 0;
         }
 
         protected double ConvetToData(object obj)
@@ -255,6 +297,33 @@ namespace LoadDataCalc
             else
             {
                 return 0;
+            }
+        }
+
+        /// <summary>
+        /// 根据G 判断是否是模数 Math.Abs(G * 100000) > 1为模数
+        /// </summary>
+        /// <param name="G"></param>
+        /// <returns></returns>
+        protected bool CheckIsMoshu(double G)
+        {
+            return (Math.Abs(G * 10000) > 1);
+        }
+        /// <summary>
+        /// 根据G 判断系数Math.Abs(G * 100) > 1 为kpa  返回0.001 
+        /// 用于渗压计
+        /// </summary>
+        /// <param name="G"></param>
+        /// <returns></returns>
+        protected double CheckIsMpa(double G)
+        {
+            if(Math.Abs(G * 100) < 1)//MPA
+            {
+                return 1;
+            }
+            else//KPA
+            {
+                return 0.001;
             }
         }
     }
@@ -306,17 +375,41 @@ namespace LoadDataCalc
         /// KPA转MPA 转换系数
         /// 数据为MPA时为1  数据为KPA时为0.001
         /// </summary>
-        public double MpaToKpa = 1;
+        public double KpaToMpa = 1;
+        /// <summary>
+        /// 渗压计系数
+        /// </summary>
+        public double WaterHead_Coeffi_C = 0.102040816;
         /// <summary>
         /// 钢板计钢板模数
         /// </summary>
-        public double Elastic_Modulus_E = 0.205;
+        public double Elastic_Modulus_E = 1;
+        /// <summary>
+        /// 常数项b
+        /// </summary>
+        public double Constant_b;
+        /// <summary>
+        /// 是否特殊标识
+        /// </summary>
+        public bool Special = false;
         /// <summary>
         /// 多点仪器的第二列
         /// </summary>
         public string Ins_Serial;
-
+        /// <summary>
+        /// 是否有无应力计//应变计和应变计组
+        /// </summary>
         public bool IsHasNonStress = true;
+
+        /// <summary>
+        /// 是否式电位器式//计算方式为和振弦式的模数一样
+        /// </summary>
+        public bool IsPotentiometer = false;
+
+        /// <summary>
+        /// 是否是模数
+        /// </summary>
+        public bool IsMoshu = false;
 
         /// <summary>
         /// 混凝土膨胀系数//应变计无应力计专用
@@ -341,7 +434,9 @@ namespace LoadDataCalc
         }
 
     }
-
+    /// <summary>
+    /// 锚索测力计参数
+    /// </summary>
     public class Anchor_CableParam : ParamData
     {
         /// <summary>
@@ -402,44 +497,39 @@ namespace LoadDataCalc
         /// <summary>是否计算成功
         /// </summary>
         public bool IsCalc = false;
+        /// <summary> 测点所在的文件
+        /// </summary>
+        public string ExcelPath = "";
     }
     /// <summary>
     /// 一组测量值
     /// </summary>
     public class SurveyData
     {
-        /// <summary>
-        /// ZorR 对应的测值//该值为直接读取的值，可能为频率或者模数
+        /// <summary>ZorR 对应的测值//该值为直接读取的值，可能为频率或者模数
         /// </summary>
         public double Survey_ZorR;
-        /// <summary>
-        /// RorT对应的测值
+        /// <summary>RorT对应的测值
         /// </summary>
         public double Survey_RorT;
-        /// <summary>
-        /// 观测时间
+        /// <summary>观测时间
         /// </summary>
         public DateTime SurveyDate = new DateTime();
 
-        /// <summary>
-        /// 计算出来的温度
+        /// <summary>计算出来的温度
         /// </summary>
         public double Tempreture;
 
-        /// <summary>
-        /// 第一个计算结果,多点位移计的成果值
+        /// <summary>第一个计算结果,多点位移计的成果值
         /// </summary>
         public double LoadReading;
-        /// <summary>
-        /// 最终计算结果
+        /// <summary> 最终计算结果
         /// </summary>
         public double ResultReading;
-        /// <summary>
-        /// 是否计算，校准参数不参与计算//备用 ，暂时没用到
+        /// <summary>是否计算，校准参数不参与计算//备用 ，暂时没用到
         /// </summary>
         public bool IsCalc = true;
-        /// <summary>
-        /// 备注信息
+        /// <summary>备注信息
         /// </summary>
         public string Remark = "";
 
@@ -453,7 +543,7 @@ namespace LoadDataCalc
         /// <summary>
         /// 模数，当直接读取的值为模数时，与Survey_ZorR相同，否则为平方后/1000的值
         /// </summary>
-        public double Survey_ZorRMoshu;
+       // public double Survey_ZorRMoshu;
 
         /// <summary> 用于存储应变计和应变计组对应的无应力计的数据
         /// </summary>
@@ -463,19 +553,32 @@ namespace LoadDataCalc
         /// 锚索测力计锁定值
         /// </summary>
         public double AfterLock;
+        /// <summary>
+        /// 锚索测力计计划锁定值
+        /// </summary>
         public double PlanLock;
+        /// <summary>
+        /// 锚索测力计最大锁定值
+        /// </summary>
         public double ResultLock;
 
-        /// <summary>
-        /// 应变计组的参数
+        /// <summary>应变计组的参数//向家坝改正用的
         /// </summary>
         public double StrainGroup_x;
         public double StrainGroup_y;
         public double StrainGroup_z;
         public double StrainGroup_xz;
-        
-        
+
+        /// <summary>excel中的计算结果，对比用
+        /// </summary>
+        public double ExcelResult;
+
+        /// <summary>
+        /// 锚索测力计的平均值
+        /// </summary>
+        public double Average;
         public static string[] ParamList = new[] {"Survey_ZorR", "Survey_RorT" };
+
 
         /// <summary>根据变量名获取变量值
         /// </summary>
@@ -502,21 +605,45 @@ namespace LoadDataCalc
         public double Sum_B;
     }
 
+    /// <summary>
+    /// 大地测量数据，直接读取结果
+    /// </summary>
+    public class Earth_MeasureData : SurveyData
+    {
+        public double X;
+        public double Y;
+        public double H;
+        public double DeltX;
+        public double DeltY;
+        public double DeltH;
+        public double SumX;
+        public double SumY;
+        public double SumH;
+    }
+
     public enum CalcType
     {
         /// <summary>
         /// 差阻
         /// </summary>
-        DifBlock,
+        DifBlock=0,
         /// <summary>
         /// 振弦
         /// </summary>
-        ShakeString,
+        ShakeString=1,
         /// <summary>
         /// 自定义
         /// </summary>
-        AutoDefine
-
+        AutoDefine=2,
+        /// <summary> 扩展方法1
+        /// </summary>
+        CalcExpand1=3,
+        /// <summary> 扩展方法2
+        /// </summary>
+        CalcExpand2=4,
+        /// <summary> 扩展方法3
+        /// </summary>
+        CalcExpand3=5
     }
     /// <summary> 仪器类型枚举
     /// </summary>
@@ -828,5 +955,5 @@ namespace LoadDataCalc
             return enumerationValue.ToString();
         }
     }
-         
+
 }

@@ -12,7 +12,7 @@ using System.IO;
 
 namespace WinDraw
 {
-    public delegate void GetNewDataHandle(TotalStationData data);
+   public delegate void GetNewDataHandle(TotalStationData data);
    public delegate void ConnectMsgHandle(bool Connected);
 
    public class TcpClientClass

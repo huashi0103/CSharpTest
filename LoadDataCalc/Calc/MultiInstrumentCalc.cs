@@ -69,18 +69,25 @@ namespace LoadDataCalc
 
             }
             double result = 0;
-            if (calc.IsMoshu == 1)//是否是模数
+            if (calc.IsMoshu == 1)//测值是否是模数
             {
                 result = pd.Gorf * (sd.Survey_ZorR - pd.ZorR) + pd.Korb * (sd.Survey_RorT - pd.RorT);
             }
             else
             {
-                result = pd.Gorf * (Math.Pow(sd.Survey_ZorR, 2) / 1000 - pd.ZorR) +
-                    pd.Korb * (sd.Survey_RorT - pd.RorT);
+                if (Config.IsMoshu)//考证表是否是模数
+                {
+                    result = pd.Gorf * (Math.Pow(sd.Survey_ZorR, 2) / 1000 - pd.ZorR) + pd.Korb * (sd.Survey_RorT - pd.RorT);
+                }
+                else
+                {
+                    result = pd.Gorf * (Math.Pow(sd.Survey_ZorR, 2)  - pd.ZorR*pd.ZorR) + pd.Korb * (sd.Survey_RorT - pd.RorT);
+                }
+
             }
+            result += pd.Constant_b;
             return result;
         }
-       
         //特殊的计算方式/对应Mcalctype=2
         private double calcOnePointExpand(ParamData pd, SurveyData sd,MultiDisplacementCalc calc=null)
         {
@@ -93,7 +100,7 @@ namespace LoadDataCalc
                 }
                 return getLastStandValue(pd.SurveyPoint, loadindex);
             }
-            return ((int)(pd.Gorf * (sd.Survey_ZorR - pd.ZorR) * 100 + 0.5)) / 100.0 + pd.Korb * (sd.Survey_RorT - pd.RorT);
+            return ((int)(pd.Gorf * (sd.Survey_ZorR - pd.ZorR) * 100 + 0.5)) / 100.0 + pd.Korb * (sd.Survey_RorT - pd.RorT)+pd.Constant_b;
         }
         //没有基准的直接遍历计算
         private void calcOneGroupExpand(ParamData Mparam, SurveyData Mdata, MultiDisplacementCalc[] Mcalc,
@@ -102,12 +109,14 @@ namespace LoadDataCalc
            foreach (var dic in Mdata.MultiDatas)
             {
                 SurveyData data = Mdata.MultiDatas[dic.Key];
+                data.Survey_RorT = Mdata.Survey_RorT;
                 ParamData pd = Mparam.MParamData[dic.Key];
                 var tcalc = Mcalc.FirstOrDefault(c => c.Ins_serial == dic.Key);
                 data.LoadReading = clacAction(pd, data, tcalc);
             }
         }
         //获取基准列的最后一次有效值
+       
         private double getLastStandValue(string surveyPoint,string loadindex)
         {
             string sql = @"select {0} from Result_Multi_Displacement where Survey_point_Number='{1}' and
@@ -137,25 +146,26 @@ namespace LoadDataCalc
                     {
                         SurveyData sd = Mdata.MultiDatas[calc.Ins_serial];
                         ParamData pd = Mparam.MParamData[calc.Ins_serial];
+                        sd.Survey_RorT = Mdata.Survey_RorT;
                         result = calcOnePoint(pd, sd, calc);//计算基准值
-
+                        sd.LoadReading = result;
                         foreach (var dic in Mdata.MultiDatas)
                         {
                             SurveyData data = Mdata.MultiDatas[dic.Key];
                             pd = Mparam.MParamData[dic.Key];
                             if (dic.Key != calc.Ins_serial)
                             {
-                                var tcalc = Mcalc.FirstOrDefault(c => c.Ins_serial == dic.Key);
+                                var tcalc = Mcalc.FirstOrDefault(c => c.Ins_serial.ToUpper().Trim() == dic.Key.ToUpper().Trim());
                                 data.LoadReading = calcOnePoint(pd, data, tcalc);
                                 if (Math.Abs(data.Survey_ZorR) > 1)//有测值才计算
                                 {
                                     data.LoadReading = (tcalc.IsBySubtract == 1) ? data.LoadReading - result : result - data.LoadReading;
                                 }
                             }
-                            else
-                            {
-                                data.LoadReading = (calc.R0IsZero == 0) ? result : 0;
-                            }
+                            //else
+                            //{
+                            //    data.LoadReading = (calc.R0IsZero == 0) ? result : 0;
+                            //}
                         }
                         Mdata.LoadReading = (calc.R0IsZero == 0) ? 0 : result;
                         if (Math.Abs(Mdata.MultiDatas[calc.Ins_serial].Survey_ZorR) < 1)//做基准的点挂了
@@ -178,9 +188,11 @@ namespace LoadDataCalc
                         SurveyData sd = Mdata.MultiDatas[calc.Ins_serial];
                         ParamData pd = Mparam.MParamData[calc.Ins_serial];
                         result = calcOnePointExpand(pd, sd, calc);
+                        sd.LoadReading = result;
                         foreach (var dic in Mdata.MultiDatas)
                         {
                             sd = Mdata.MultiDatas[dic.Key];
+                            sd.Survey_RorT = Mdata.Survey_RorT;
                             pd = Mparam.MParamData[dic.Key];
                             if (dic.Key != calc.Ins_serial)//不是基准
                             {
@@ -195,11 +207,11 @@ namespace LoadDataCalc
                                 }
           
                             }
-                            else
-                            {
-                                sd.LoadReading = (calc.R0IsZero == 0) ? result : 0;
-                                if (Math.Abs(sd.Survey_ZorR) < 1) sd.LoadReading = 0;
-                            }
+                            //else
+                            //{
+                            //    sd.LoadReading = (calc.R0IsZero == 0) ? result : 0;
+                            //    if (Math.Abs(sd.Survey_ZorR) < 1) sd.LoadReading = 0;
+                            //}
                         }
                         Mdata.LoadReading = (calc.R0IsZero == 0) ? 0 : result;
                         if (Math.Abs(Mdata.MultiDatas[calc.Ins_serial].Survey_ZorR) < 1)//做基准的点挂了
@@ -214,30 +226,38 @@ namespace LoadDataCalc
                         
                     break;
             }
-            if (Mcalc[0].R0IsZero != 0)//倒序排列下//默认是从深到浅。当孔口为0的时候为从浅到深
-            {
-                Dictionary<string, SurveyData> Dic = new Dictionary<string, SurveyData>();
-                List<string> li = new List<string>(Mdata.MultiDatas.Keys);
-                for (int i = li.Count - 1; i >= 0; i--)
-                {
-                    Dic.Add(li[i], Mdata.MultiDatas[li[i]]);
-                }
-                Mdata.MultiDatas = Dic;
-            }
 
+            
         }
         public override double ShakeString(ParamData Mparam, SurveyData Mdata, params double[] expand)
         {
             double result = 0;
-            var Mcalc = Config.MultiDisplacementCalcs.GetBySurveypoint(Mparam.SurveyPoint);
+            var Mcalc = Config.MultiDisplacementCalcs.GetBySurveypoint(Mparam.SurveyPoint.Trim());
             if (Mcalc.Length > 0)
-            {   
+            {
                 calcOneGroup(Mparam, Mdata, Mcalc);
             }
             else
             {
                 calcOneGroupNull(Mparam, Mdata);
             }
+
+            //倒序排列下//默认是从深到浅。当孔口为0的时候为从浅到深
+            Dictionary<string, SurveyData> Dic = new Dictionary<string, SurveyData>();
+            List<string> li = new List<string>(Mdata.MultiDatas.Keys);
+            string serial = null;
+            foreach (string number in li)
+            {
+                if (number.EndsWith("A")) serial = number;            
+            }
+            li.Remove(serial);
+            li.Add(serial);
+            for (int i = li.Count - 1; i >= 0; i--)
+            {
+                Dic.Add(li[i], Mdata.MultiDatas[li[i]]);
+                
+            }
+            Mdata.MultiDatas = Dic;
  
             return result;
         }
@@ -258,7 +278,7 @@ namespace LoadDataCalc
                 }
                 else
                 {
-                   result= base.ShakeString(pd, sd);
+                    result= base.ShakeString(pd, sd);
                 }
                 foreach (var di in Mdata.MultiDatas)
                 {
@@ -288,6 +308,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
+            #region
             string sql = @"select Instrument_Type,Calculate_Coeffi_G,Tempera_Revise_K,Benchmark_Resist_Ratio,Benchmark_Resist,Temperature_Read,Zero_Resistance,Instrument_Serial
                                 from {0} where Survey_point_Number='{1}'";
             sql = string.Format(sql, tablename, Survey_point_Number);
@@ -327,6 +348,28 @@ namespace LoadDataCalc
                 }
                 catch {}
             }
+            #endregion
+
+            #region //读扩展表
+            if (Config.ProCode == "MW")
+            {
+                sql = @"select Instrument_Serial,Add_Temperature,Conversion_C,Minus_Type from Instrument_PointCompute where Instrument_Name='多点位移计' and Survey_point_Number='{0}'";
+                dt = SqlHelper.SelectData(string.Format(sql, Survey_point_Number));
+                if (dt.Rows.Count > 0)
+                {
+                    for (int i = 0; i < dt.Rows.Count; i++)
+                    {
+                        string seril = dt.Rows[i]["Instrument_Serial"].ToString();
+                        int isAddT = Convert.ToInt16(dt.Rows[i]["Add_Temperature"]);
+                        Mpd.MParamData[seril].Korb = (isAddT == 1) ? 0 : Mpd.MParamData[seril].Korb;//1--不改，2-改
+                        Mpd.MParamData[seril].Gorf = Convert.ToInt16(dt.Rows[i]["Minus_Type"]) == 2 ? Mpd.MParamData[seril].Gorf * -1 : Mpd.MParamData[seril].Gorf;
+                        Mpd.MParamData[seril].Constant_b = Convert.ToDouble(dt.Rows[i]["Conversion_C"]);
+                        //Mpd.MParamData[seril].Special_Code = Convert.ToInt16(dt.Rows[0]["Special_Case"]); //1 2都是模数,
+                    }
+
+                }
+            }
+            #endregion
             return Mpd;
             
         }
@@ -346,6 +389,7 @@ namespace LoadDataCalc
             }
             dt.Columns.Add("Remark");
             dt.Columns.Add("UpdateTime");
+            if(Config.IsAuto)dt.Columns.Add("RecordMethod");
             var sqlhelper = CSqlServerHelper.GetInstance();
             var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
             int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
@@ -358,7 +402,7 @@ namespace LoadDataCalc
                     dr["ID"] = id;
                     dr["Survey_point_Number"] = pd.SurveyPoint;
                     dr["Observation_Date"] = surveydata.SurveyDate;
-                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
                     dr["Temperature"] = Math.Round(surveydata.Survey_RorT,2);
                     int index = 1;
                     foreach (var dic in surveydata.MultiDatas)
@@ -368,6 +412,7 @@ namespace LoadDataCalc
                     }
                     dr["Remark"] = surveydata.Remark;
                     dr["UpdateTime"] = DateTime.Now;
+                    if (Config.IsAuto) dr["RecordMethod"] = "人工";
                     dt.Rows.Add(dr);
                 }
             }
@@ -389,6 +434,7 @@ namespace LoadDataCalc
             }
             dt.Columns.Add("Remark");
             dt.Columns.Add("UpdateTime");
+            if (Config.IsAuto) dt.Columns.Add("RecordMethod");
             var sqlhelper = CSqlServerHelper.GetInstance();
             var sid = sqlhelper.SelectFirst("select max(ID) as sid  from  " + TableName);
             int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
@@ -401,10 +447,10 @@ namespace LoadDataCalc
                     dr["ID"] = id;
                     dr["Survey_point_Number"] = pd.SurveyPoint;
                     dr["Observation_Date"] = surveydata.SurveyDate;
-                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
                     dr["Temperature"] = Math.Round(surveydata.Tempreture,2);
-                    dr["loadReading0"] = Math.Round(surveydata.LoadReading,4);
-                    int index = 1;
+                    //dr["loadReading0"] = Math.Round(surveydata.LoadReading,4);
+                    int index = surveydata.MultiDatas.Keys.First().EndsWith("A") ? 0 : 1;
                     foreach (var dic in surveydata.MultiDatas)
                     {
                         dr["loadReading" + index.ToString()] = Math.Round(dic.Value.LoadReading,4);
@@ -412,6 +458,7 @@ namespace LoadDataCalc
                     }
                     dr["Remark"] = surveydata.Remark;
                     dr["UpdateTime"] = DateTime.Now;
+                    if (Config.IsAuto) dr["RecordMethod"] = "人工";
                     dt.Rows.Add(dr);
                 }
             }
@@ -474,7 +521,19 @@ namespace LoadDataCalc
             Fiducial_Strain_Gauge FStrain_Gauge = new Fiducial_Strain_Gauge();
             foreach (var sd in data.MultiDatas)
             {
-                FStrain_Gauge.ShakeString(param.MParamData[sd.Key], sd.Value);
+                var pa = param.MParamData[sd.Key.ToUpper().Trim()];
+                switch (pa.InsCalcType)
+                {
+                    case CalcType.DifBlock:
+                        FStrain_Gauge.DifBlock(pa, sd.Value);
+                        break;
+                    case CalcType.ShakeString:
+                        FStrain_Gauge.ShakeString(pa, sd.Value);
+                        break;
+                    case CalcType.CalcExpand1:
+                        FStrain_Gauge.Expand1(pa, sd.Value,null);
+                        break;
+                }
             }
             if (data.MultiDatas.Keys.Count == 5)
             {
@@ -497,13 +556,14 @@ namespace LoadDataCalc
             ParamData Mpd = new ParamData();
             Mpd.SurveyPoint = Survey_point_Number;
             Mpd.NonStressNumber = dt.Rows[0]["Nonstress_Number"].ToString();
+            if(String.IsNullOrEmpty(Mpd.NonStressNumber))Mpd.IsHasNonStress=false;
             for (int i = 0; i < dt.Rows.Count; i++)
             {
                 try
                 {
                     ParamData pd = new ParamData();
                     pd.SurveyPoint = Survey_point_Number;
-                    string insSerial = dt.Rows[i]["Instrument_Serial"].ToString();
+                    string insSerial = dt.Rows[i]["Instrument_Serial"].ToString().ToUpper().Trim();
                     pd.Ins_Serial = insSerial;
                     if (dt.Rows[i]["Calculate_Coeffi_G"] == null || dt.Rows[i]["Benchmark_Resist_Ratio"] == null) return null;//G和Z必须有
                     pd.Gorf = ConvetToData(dt.Rows[i]["Calculate_Coeffi_G"]);
@@ -550,6 +610,7 @@ namespace LoadDataCalc
             dt.Columns.Add("Non_Temperature");
             dt.Columns.Add("Remark");
             dt.Columns.Add("UpdateTime");
+            if(Config.IsAuto)dt.Columns.Add("RecordMethod");
             var sqlhelper = CSqlServerHelper.GetInstance();
             var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
             int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
@@ -562,8 +623,7 @@ namespace LoadDataCalc
                     dr["ID"] = id;
                     dr["Survey_point_Number"] = pd.SurveyPoint;
                     dr["Observation_Date"] = surveydata.SurveyDate;
-                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
-                    dr["Temperature"] = Math.Round(surveydata.Survey_RorT,2);
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
                     int index = 1;
                     foreach (var dic in surveydata.MultiDatas)
                     {
@@ -571,11 +631,18 @@ namespace LoadDataCalc
                         dr["Temperature" + index.ToString()] = Math.Round(dic.Value.Survey_RorT,4);
                         index++;
                     }
+                    if (surveydata.NonStressSurveyData != null)
+                    {
+                        dr["Non_Frequency" + index.ToString()] = Math.Round(surveydata.NonStressSurveyData.Survey_ZorR, 4);
+                        dr["Non_Temperature" + index.ToString()] = Math.Round(surveydata.NonStressSurveyData.Survey_RorT, 4);
+                    }
                     dr["Remark"] = surveydata.Remark;
                     dr["UpdateTime"] = DateTime.Now;
+                    if (Config.IsAuto) dr["RecordMethod"] = "人工";
                     dt.Rows.Add(dr);
                 }
             }
+            //return dt.Rows.Count;
             return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
         }
         public override int WriteResultToDB(List<PointSurveyData> datas)
@@ -587,14 +654,14 @@ namespace LoadDataCalc
             dt.Columns.Add("Survey_point_Number");
             dt.Columns.Add("Observation_Date");
             dt.Columns.Add("Observation_Time");
-            dt.Columns.Add("Temperature");
             for (int i = 1; i < 7; i++)
             {
                 dt.Columns.Add("loadReading"+i.ToString());
                 dt.Columns.Add("Temperature" + i.ToString());
             }
-            dt.Columns.Add("Non_loadReading");
             dt.Columns.Add("Non_Temperature");
+           
+            dt.Columns.Add("Non_loadReading");
             dt.Columns.Add("Ex");
             dt.Columns.Add("Ey");
             dt.Columns.Add("Ez");
@@ -603,6 +670,8 @@ namespace LoadDataCalc
             dt.Columns.Add("σz");
             dt.Columns.Add("Remark");
             dt.Columns.Add("UpdateTime");
+            if (Config.IsAuto) dt.Columns.Add("RecordMethod");
+            
             var sqlhelper = CSqlServerHelper.GetInstance();
             var sid = sqlhelper.SelectFirst("select max(ID) as sid  from  " + TableName);
             int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
@@ -615,24 +684,28 @@ namespace LoadDataCalc
                     dr["ID"] = id;
                     dr["Survey_point_Number"] = pd.SurveyPoint;
                     dr["Observation_Date"] = surveydata.SurveyDate;
-                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
-                    dr["loadReading0"] = Math.Round(surveydata.LoadReading,4);
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
                     int index = 1;
                     foreach (var dic in surveydata.MultiDatas)
                     {
-                        dr["loadReading" + index.ToString()] = Math.Round(dic.Value.LoadReading,2);
-                        dr["Temperature" + index.ToString()] = Math.Round(dic.Value.Tempreture,2);
+                        dr["loadReading" + index.ToString()] = Math.Round(Convert.ToDecimal(dic.Value.LoadReading), 2);
+                        dr["Temperature" + index.ToString()] = Math.Round((decimal)dic.Value.Tempreture, 2);
                         index++;
+                    }
+                    if (surveydata.NonStressSurveyData != null)
+                    {
+                        dr["Non_loadReading" + index.ToString()] = Math.Round((decimal)surveydata.NonStressSurveyData.LoadReading, 2);
+                        dr["Non_Temperature" + index.ToString()] = Math.Round((decimal)surveydata.NonStressSurveyData.Survey_RorT, 2);
                     }
                     dr["Remark"] = surveydata.Remark;
                     dr["UpdateTime"] = DateTime.Now;
+                    if (Config.IsAuto) dr["RecordMethod"] = "人工";
                     dt.Rows.Add(dr);
                 }
             }
             return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
         }
     }
-
 
     /// <summary>
     /// 多点锚杆应力计
@@ -669,4 +742,6 @@ namespace LoadDataCalc
         }
 
     }
+
+
 }

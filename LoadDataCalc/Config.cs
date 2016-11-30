@@ -5,6 +5,7 @@ using System.Text;
 using System.Xml;
 using System.Reflection;
 using System.IO;
+using NPOI.SS.UserModel;
 
 namespace LoadDataCalc
 {
@@ -13,15 +14,7 @@ namespace LoadDataCalc
         /// <summary>
         /// 根目录
         /// </summary>
-        public static string DataRoot
-        {
-            get { return dataRoot; }
-            set
-            {
-                  dataRoot = value;
-            }
-        }
-        private  static string dataRoot = "";
+        public static string DataRoot;
         /// <summary> 当前项目用到的仪器类型
         /// </summary>
         public static  List<InsConfig> Instruments = new List<InsConfig>();
@@ -49,6 +42,19 @@ namespace LoadDataCalc
         /// </summary>
         public static double LimitZ = 20;
         public static double LimitT = 20;
+        /// <summary>
+        /// 是否是模数//考证表中录入的参数基准录入的是模数还是频率
+        /// 主要针对振弦式仪器
+        /// </summary>
+        public static  bool IsMoshu = false;
+        /// <summary>是否自动化,自动化数据库多一个字段
+        /// </summary>
+        public static bool IsAuto = true;
+
+#if TEST
+        public static long Tick1 = 0;
+        public static long Tick2 = 0;
+#endif
 
         public static MultiDisplacementCalc MultiDisplacementCalcs =new MultiDisplacementCalc();
 
@@ -60,8 +66,7 @@ namespace LoadDataCalc
         {
             string filename = "\\config\\Config.xml";//针对项目的配置文件，只包含项目涉及到的仪器种类
             if (IsReadDefault) filename = "\\config\\Config_Default.xml";//default文件 包含所有种类仪器
-            string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string path = dir + filename;
+            string path = Assemblydir + filename;
             if (!File.Exists(path)) return false;
             try
             {
@@ -75,8 +80,10 @@ namespace LoadDataCalc
                 var dataroot = root.SelectSingleNode("DataRoot");
                 DataRoot = dataroot.InnerText;
                 var database = root.SelectSingleNode("DataBase");
+                IsAuto = int.Parse(database.Attributes["IsAuto"].Value) == 0 ? false : true;
                 DataBase = database.InnerText;
                 var DataProCode = root.SelectSingleNode("ProCode");
+                IsMoshu = int.Parse(DataProCode.Attributes["IsMoshu"].Value) == 0 ? false : true;
                 ProCode = DataProCode.InnerText;
                 var Instrumentents = root.SelectSingleNode("Instruments");
                 var list = Instrumentents.ChildNodes;
@@ -95,7 +102,6 @@ namespace LoadDataCalc
                 }
                 
                 loadIns();
-                loadcalcs();
                 return true;
             }
             catch
@@ -103,7 +109,6 @@ namespace LoadDataCalc
                 return false;
             }
         }
-
         private static void loadIns()
         {
             string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -125,10 +130,21 @@ namespace LoadDataCalc
                 list.Add(info);
             }
             InsCollection.InsTables = list;
+            Dictionary<string, InstrumentType> InsDic = new Dictionary<string, InstrumentType>();
+            foreach (int myCode in Enum.GetValues(typeof(InstrumentType)))
+            {
+                var instype = (InstrumentType)myCode;
+                string insname = instype.GetDescription();
+                InsDic.Add(insname, (InstrumentType)myCode);
+            }
+            InsCollection.InstrumentDic = InsDic;
         }
-        private static void loadcalcs()
+        /// <summary>加载多点位移计计算excel
+        /// </summary>
+        public  static void LoadMultiDisplacementCalcs()
         {
-            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\config\\templist.xls";
+            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\config\\MultiDisplacement.xls";
+            if (!File.Exists(path)) return;
             MultiDisplacementCalcs.loadexcel(path);
         }
 
@@ -148,10 +164,12 @@ namespace LoadDataCalc
             element.InnerText = DataRoot;
             root.AppendChild(element);
             element = xml.CreateElement("DataBase");
+            element.SetAttribute("IsAuto", (IsAuto ? 1 : 0).ToString());
             element.InnerText = DataBase;
             root.AppendChild(element);
 
             element = xml.CreateElement("ProCode");
+            element.SetAttribute("IsMoshu", (IsMoshu?1:0).ToString());
             element.InnerText = ProCode;
             root.AppendChild(element);
 
@@ -207,8 +225,10 @@ namespace LoadDataCalc
             element.InnerText = dir;
             root.AppendChild(element);
             element = xml.CreateElement("DataBase");
+            element.SetAttribute("IsAuto", (IsAuto ? 1 : 0).ToString());
             element.InnerText = "Data Source = 10.6.179.44,1433;Network Library = DBMSSOCN;Initial Catalog = MWDatabase;User ID = sa;Password = sa;";
             element = xml.CreateElement("ProCode");
+            element.SetAttribute("IsMoshu", (IsMoshu ? 1 : 0).ToString());
             element.InnerText = ProCode;
             root.AppendChild(element);
             element = xml.CreateElement("Instruments");
@@ -222,7 +242,7 @@ namespace LoadDataCalc
                 ent.SetAttribute("Name", insname);
                 var entkeyword = xml.CreateElement("KeyWord");
                 entkeyword.InnerText = insname;
-                ent.AppendChild(ent);
+                ent.AppendChild(entkeyword);
                 element.AppendChild(ent);
             }
             root.AppendChild(element);
@@ -298,12 +318,35 @@ namespace LoadDataCalc
             }
  
         }
+        /// <summary>
+        /// 获取多点位移计从浅到深排序的点，默认不在此列中得点为从深到浅排序
+        /// </summary>
+        /// <returns></returns>
+        public static List<string> GetMultiDisplacementOrder()
+        {
+            List<string> list = new List<string>();
+            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\config\\MultiDisplacement.xls";
+            var workbook = WorkbookFactory.Create(path);
+            string sheetname = Config.ProCode + "_Order";  
+            var psheet = workbook.GetSheet(sheetname);
+            if (psheet == null) return list;
+            int count = psheet.LastRowNum + 1;
+            for (int i = 0; i < count; i++)
+            {
+                IRow row = psheet.GetRow(i);
+                list.Add(row.GetCell(0).StringCellValue.ToUpper().Trim());
+            }
+            return list;
+        }
     }
     public class InsConfig
     {
         public string InsName;
         public List<string> KeyWord = new List<string>();
     }
+    /// <summary>
+    /// 仪器名，考证表，测值表，成果表参照类
+    /// </summary>
     public class InsTableInfo
     {
         public string Instrument_Name;
@@ -311,10 +354,17 @@ namespace LoadDataCalc
         public string Measure_Table;
         public string Monitor_Name;
         public string Result_Table;
-
     }
+   /// <summary>
+   /// 集合类
+   /// </summary>
     public class InsTableCollection
     {
+        /// <summary>所有仪器名和枚举类型词典
+        /// </summary>
+        public  Dictionary<string, InstrumentType> InstrumentDic = new Dictionary<string, InstrumentType>();
+        /// <summary> 表名信息
+        /// </summary>
         public List<InsTableInfo> InsTables = new List<InsTableInfo>();
         public InsTableInfo this[string Instrument_Name]
         {

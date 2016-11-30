@@ -71,9 +71,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Calc\CalcClass.cs" />
+    <Compile Include="Calc\InstrumentCalcMW.cs" />
+    <Compile Include="Calc\InstrumentCalcXJB.cs" />
     <Compile Include="Process\InstrumentProcessMW.cs" />
     <Compile Include="Process\ProcessData.cs" />
-    <Compile Include="Utils\CExcel.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="Utils\CSqlServer.cs" />
     <Compile Include="FormConfigFilePath.cs">
@@ -126,6 +127,7 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <EmbeddedResource Include="config\Config.xml" />
     <Content Include="DLLS\ICSharpCode.SharpZipLib.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

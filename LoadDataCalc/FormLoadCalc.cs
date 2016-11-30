@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Threading;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace LoadDataCalc
 {
@@ -16,10 +17,6 @@ namespace LoadDataCalc
     {
         private LoadDataClass loadData;
         private List<string> loadFiles = new List<string>();
-
-        /// <summary> 所有仪器名词典
-        /// </summary>
-        private Dictionary<string, InstrumentType> InsDic = new Dictionary<string, InstrumentType>();
         /// <summary>各仪器对应文件列表
         /// </summary>
         private Dictionary<string, List<string>> Files = new Dictionary<string, List<string>>();
@@ -32,6 +29,7 @@ namespace LoadDataCalc
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
+            #region//初始化
             Status("初始化...");
             btnRead.Enabled = false;
             toolStripProgressLoad.Visible = true;
@@ -41,7 +39,7 @@ namespace LoadDataCalc
                 string res = loadData.Init();
                 if (res != "OK")
                 {
-                    Status(String.Format("加载失败,{0}", res));
+                    Status(String.Format("{0}失败!", res));
                 }
                 else
                 {
@@ -61,18 +59,24 @@ namespace LoadDataCalc
                 }));
             });
             loadThread.Start();
-
+            #endregion
+            #region //窗体事件
             btnRead.Click += new EventHandler(btnRead_Click);
             btnWrite.Click += (o, eg) => {
                 if (MessageBox.Show("确定写入数据库?", "提示", MessageBoxButtons.OKCancel) == 
                     System.Windows.Forms.DialogResult.Cancel) return;
-                var instype = InsDic[ comboType.Text];
-                loadData.Wirte(instype);
-                Status(String.Format("写入数据库完成"));
+                var instype = Config.InsCollection.InstrumentDic[ comboType.Text];
+                bool flag = false;
+                flag = loadData.WirteToSurvey();
+                string surveyStatus = String.Format("写入测值{0}", (flag ? "成功" : "失败"));
+                flag = loadData.WirteToResult();
+                string resultSatus = String.Format("写入成果{0}", (flag ? "成功" : "失败"));
+                Status(surveyStatus + "," + resultSatus);
             };
             btnConfig.Click += (o, eg) => {
                 FormConfigFilePath fcf = new FormConfigFilePath();
-                fcf.ShowDialog();
+                //fcf.ShowDialog();
+                fcf.Show();
                 Files = Config.ReadFileList();
             };
             numericLimit.ValueChanged += (o, eg) => { Config.LimitZ = (double)numericLimit.Value;
@@ -87,8 +91,91 @@ namespace LoadDataCalc
                 btnShowNonStress.Visible = (comboType.Text == "应变计" || comboType.Text == "应变计组");
             });
             btnShowNonStress.Click += new EventHandler(btnShowNonStress_Click);
+            btnSearch.Click+=new EventHandler((send,arg)=>{
+                var data=loadData.SurveyDataCach.Where(p => p.SurveyPoint.ToUpper().Trim()==txNumber.Text.ToUpper().Trim()).FirstOrDefault();
+                if (data == null)
+                {
+                    MessageBox.Show("没有数据");
+                    return;
+                }
+                int rowcount = 0;
+                foreach (var pd in loadData.SurveyDataCach)
+                {
+                    if (pd.SurveyPoint == data.SurveyPoint) break;
+                    rowcount += pd.Datas.Count;
+                }
+                this.dataGridView1.CurrentCell = this.dataGridView1.Rows[rowcount].Cells[0];
+                
+                
+            });
+            btnNext.Click+=new EventHandler((send,arg)=>{
+                if (dataGridView1.SelectedRows.Count < 1) return;
+                string current = dataGridView1.CurrentRow.Cells["Survey_point_Number"].Value.ToString();
+                int index = dataGridView1.CurrentRow.Index;
+                for (int i = index; i < dataGridView1.Rows.Count-1; i++)
+                {
+                    string tempnumber = dataGridView1.Rows[i].Cells["Survey_point_Number"].Value.ToString();
+                    if (tempnumber != current)
+                    {
+                        dataGridView1.CurrentCell = dataGridView1.Rows[i].Cells[0];
+                        dataGridView1.FirstDisplayedScrollingRowIndex = dataGridView1.CurrentCell.OwningRow.Index;
+                        break;
+                    }
+                }
+            });
+            btnlast.Click += new EventHandler((send, arg) =>
+            {
+                if (dataGridView1.SelectedRows.Count < 1) return;
+                string current = dataGridView1.CurrentRow.Cells["Survey_point_Number"].Value.ToString();
+                int index = dataGridView1.CurrentRow.Index;
+                for (int i = index; i >0; i--)
+                {
+                    string tempnumber = dataGridView1.Rows[i].Cells["Survey_point_Number"].Value.ToString();
+                    if (tempnumber != current)
+                    {
+                        dataGridView1.CurrentCell = dataGridView1.Rows[i].Cells[0];
+                        dataGridView1.FirstDisplayedScrollingRowIndex = dataGridView1.CurrentCell.OwningRow.Index;
+                        break;
+                    }
+                }
+            });
+            btnNextError.Click += new EventHandler((send, arg) =>
+            {
+                if (dataGridView1.SelectedRows.Count < 1) return;
+                string current = dataGridView1.CurrentRow.Cells["Survey_point_Number"].Value.ToString();
+                int index = dataGridView1.CurrentRow.Index;
+                for (int i = index+1; i < dataGridView1.Rows.Count - 1; i++)
+                {
+                    string tempnumber = dataGridView1.Rows[i].Cells["Survey_point_Number"].Value.ToString();
+                    //if (tempnumber != current)
+                    {
+                        double value1 = Convert.ToDouble(dataGridView1.Rows[i].Cells["loadreading"].Value);
+                        double value2 = Convert.ToDouble(dataGridView1.Rows[i].Cells["ExcelResult"].Value);
+                        if (Math.Abs(value1 - value2) > (double)numericError.Value)
+                        {
+                            dataGridView1.CurrentCell = dataGridView1.Rows[i].Cells[0];
+                            dataGridView1.FirstDisplayedScrollingRowIndex = dataGridView1.CurrentCell.OwningRow.Index;
+                            break;
+                        }
+                        else
+                        {
+                            current = tempnumber;
+                            continue;
+                        }
+                    }
+                }
+            });
+            btnfile.Click += new EventHandler((send, arg) => {
+                if (dataGridView1.SelectedRows.Count < 1) return;
+                string current = dataGridView1.CurrentRow.Cells["Survey_point_Number"].Value.ToString();
+                var point = loadData.SurveyDataCach.Where(p => p.SurveyPoint == current).FirstOrDefault();
+                if (point != null)
+                {
+                    if (File.Exists(point.ExcelPath)) Process.Start(point.ExcelPath);
+                }
+            });
+            #endregion
         }
-
         void btnShowNonStress_Click(object sender, EventArgs e)
         {
             if (btnShowNonStress.Text == "无应力计")
@@ -136,16 +223,21 @@ namespace LoadDataCalc
                 btnShowNonStress.Text = "无应力计";
             }
         }
-
         void btnRead_Click(object sender, EventArgs e)
         {
-           string insname = comboType.Text;
-           string errfile;
-           if (!loadData.CheckFiles(Files[insname], out errfile))
-           {
-               MessageBox.Show(errfile+"被占用!");
-               return;
-           }
+            string insname = comboType.Text;
+            Status("检查文件");
+            Func<bool> checkFunc = new Func<bool>(() => {
+                string errfile;
+                if (!loadData.CheckFiles(Files[insname], out errfile))
+                {
+                    this.Invoke(new EventHandler(delegate { MessageBox.Show(errfile + "被占用!");}));
+                    return false;
+                }
+                return true;
+            });
+           if (!checkFunc()) return;
+
            setEnable(false);
            Status("读取数据");
            toolStripProgressLoad.Visible = true;
@@ -158,12 +250,13 @@ namespace LoadDataCalc
                     setEnable(true);
                     loaddatagridview(loadData.SurveyDataCach);
                     ErrorMsg.OpenLog(1);
+                    //MessageBox.Show(Config.Tick1.ToString() + "__" + Config.Tick2.ToString());
                 }));
             };
 
             threadLoad = new Thread((cb) =>
             {
-                var type = InsDic[insname];
+                var type = Config.InsCollection.InstrumentDic[insname];
                 loadData.ClearCach();
                 loadData.ReadData(type,Files[insname]);
                 //string path = Environment.CurrentDirectory + "\\templist.xml";
@@ -196,13 +289,6 @@ namespace LoadDataCalc
         }
        void loadTypes()
         {
-            InsDic.Clear();
-            foreach (int myCode in Enum.GetValues(typeof(InstrumentType)))
-            {
-                var instype = (InstrumentType)myCode;
-                string insname = instype.GetDescription();
-                InsDic.Add(insname, (InstrumentType)myCode);
-            }
             comboType.Items.Clear();
             foreach (var ins in Config.Instruments) {
                 comboType.Items.Add(ins.InsName);         
@@ -210,9 +296,14 @@ namespace LoadDataCalc
         }
        void loaddatagridview(List<PointSurveyData> datas)
         {
-            bool flag = comboType.Text == "多点位移计" || comboType.Text == "锚索测力计"||comboType.Text=="应变计组";
+            if (comboType.Text == "锚索测力计")
+            {
+                loaddatagridviewExpand(datas);
+                return;
+            }
+            bool flag = comboType.Text == "多点位移计"||comboType.Text=="应变计组";
             DataTable dt = new DataTable();
-            dt.TableName = "Survey_Leakage_Pressure";
+            dt.TableName = "showTable";
             dt.Columns.Add("ID");
             dt.Columns.Add("Survey_point_Number");
             dt.Columns.Add("Observation_Date");
@@ -224,6 +315,9 @@ namespace LoadDataCalc
             dt.Columns.Add("Tresult");
             dt.Columns.Add("loadreading");
             dt.Columns.Add("resultreading");
+            dt.Columns.Add("ExcelResult");
+            dt.Columns.Add("dif");
+            
             if (flag)
             {
                 dt.Columns.Add("F1");
@@ -238,10 +332,13 @@ namespace LoadDataCalc
                 dt.Columns.Add("R4");
                 dt.Columns.Add("R5");
                 dt.Columns.Add("R6");
+                
             }
-            int id = 0;
+            int id = 0;//总数据
+            int Pcount = 0;//点数
             foreach (PointSurveyData pd in datas)
             {
+                Pcount++;
                 foreach (var surveydata in pd.Datas)
                 {
                     id++;
@@ -257,6 +354,8 @@ namespace LoadDataCalc
                     dr["Tresult"] = surveydata.Tempreture;
                     dr["loadreading"] = surveydata.LoadReading;
                     dr["resultreading"] = surveydata.ResultReading;
+                    dr["ExcelResult"] = surveydata.ExcelResult;
+                    dr["dif"] = Math.Abs(surveydata.ExcelResult - surveydata.LoadReading).ToString("#0.0000"); 
                     if (flag)
                     {
                         dr["resultreading"] = surveydata.AfterLock;
@@ -265,10 +364,10 @@ namespace LoadDataCalc
                         {
                             dr["F" + i.ToString()] = v.Value.Survey_ZorR;
                             dr["R" + i.ToString()] = v.Value.LoadReading;
-                            if (comboType.Text == "应变计组")
-                            {
-                                dr["R" + i.ToString()] = v.Value.Survey_RorT;
-                            }
+                            //if (comboType.Text == "应变计组")
+                            //{
+                            //    dr["R" + i.ToString()] = v.Value.Survey_RorT;
+                            //}
                             i++;
                         }
                     }
@@ -276,9 +375,75 @@ namespace LoadDataCalc
                 }
             }
             this.dataGridView1.DataSource = dt;
-            Status(String.Format("读取{0}条数据", id));
+            for (int i = 0; i < this.dataGridView1.Columns.Count; i++)
+            {
+                this.dataGridView1.Columns[i].SortMode = DataGridViewColumnSortMode.NotSortable;
+            }
+            Status(String.Format("读取{0}个点，总共{1}条数据",Pcount, id));
            
         }
+       void loaddatagridviewExpand(List<PointSurveyData> datas)
+       {
+           DataTable dt = new DataTable();
+           dt.TableName = "showTable";
+           dt.Columns.Add("ID");
+           dt.Columns.Add("Survey_point_Number");
+           dt.Columns.Add("Observation_Date");
+           dt.Columns.Add("Observation_Time");
+           dt.Columns.Add("Temperature");
+           dt.Columns.Add("Frequency");
+           dt.Columns.Add("Remark");
+           dt.Columns.Add("UpdateTime");
+           dt.Columns.Add("Tresult");
+           dt.Columns.Add("loadreading");
+           dt.Columns.Add("resultreading");
+           dt.Columns.Add("ExcelResult");
+           dt.Columns.Add("dif");
+           dt.Columns.Add("F1");
+           dt.Columns.Add("F2");
+           dt.Columns.Add("F3");
+           dt.Columns.Add("F4");
+           dt.Columns.Add("F5");
+           dt.Columns.Add("F6");
+           int id = 0;//总数据
+           int Pcount = 0;//点数
+           foreach (PointSurveyData pd in datas)
+           {
+               Pcount++;
+               foreach (var surveydata in pd.Datas)
+               {
+                   id++;
+                   DataRow dr = dt.NewRow();
+                   dr["ID"] = id;
+                   dr["Survey_point_Number"] = pd.SurveyPoint;
+                   dr["Observation_Date"] = surveydata.SurveyDate;
+                   dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
+                   dr["Temperature"] = surveydata.Survey_RorT;
+                   dr["Frequency"] = surveydata.Survey_ZorR;
+                   dr["Remark"] = surveydata.Remark;
+                   dr["UpdateTime"] = DateTime.Now;
+                   dr["Tresult"] = surveydata.Tempreture;
+                   dr["loadreading"] = surveydata.LoadReading;
+                   dr["resultreading"] = surveydata.AfterLock;
+                   dr["ExcelResult"] = surveydata.ExcelResult;
+                    dr["dif"] = Math.Abs(surveydata.ExcelResult - surveydata.LoadReading).ToString("#0.0000");
+                    int i = 1;
+                    foreach (var v in surveydata.MultiDatas)
+                    {
+                        dr["F" + i.ToString()] = v.Value.Survey_ZorR;
+                        i++;
+                    }
+                   dt.Rows.Add(dr);
+               }
+           }
+           this.dataGridView1.DataSource = dt;
+           for (int i = 0; i < this.dataGridView1.Columns.Count; i++)
+           {
+               this.dataGridView1.Columns[i].SortMode = DataGridViewColumnSortMode.NotSortable;
+           }
+           Status(String.Format("读取{0}个点，总共{1}条数据", Pcount, id));
+
+       }
        void setEnable(bool status)
        {
            btnWrite.Enabled = status;

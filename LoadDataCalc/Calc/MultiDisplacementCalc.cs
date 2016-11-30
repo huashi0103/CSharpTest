@@ -6,6 +6,7 @@ using System.Data;
 using System.IO;
 using System.Xml;
 using NPOI.SS.UserModel;
+using System.Reflection;
 
 namespace LoadDataCalc
 {
@@ -31,7 +32,7 @@ namespace LoadDataCalc
        public int IsStanderd = 0;
        /// <summary>
        /// 是否是被减，是就是其他点减去该点，不是就是基准减去其他点
-       /// 被减为1--（其他点-基准）  0--（基准-其他点）
+       /// 1--（其他点-基准）  0--（基准-其他点）
        /// </summary>
        public int IsBySubtract = 1;
        /// <summary>
@@ -156,8 +157,7 @@ namespace LoadDataCalc
            }
        }
 
-       /// <summary>
-       /// 写入数据库
+       /// <summary>写入数据库暂时不用
        /// </summary>
        /// <param name="calclist"></param>
        public void WriteDB(List<MultiDisplacementCalc> calclist)
@@ -203,8 +203,7 @@ namespace LoadDataCalc
            sqlhelper.BulkCopy(dt);
        }
 
-       /// <summary>
-       /// 写入xml
+       /// <summary> 写入xml暂时不用
        /// </summary>
        /// <param name="calclist"></param>
        /// <param name="path"></param>
@@ -258,11 +257,17 @@ namespace LoadDataCalc
                MultiDisplacementCalcs.Add(info);
            }
        }
+       /// <summary>
+       /// 从excel中加载文件
+       /// </summary>
+       /// <param name="path"></param>
        public void loadexcel(string path)
        {
+           MultiDisplacementCalcs.Clear();
            var workbook = WorkbookFactory.Create(path);
-           var psheet = workbook.GetSheet(Config.ProCode);             
-           int count = psheet.LastRowNum;
+           var psheet = workbook.GetSheet(Config.ProCode);
+           if (psheet == null) return;  
+           int count = psheet.LastRowNum+1;
            for (int i = 1; i<count; i++)
            {
                IRow row = psheet.GetRow(i);
@@ -281,4 +286,41 @@ namespace LoadDataCalc
  
        }
    }
+   /// <summary> 计算方法扩展类
+   /// </summary>
+   public class CalcExpand
+   {
+       public InstrumentType InsType;
+       public CalcType Calc_Type;
+       public string Survey_point_Number;
+       private static  string filePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\config\\CalcExpand.xls";
+       
+       /// <summary>从excel文件中读取参数
+       /// </summary>
+       /// <param name="type"></param>
+       /// <returns></returns>
+       public static List<CalcExpand> LoadList(InstrumentType type)
+       {
+           List<CalcExpand> calcs = new List<CalcExpand>();
+           if (!File.Exists(filePath)) return calcs;
+           var workbook = WorkbookFactory.Create(filePath);
+           var psheet = workbook.GetSheet(Config.ProCode);
+           int count = psheet.LastRowNum;
+           for (int i = 1; i < count; i++)
+           {
+               IRow row = psheet.GetRow(i);
+               string Instypename = row.GetCell(1).StringCellValue;
+               if (!Config.InsCollection.InstrumentDic.ContainsKey(Instypename)) continue;
+               var temptype = Config.InsCollection.InstrumentDic[Instypename];
+               if (temptype != type) continue;
+               CalcExpand info = new CalcExpand();
+               info.InsType = temptype;
+               info.Survey_point_Number = row.GetCell(0).StringCellValue;
+               info.Calc_Type = (CalcType)((int)row.GetCell(2).NumericCellValue);
+               calcs.Add(info);
+           }
+           return calcs;
+       }
+   }
+
 }

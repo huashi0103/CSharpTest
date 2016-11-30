@@ -42,6 +42,7 @@
     <Compile Include="CSWord.cs" />
     <Compile Include="CXML.cs" />
     <Compile Include="NExcel.cs" />
+    <Compile Include="Pic.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -70,6 +71,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>

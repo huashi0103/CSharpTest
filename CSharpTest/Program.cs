@@ -5,13 +5,23 @@ using System.Text;
 using System.IO;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using WinDraw;
+using System.Diagnostics;
 
 namespace CSharpTest
 {
     class Program
     {
+
         static void Main(string[] args) 
         {
+            Pic pic = new Pic();
+            var bit = pic.pic1(3);
+            string path = "D:\\2.jpg";
+            if (File.Exists(path)) File.Delete(path);
+            bit.Save(path);
+            Process.Start(path);
+            Console.WriteLine("OK");
             //NExcel excel = new NExcel();
             //string filepath = @"D:\WORK\Project\三峡\三峡工程自动化文件\XIN三峡枢纽考证表格式.xls";
             //excel.Open(filepath);
@@ -90,10 +100,15 @@ namespace CSharpTest
             //{
             //    Console.WriteLine(v);
             //}
-            Console.WriteLine("Sb1-2与Nb1-2".Split('与')[0]);
+            //Console.WriteLine("Sb1-2与Nb1-2".Split('与')[0]);
             //string r = Regex.Replace(DateTime.Now.TimeOfDay.ToString(), @"\.\d+$", string.Empty);
             //var ts = TimeSpan.Parse(r);
-            //Console.WriteLine(ts.ToString());
+
+            //Console.WriteLine(DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss"));
+            //double a = 42639.00;
+            //string s="该仪器在洞口开挖过程中,由于放炮仪器周围岩石脱落,造成6米处仪器露在外面";
+            //string d="35A";
+            //Console.WriteLine(d.Substring(0, d.Length-1));
             //CSqlServer.test();
             //CAccessClass.Test();
             Console.ReadLine();

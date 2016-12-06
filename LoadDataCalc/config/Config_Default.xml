@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <ProConfig ProjectName="DefaultProject">
   <DataRoot>D:\wokspace\CSharpTest\LoadDataCalc\bin\Debug</DataRoot>
+  <DataBase IsAuto="1">Data Source =127.0.0.1;Initial Catalog = MWDatabase;User ID = sa;Password = sa;</DataBase>
   <ProCode IsMoshu="0">
   </ProCode>
   <Instruments>

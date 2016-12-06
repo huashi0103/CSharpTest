@@ -22,7 +22,12 @@ namespace LoadDataCalc
         /// <summary>特殊计算方法的缓存
         /// </summary>
         public List<CalcExpand> CalcExpandList = new List<CalcExpand>();
-        
+
+        /// <summary>仪器类型
+        /// </summary>
+        public InstrumentType InsType = InstrumentType.BaseInstrument;
+
+
         public  BaseInstrument()
         {
             FuncDic.Add(CalcType.DifBlock, DifBlockExpand);
@@ -32,10 +37,6 @@ namespace LoadDataCalc
             FuncDic.Add(CalcType.CalcExpand2, Expand2);
             FuncDic.Add(CalcType.CalcExpand3, Expand3);
         }
-
-        /// <summary>仪器类型
-        /// </summary>
-        public InstrumentType InsType = InstrumentType.BaseInstrument;
 
         public double DifBlockExpand(ParamData param, SurveyData data, string expression)
         {
@@ -410,6 +411,10 @@ namespace LoadDataCalc
         /// 是否是模数
         /// </summary>
         public bool IsMoshu = false;
+        /// <summary>
+        /// 钢筋计直径
+        /// </summary>
+        public double Steel_Diameter_L;
 
         /// <summary>
         /// 混凝土膨胀系数//应变计无应力计专用
@@ -485,6 +490,19 @@ namespace LoadDataCalc
     /// </summary>
     public class PointSurveyData
     {
+
+        public PointSurveyData(InstrumentType ins)
+        {
+            m_InsType = ins;
+        }
+        /// <summary>
+        /// 数据对应的仪器类型
+        /// </summary>
+        public InstrumentType InsType
+        {
+            get { return m_InsType; }
+        }
+        private InstrumentType m_InsType;
         /// <summary>
         /// 测点名
         /// </summary>
@@ -543,7 +561,7 @@ namespace LoadDataCalc
         /// <summary>
         /// 模数，当直接读取的值为模数时，与Survey_ZorR相同，否则为平方后/1000的值
         /// </summary>
-       // public double Survey_ZorRMoshu;
+        public double Survey_ZorRMoshu;
 
         /// <summary> 用于存储应变计和应变计组对应的无应力计的数据
         /// </summary>

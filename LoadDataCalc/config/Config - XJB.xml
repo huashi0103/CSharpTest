@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <ProConfig ProjectName="向家坝">
   <DataRoot>D:\AWORK\向家坝\向家坝数据</DataRoot>
-  <DataBase IsAuto="0">Data Source =127.0.0.1;Network Library = DBMSSOCN;Initial Catalog = XJBDatabase;User ID = sa;Password = sa;</DataBase>
+  <DataBase IsAuto="0">Data Source =127.0.0.1;Initial Catalog = XJBDatabase;User ID = sa;Password = sa;</DataBase>
   <ProCode IsMoshu="1">XJB</ProCode>
   <Instruments>
     <Ins Name="单点位移计">

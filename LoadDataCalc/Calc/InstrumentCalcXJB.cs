@@ -591,7 +591,7 @@ namespace LoadDataCalc
             {
                 if (data.Survey_ZorR > 5000)
                 {
-                    result = param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT);
+                    result = param.Gorf * (data.Survey_ZorR - param.ZorR) + (param.Korb - param.Concrete_Expansion_ac) * (data.Survey_RorT - param.RorT);
                     //data.Survey_ZorRMoshu = data.Survey_ZorR;
                 }
                 else
@@ -622,7 +622,38 @@ namespace LoadDataCalc
         }
         public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
         {
-            return base.ShakeString(param, data, expand);
+            //Gorf*(Survey_ZorR-ZorR)+Korb*(Survey_RorT-RorT)
+            double result = 0;
+            double Tcorrect = (data.Survey_RorT != 0) ? param.Korb * (data.Survey_RorT - param.RorT) : 0;
+            if (Math.Abs(data.Survey_ZorR) > 1)
+            {
+                //if (data.Survey_ZorR > 2000)//模数
+                {
+                    result = param.Gorf * (data.Survey_ZorR - param.ZorR) + Tcorrect;
+                    //data.Survey_ZorRMoshu = data.Survey_ZorR;
+                }
+                //else//频率
+                //{
+                //    //录入的是频率或者模数
+                //    if (Config.IsMoshu)
+                //    {
+
+                //        result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) / 1000.0 - param.ZorR) + Tcorrect;
+                //    }
+                //    else
+                //    {
+                //        result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) - param.ZorR * param.ZorR) + Tcorrect;
+                //    }
+                //    //data.Survey_ZorRMoshu = Math.Pow(data.Survey_ZorR, 2) / 1000;
+                //}
+            }
+            result += param.Constant_b;
+            data.Tempreture = data.Survey_RorT;
+            data.LoadReading = result;
+            //*1000/面积
+            data.ResultReading = result * 1000 / (Math.PI * Math.Pow(param.Steel_Diameter_L / 2.0, 2));
+            
+            return result;
         }
         public override double AutoDefined(ParamData param, SurveyData data, string expression)
         {
@@ -641,7 +672,19 @@ namespace LoadDataCalc
         }
         public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
         {
-            return base.ShakeString(param, data, expand);
+            //Gorf*(Survey_ZorR-ZorR)+Korb*(Survey_RorT-RorT)
+            double result = 0;
+            double Tcorrect = (data.Survey_RorT != 0) ? param.Korb * (data.Survey_RorT - param.RorT) : 0;
+            if (Math.Abs(data.Survey_ZorR) > 1)
+            {
+                  result = param.Gorf * (data.Survey_ZorR - param.ZorR) + Tcorrect;
+                    //data.Survey_ZorRMoshu = data.Survey_ZorR;
+            }
+            data.Tempreture = data.Survey_RorT;
+            data.LoadReading = result;
+            data.ResultReading = result * 1000 / (Math.PI * Math.Pow(param.Steel_Diameter_L / 2.0, 2));
+
+            return result;
         }
         public override double AutoDefined(ParamData param, SurveyData data, string expression)
         {
@@ -721,8 +764,8 @@ namespace LoadDataCalc
                 }
                 else
                 {
-                    //dic.Value.Survey_ZorRMoshu = Math.Pow(dic.Value.Survey_ZorR, 2) / 1000.0;
-                    //value += dic.Value.Survey_ZorRMoshu;
+                    dic.Value.Survey_ZorRMoshu = Math.Pow(dic.Value.Survey_ZorR, 2) / 1000.0;
+                    value += dic.Value.Survey_ZorRMoshu;
                 }
             }
             if (count == data.MultiDatas.Keys.Count)

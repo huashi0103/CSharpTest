@@ -242,8 +242,10 @@ namespace LoadDataCalc
                 calcOneGroupNull(Mparam, Mdata);
             }
 
-            //倒序排列下//默认是从深到浅。当孔口为0的时候为从浅到深
+            //倒序排列下//读数据时从深到浅。
+            //数据库中是从浅到深，有基准基准写0，没有从1开始写
             Dictionary<string, SurveyData> Dic = new Dictionary<string, SurveyData>();
+            if (Mdata.MultiDatas.Count == 0) return result;
             List<string> li = new List<string>(Mdata.MultiDatas.Keys);
             string serial = null;
             foreach (string number in li)

@@ -34,6 +34,9 @@ namespace LoadDataCalc
         public Action<string> StatusAction;
         //数据锁
         private object DataLock = new object();
+        /// <summary>写入数据的其实行ID，默认-1;每次写数据的时候重新赋值
+        /// </summary>
+        public int ID = -1;
 
         private LoadDataClass()
         {
@@ -83,15 +86,15 @@ namespace LoadDataCalc
         {
             foreach(string ins in insname)
             {
-                string[] multikey = Config.Instruments.Where(x => x.InsName == ins).FirstOrDefault().KeyWord.ToArray();
+                var result = Config.Instruments.Where(x => x.InsName == ins).FirstOrDefault();
+                if (result == null) continue;
+                string[] multikey = result.KeyWord.ToArray();
                 if (DataUtils.CheckContainStr(filename, multikey)) return true;
             }
             return false;
-      
         }
 
-        /// <summary>
-        /// 获取包含关键词的文件，关键词为空，返回所有文件
+        /// <summary>获取包含关键词的文件，关键词为空，返回所有文件
         /// </summary>
         /// <param name="keyword">关键词</param>
         /// <returns>文件</returns>
@@ -141,14 +144,12 @@ namespace LoadDataCalc
  
         }
         
-        /// <summary>
-        ///         //数据缓存
+        /// <summary> //读取计算的数据缓存
         /// </summary>
         public List<PointSurveyData> SurveyDataCach = new List<PointSurveyData>();
         public Dictionary<string, List<ErrorMsg>> ErrorMsgCach = new Dictionary<string, List<ErrorMsg>>();
 
-        /// <summary>
-        ///数据缓存,缓存应变计对应的无应力计数据
+        /// <summary>数据缓存,缓存应变计对应的无应力计数据
         /// </summary>
         public List<PointSurveyData> SurveyDataCachExpand = new List<PointSurveyData>();
      
@@ -161,6 +162,7 @@ namespace LoadDataCalc
             SurveyDataCach.Clear();
             ErrorMsgCach.Clear();
             SurveyDataCachExpand.Clear();
+            ID = -1;
         }
         /// <summary>
         /// 检查文件是否被占用
@@ -275,7 +277,7 @@ namespace LoadDataCalc
             foreach (var pd in SurveyDataCach)
             {
                 ParamData param = inscalc.GetParam(pd.SurveyPoint, instype.ToString());
-                PointSurveyData NonStressPoint = new PointSurveyData();
+                PointSurveyData NonStressPoint=null;
                 if ((instype == InstrumentType.Fiducial_Strain_Gauge || instype == InstrumentType.Fiducial_Strain_Group)&&param.IsHasNonStress )
                 {
                    NonStressPoint= SurveyDataCachExpand.Where(p => p.SurveyPoint == param.NonStressNumber).FirstOrDefault();
@@ -330,6 +332,36 @@ namespace LoadDataCalc
             }
             ErrorMsg.Log(Errors);
         }
+        
+        /// <summary> 检查数据缓存的第一个点的第一条数据是否比数据库中的最后一条语句大，
+        /// 防止多次写入，每次写入之前都做判断
+        /// </summary>
+        /// <param name="ins">仪器类型</param>
+        /// <param name="tableName">测值表还是成果表</param>
+        /// <returns></returns>
+        public bool CheckSurveyDate(InstrumentType ins,string tableName)
+        {
+            var firstPd = SurveyDataCach.First(p => p.Datas.Count > 0);
+            if (firstPd.InsType != ins) return false;
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            DateTime maxDatetime = new DateTime();
+            string sql = Config.IsAuto ? "select max(Observation_Date) from {0} where Survey_point_Number=@Survey_point_Number and RecordMethod='人工'" :
+                                 "select max(Observation_Date) from {0} where Survey_point_Number=@Survey_point_Number";
+            sql = String.Format(sql, tableName);
+            var dtresult = sqlhelper.SelectFirst(sql, new SqlParameter("@Survey_point_Number", firstPd.SurveyPoint));
+            bool flag = (dtresult != DBNull.Value);
+            if (flag) maxDatetime = (DateTime)dtresult;
+            if (flag)
+            {
+                if (firstPd.Datas[0].SurveyDate.Date.CompareTo(maxDatetime) <= 0)
+                {
+                    return false;
+                }
+            }
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from  " + tableName);
+            ID = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            return true;
+        }
         /// <summary>写测值表
         /// </summary>
         /// <returns></returns>
@@ -361,7 +393,38 @@ namespace LoadDataCalc
             ErrorMsg.Log(String.Format("写入{0}行成果值", result));
             return result == icount;
         }
-        
+        /// <summary> 回滚数据
+        /// </summary>
+        /// <param name="ins">仪器类型</param>
+        public void Rollback(InstrumentType ins)
+        {
+            if (ID < 0) return;
+            var firstPd = SurveyDataCach.First(p => p.Datas.Count > 0);
+            if (firstPd.InsType != ins) return;
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            string sql = Config.IsAuto ? "Delete from {0} where ID in  (Select ID from {1} where ID>{2} and RecordMethod='人工')" :
+               "Delete from {0} where  ID in (Select ID from {1} where ID>{2})";
+            string table=Config.InsCollection[ins.GetDescription()].Measure_Table;
+            sqlhelper.InsertDelUpdate(string.Format(sql, table, table, ID));
+            table = Config.InsCollection[ins.GetDescription()].Result_Table;
+            sqlhelper.InsertDelUpdate(string.Format(sql, table, table, ID));
+            ID = -1;
+        }
+        public bool RollbackCheck(InstrumentType ins,out DateTime dt)
+        {
+          var sqlhelper = CSqlServerHelper.GetInstance();
+          dt = new DateTime();
+          if (ID < 0) return false;
+          string table=Config.InsCollection[ins.GetDescription()].Measure_Table;
+          string sql = Config.IsAuto ? "select UpdateTime from {0} where  ID>{1} and RecordMethod='人工'" :
+                "select UpdateTime from {0} where ID>{1}";
+            sql = String.Format(sql,table,ID);
+            var result = sqlhelper.SelectFirst(sql);
+            bool flag=(result != DBNull.Value);
+            if(flag)dt = (DateTime)result;
+            return flag;
+        }
+
         public void getDir(string path, List<string> FileList)
         {
             getFiles(FileList, path, "*.xls");

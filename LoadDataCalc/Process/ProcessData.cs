@@ -73,7 +73,6 @@ namespace LoadDataCalc
             info.TimeIndex = -1;
             info.RemarkIndex = -1;
             bool flag = true;
-            bool Zflag = true;
             bool Rflag = true;
             int count = psheet.LastRowNum > 10 ? 10 : psheet.LastRowNum;
             for (int j = 0; j < count; j++)//读取前10行
@@ -96,7 +95,6 @@ namespace LoadDataCalc
                     else if (DataUtils.CheckContainStr(cellstr, "digit", "读数(L)", "电阻比", "频模", "频率", "模数"))
                     {
                         info.ZoRIndex = pyhindex;
-                        Zflag = false;
                     }
                     else if (DataUtils.CheckContainStr(cellstr, "电阻", "电阻值", "温度电阻") && !DataUtils.CheckContainStr(cellstr, "电阻比"))
                     {
@@ -104,7 +102,7 @@ namespace LoadDataCalc
                         Rflag = false;
                     }
                     else if (cellstr.Contains("备注")) info.RemarkIndex = pyhindex;
-                    if (DataUtils.CheckContainStr(cellstr, "计算结果", "开合度", "张合量(mm)", "应变"))//对比用
+                    if (DataUtils.CheckContainStr(cellstr, "计算结果", "开合度", "张合量(mm)", "应变","应力"))//对比用
                     {
                         info.Result = pyhindex;
                     }
@@ -257,9 +255,10 @@ namespace LoadDataCalc
                 //测试代码
 #if TEST
                 PointCach[path].Add(psheet.SheetName);
+
 #endif
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
-                PointSurveyData pd = new PointSurveyData();
+                PointSurveyData pd = new PointSurveyData(this.InsType);
                 pd.SurveyPoint = pointnumber;
                 pd.ExcelPath = path;
                 DataInfo dinfo = new DataInfo();
@@ -278,6 +277,11 @@ namespace LoadDataCalc
                 bool FirstFlag = (ZStandard == 0);//是否找到基准行
                 SurveyData lastsd = null;
                 int count = psheet.PhysicalNumberOfRows;
+                if (pd.SurveyPoint == " ASb-9-2")
+                {
+
+                }
+
                 //for (int j = count - 1; j > 0; j--)//从后往前读，没法滤掉有问题的数据
                 for (int j = 1; j <count+1; j++)//从前往后读
                 {
@@ -289,7 +293,7 @@ namespace LoadDataCalc
                         //获取时间，不是时间进入下一次循环
                         if (!GetDateTime(row, dinfo, out dt)) continue;
                         //数据库中有数据，对比上次最大时间，比上次时间小，进入下一次循环
-                        if (flag && dt.CompareTo(maxDatetime) <= 0) continue;
+                        if (flag && dt.Date.CompareTo(maxDatetime) <= 0) continue;
                         SurveyData sd = new SurveyData();
                         string errmsg = null;
                         if (!ReadRow(row, dinfo, sd, out  errmsg))//读当前行
@@ -408,8 +412,7 @@ namespace LoadDataCalc
                 cell.CellType==CellType.Formula)
             {
                 if (cell.CellType == CellType.Formula&&cell.CellFormula == "#N/A") value = 0;
-                if (cell == null) value = 0;
-                value = cell.NumericCellValue;
+                else value = cell.NumericCellValue;
                 return true;
             }
             else
@@ -435,7 +438,8 @@ namespace LoadDataCalc
                     SurveyNumberCach.Add(dt.Rows[i][0].ToString().ToUpper().Trim());
                 }
             }
-            return SurveyNumberCach.Contains(name.ToUpper().Trim());
+            return SurveyNumberCach.Exists(p => DataUtils.CheckStrIgnoreCN(p,name.ToUpper().Trim()));
+              
         }
         /// <summary>
         /// 检查扩展数据(无应力计)点名是否在数据库/不区分大小写，去空格
@@ -487,6 +491,7 @@ namespace LoadDataCalc
             }
             else
             {
+                if (cell.CellType == CellType.Formula && cell.CellFormula == "#REF!") return false;
                 if (!HSSFDateUtil.IsCellDateFormatted(cell)) return false;
             }
             if (info.TimeIndex > 0 && row.GetCell(info.TimeIndex) != null && row.GetCell(info.TimeIndex).ToString() != "")

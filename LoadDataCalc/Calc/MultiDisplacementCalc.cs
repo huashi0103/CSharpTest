@@ -56,7 +56,7 @@ namespace LoadDataCalc
        }
        public MultiDisplacementCalc[] GetBySurveypoint(string SurveyPoint)
        {
-            return MultiDisplacementCalcs.Where(calc => calc.Survey_point_Number == SurveyPoint).ToArray(); 
+            return MultiDisplacementCalcs.Where(calc => DataUtils.CheckStrIgnoreCN(calc.Survey_point_Number, SurveyPoint)).ToArray(); 
        }
 
        public List<MultiDisplacementCalc> MultiDisplacementCalcs = new List<MultiDisplacementCalc>();

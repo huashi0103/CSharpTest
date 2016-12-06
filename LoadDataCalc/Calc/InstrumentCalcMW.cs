@@ -1067,7 +1067,7 @@ namespace LoadDataCalc
             result += param.Constant_b;
             data.Tempreture = data.Survey_RorT;
             data.LoadReading = result;
-            data.ResultReading = result * param.KpaToMpa;
+            data.ResultReading = result * 1000 / (Math.PI * Math.Pow(param.Steel_Diameter_L / 2.0, 2));
 
             return result;
         }

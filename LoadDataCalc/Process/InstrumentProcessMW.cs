@@ -478,7 +478,7 @@ namespace LoadDataCalc
         }
         protected PointSurveyData LoadOnepoint(string path, string point, DataInfo dinfo, ISheet psheet, ref List<ErrorMsg> errors)
         {
-            PointSurveyData pd = new PointSurveyData();
+            PointSurveyData pd = new PointSurveyData(this.InsType);
             pd.SurveyPoint = point;
             pd.ExcelPath = path;
             DateTime maxDatetime = new DateTime();
@@ -738,7 +738,7 @@ namespace LoadDataCalc
                 PointCach[path].Add(psheet.SheetName);
 #endif
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
-                PointSurveyData pd = new PointSurveyData();
+                PointSurveyData pd = new PointSurveyData(this.InsType);
                 pd.SurveyPoint = psheet.SheetName;
                 DataInfo dinfo = new DataInfo();
                 if (info == null)
@@ -948,7 +948,7 @@ namespace LoadDataCalc
                 PointCach[path].Add(psheet.SheetName);
 #endif
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
-                PointSurveyData pd = new PointSurveyData();
+                PointSurveyData pd = new PointSurveyData(this.InsType);
                 pd.SurveyPoint = pointnumber;
                 pd.ExcelPath = path;
                 IsShallowToDeep = NonNumberDataCach.Contains(pd.SurveyPoint.ToUpper().Trim());
@@ -1137,7 +1137,7 @@ namespace LoadDataCalc
                 string serialnum = (string)dt.Rows[i][0];
                 //list.Add(serialnum);
                 bool flag = true;
-                for (int j = 0; j <list.Count; j++)
+                for (int j = 0; j < list.Count; j++)
                 {
                     if (Compare(serialnum, list[j]))
                     {
@@ -1286,7 +1286,7 @@ namespace LoadDataCalc
                     continue;
                 }
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
-                PointSurveyData pd = new PointSurveyData();
+                PointSurveyData pd = new PointSurveyData(this.InsType);
                 pd.SurveyPoint = sheetname;
                 pd.ExcelPath = path;
                 DataInfo info = GetInfo(psheet, path);
@@ -1296,10 +1296,8 @@ namespace LoadDataCalc
                 }
 
                 DateTime maxDatetime = new DateTime();
-                string sql = String.Format("select max(Observation_Date) from {0} where Survey_point_Number=@Survey_point_Number", info.TableName);
-                var result = sqlhelper.SelectFirst(sql, new SqlParameter("@Survey_point_Number", pd.SurveyPoint));
-                bool flag = (result != DBNull.Value);
-                if (flag) maxDatetime = (DateTime)result;
+                bool flag = GetMaxDate(pd.SurveyPoint, out maxDatetime);
+
                 double ZStandard = 0;
                 if (!flag) ZStandard = GetZorRStandard(pd.SurveyPoint);
                 bool FirstFlag = (ZStandard == 0);//是否找到基准行
@@ -1425,7 +1423,7 @@ namespace LoadDataCalc
                 }
             }
             if (!CheckNameExpand(number)) return;
-            PointSurveyData pd = new PointSurveyData();
+            PointSurveyData pd = new PointSurveyData(InstrumentType.Fiducial_Nonstress);
             pd.SurveyPoint = number;
        
             DataInfo info = GetNonInfo(psheet);
@@ -1639,7 +1637,7 @@ namespace LoadDataCalc
                     continue;
                 }
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
-                PointSurveyData pd = new PointSurveyData();
+                PointSurveyData pd = new PointSurveyData(this.InsType);
                 pd.SurveyPoint = sheetname;
                 pd.ExcelPath = path;
                 info = GetInfo(psheet, path);
@@ -1794,7 +1792,7 @@ namespace LoadDataCalc
                     }
                 }
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
-                PointSurveyData pd = new PointSurveyData();
+                PointSurveyData pd = new PointSurveyData(this.InsType);
                 pd.SurveyPoint = pointnumber;
                 pd.ExcelPath = path;
                 DataInfo info = GetInfo(psheet);
@@ -2142,7 +2140,7 @@ namespace LoadDataCalc
                     serials.Add(tempser);
 
                 }
-                PointSurveyData pd = new PointSurveyData();
+                PointSurveyData pd = new PointSurveyData(this.InsType);
                 pd.SurveyPoint = SurveyPoint;
                 pd.ExcelPath = path;
                 for (int i = 0; i < count; i++)
@@ -2233,7 +2231,7 @@ namespace LoadDataCalc
                     continue;
                 }
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
-                PointSurveyData pd = new PointSurveyData();
+                PointSurveyData pd = new PointSurveyData(this.InsType);
                 pd.SurveyPoint = psheet.SheetName;
                 pd.ExcelPath = path;
                 DataInfo info = GetInfo(psheet);
@@ -2485,7 +2483,7 @@ namespace LoadDataCalc
                 info.RorTIndex = info.Findex + 1;//温度电阻+1
             }
             if (!CheckNameExpand(number)) return;
-            PointSurveyData pd = new PointSurveyData();
+            PointSurveyData pd = new PointSurveyData(InstrumentType.Fiducial_Nonstress);
             pd.SurveyPoint = number;
             DateTime maxDatetime = new DateTime();
             string sql = "select max(Observation_Date) from Survey_Nonstress where Survey_point_Number=@Survey_point_Number";
@@ -2653,7 +2651,7 @@ namespace LoadDataCalc
                 List<PointSurveyData> PointList = new List<PointSurveyData>();
                 foreach (string name in points)
                 {
-                    PointSurveyData pd = new PointSurveyData();
+                    PointSurveyData pd = new PointSurveyData(this.InsType);
                     pd.SurveyPoint = name;
                     PointList.Add(pd);
                 }
@@ -2988,7 +2986,7 @@ namespace LoadDataCalc
                 List<PointSurveyData> PointList = new List<PointSurveyData>();
                 for (int k = 0; k < points.Count; k++)
                 {
-                    PointSurveyData pd = new PointSurveyData();
+                    PointSurveyData pd = new PointSurveyData(this.InsType);
                     pd.SurveyPoint = points[0];
                     PointList.Add(pd);
                 }
@@ -3176,7 +3174,7 @@ namespace LoadDataCalc
                 PointCach[path].Add(psheet.SheetName);
 #endif
                 if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
-                PointSurveyData pd = new PointSurveyData();
+                PointSurveyData pd = new PointSurveyData(this.InsType);
                 pd.SurveyPoint = pointnumber;
                 pd.ExcelPath = path;
                 DataInfo dinfo = new DataInfo();

@@ -40,15 +40,16 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.btnConfig = new System.Windows.Forms.Button();
-            this.btnWrite = new System.Windows.Forms.Button();
             this.btnSearch = new System.Windows.Forms.Button();
             this.txNumber = new System.Windows.Forms.TextBox();
+            this.btnBack = new System.Windows.Forms.Button();
+            this.btnWrite = new System.Windows.Forms.Button();
             this.btnNext = new System.Windows.Forms.Button();
             this.btnlast = new System.Windows.Forms.Button();
-            this.btnShowNonStress = new System.Windows.Forms.Button();
             this.btnNextError = new System.Windows.Forms.Button();
             this.btnfile = new System.Windows.Forms.Button();
             this.numericError = new System.Windows.Forms.NumericUpDown();
+            this.btnShowNonStress = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericLimit)).BeginInit();
@@ -92,15 +93,15 @@
             this.dataGridView1.Location = new System.Drawing.Point(0, 119);
             this.dataGridView1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.ReadOnly = true;
             this.dataGridView1.RowTemplate.Height = 23;
-            this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dataGridView1.Size = new System.Drawing.Size(1135, 446);
             this.dataGridView1.TabIndex = 3;
             // 
             // btnRead
             // 
             this.btnRead.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnRead.Location = new System.Drawing.Point(240, 5);
+            this.btnRead.Location = new System.Drawing.Point(242, 5);
             this.btnRead.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnRead.Name = "btnRead";
             this.btnRead.Size = new System.Drawing.Size(104, 30);
@@ -173,12 +174,12 @@
             this.tableLayoutPanel1.ColumnCount = 8;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 101F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 135F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 113F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 117F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 124F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 116F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 122F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 541F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 167F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 152F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 174F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 406F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.Controls.Add(this.label3, 0, 2);
@@ -188,15 +189,16 @@
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.btnRead, 2, 0);
             this.tableLayoutPanel1.Controls.Add(this.btnConfig, 2, 1);
-            this.tableLayoutPanel1.Controls.Add(this.btnWrite, 4, 0);
             this.tableLayoutPanel1.Controls.Add(this.btnSearch, 2, 2);
             this.tableLayoutPanel1.Controls.Add(this.txNumber, 1, 2);
-            this.tableLayoutPanel1.Controls.Add(this.btnNext, 4, 2);
-            this.tableLayoutPanel1.Controls.Add(this.btnlast, 5, 2);
+            this.tableLayoutPanel1.Controls.Add(this.btnBack, 3, 1);
+            this.tableLayoutPanel1.Controls.Add(this.btnWrite, 3, 0);
+            this.tableLayoutPanel1.Controls.Add(this.btnNext, 3, 2);
+            this.tableLayoutPanel1.Controls.Add(this.btnlast, 4, 2);
             this.tableLayoutPanel1.Controls.Add(this.btnNextError, 4, 1);
+            this.tableLayoutPanel1.Controls.Add(this.btnfile, 4, 0);
             this.tableLayoutPanel1.Controls.Add(this.numericError, 5, 1);
-            this.tableLayoutPanel1.Controls.Add(this.btnfile, 5, 0);
-            this.tableLayoutPanel1.Controls.Add(this.btnShowNonStress, 6, 0);
+            this.tableLayoutPanel1.Controls.Add(this.btnShowNonStress, 5, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
@@ -232,7 +234,7 @@
             // btnConfig
             // 
             this.btnConfig.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnConfig.Location = new System.Drawing.Point(240, 45);
+            this.btnConfig.Location = new System.Drawing.Point(242, 45);
             this.btnConfig.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnConfig.Name = "btnConfig";
             this.btnConfig.Size = new System.Drawing.Size(104, 30);
@@ -240,21 +242,10 @@
             this.btnConfig.Text = "配置";
             this.btnConfig.UseVisualStyleBackColor = true;
             // 
-            // btnWrite
-            // 
-            this.btnWrite.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnWrite.Location = new System.Drawing.Point(357, 5);
-            this.btnWrite.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.btnWrite.Name = "btnWrite";
-            this.btnWrite.Size = new System.Drawing.Size(107, 30);
-            this.btnWrite.TabIndex = 9;
-            this.btnWrite.Text = "写入数据库";
-            this.btnWrite.UseVisualStyleBackColor = true;
-            // 
             // btnSearch
             // 
             this.btnSearch.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnSearch.Location = new System.Drawing.Point(240, 85);
+            this.btnSearch.Location = new System.Drawing.Point(242, 85);
             this.btnSearch.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnSearch.Name = "btnSearch";
             this.btnSearch.Size = new System.Drawing.Size(104, 30);
@@ -270,10 +261,32 @@
             this.txNumber.Size = new System.Drawing.Size(129, 28);
             this.txNumber.TabIndex = 12;
             // 
+            // btnBack
+            // 
+            this.btnBack.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.btnBack.Location = new System.Drawing.Point(357, 45);
+            this.btnBack.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnBack.Name = "btnBack";
+            this.btnBack.Size = new System.Drawing.Size(107, 30);
+            this.btnBack.TabIndex = 19;
+            this.btnBack.Text = "回滚数据";
+            this.btnBack.UseVisualStyleBackColor = true;
+            // 
+            // btnWrite
+            // 
+            this.btnWrite.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.btnWrite.Location = new System.Drawing.Point(357, 5);
+            this.btnWrite.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnWrite.Name = "btnWrite";
+            this.btnWrite.Size = new System.Drawing.Size(107, 30);
+            this.btnWrite.TabIndex = 9;
+            this.btnWrite.Text = "写入数据";
+            this.btnWrite.UseVisualStyleBackColor = true;
+            // 
             // btnNext
             // 
             this.btnNext.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnNext.Location = new System.Drawing.Point(359, 85);
+            this.btnNext.Location = new System.Drawing.Point(358, 85);
             this.btnNext.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnNext.Name = "btnNext";
             this.btnNext.Size = new System.Drawing.Size(104, 30);
@@ -284,7 +297,7 @@
             // btnlast
             // 
             this.btnlast.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnlast.Location = new System.Drawing.Point(477, 85);
+            this.btnlast.Location = new System.Drawing.Point(497, 85);
             this.btnlast.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnlast.Name = "btnlast";
             this.btnlast.Size = new System.Drawing.Size(108, 30);
@@ -292,22 +305,10 @@
             this.btnlast.Text = "上一点";
             this.btnlast.UseVisualStyleBackColor = true;
             // 
-            // btnShowNonStress
-            // 
-            this.btnShowNonStress.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnShowNonStress.Location = new System.Drawing.Point(594, 5);
-            this.btnShowNonStress.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.btnShowNonStress.Name = "btnShowNonStress";
-            this.btnShowNonStress.Size = new System.Drawing.Size(111, 30);
-            this.btnShowNonStress.TabIndex = 10;
-            this.btnShowNonStress.Text = "无应力计";
-            this.btnShowNonStress.UseVisualStyleBackColor = true;
-            this.btnShowNonStress.Visible = false;
-            // 
             // btnNextError
             // 
             this.btnNextError.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnNextError.Location = new System.Drawing.Point(353, 45);
+            this.btnNextError.Location = new System.Drawing.Point(494, 45);
             this.btnNextError.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnNextError.Name = "btnNextError";
             this.btnNextError.Size = new System.Drawing.Size(115, 30);
@@ -318,7 +319,7 @@
             // btnfile
             // 
             this.btnfile.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnfile.Location = new System.Drawing.Point(477, 5);
+            this.btnfile.Location = new System.Drawing.Point(497, 5);
             this.btnfile.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnfile.Name = "btnfile";
             this.btnfile.Size = new System.Drawing.Size(108, 30);
@@ -335,15 +336,27 @@
             0,
             0,
             131072});
-            this.numericError.Location = new System.Drawing.Point(476, 46);
+            this.numericError.Location = new System.Drawing.Point(638, 46);
             this.numericError.Name = "numericError";
-            this.numericError.Size = new System.Drawing.Size(110, 28);
+            this.numericError.Size = new System.Drawing.Size(146, 28);
             this.numericError.TabIndex = 18;
             this.numericError.Value = new decimal(new int[] {
             1,
             0,
             0,
             131072});
+            // 
+            // btnShowNonStress
+            // 
+            this.btnShowNonStress.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.btnShowNonStress.Location = new System.Drawing.Point(655, 5);
+            this.btnShowNonStress.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnShowNonStress.Name = "btnShowNonStress";
+            this.btnShowNonStress.Size = new System.Drawing.Size(111, 30);
+            this.btnShowNonStress.TabIndex = 10;
+            this.btnShowNonStress.Text = "无应力计";
+            this.btnShowNonStress.UseVisualStyleBackColor = true;
+            this.btnShowNonStress.Visible = false;
             // 
             // FormLoadCalc
             // 
@@ -393,6 +406,7 @@
         private System.Windows.Forms.Button btnlast;
         private System.Windows.Forms.Button btnfile;
         private System.Windows.Forms.NumericUpDown numericError;
+        private System.Windows.Forms.Button btnBack;
     }
 }
 

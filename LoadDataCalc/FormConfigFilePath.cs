@@ -273,7 +273,7 @@ namespace LoadDataCalc
             
             foreach (var d in Files)
             {
-                ListViewGroup group = new ListViewGroup(d.Key);
+                ListViewGroup group = new ListViewGroup(d.Key+":"+d.Value.Count);
                 listviewFiles.Groups.Add(group);
                 foreach (var f in d.Value)
                 {

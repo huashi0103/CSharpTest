@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <ProConfig ProjectName="向家坝">
-  <DataRoot>D:\AWORK\向家坝\向家坝数据</DataRoot>
+  <DataRoot>D:\AWORK\向家坝\向家坝10月份数据</DataRoot>
   <DataBase IsAuto="0">Data Source =127.0.0.1;Network Library = DBMSSOCN;Initial Catalog = XJBDatabase;User ID = sa;Password = sa;</DataBase>
   <ProCode IsMoshu="1">XJB</ProCode>
   <Instruments>
     <Ins Name="单点位移计">
       <KeyWord>钢丝位移计</KeyWord>
-	  <KeyWord>基岩变位计</KeyWord>
+      <KeyWord>基岩变位计</KeyWord>
     </Ins>
     <Ins Name="固定测斜仪">
       <KeyWord>固定测斜仪</KeyWord>
@@ -25,11 +25,11 @@
     </Ins>
     <Ins Name="应变计">
       <KeyWord>应变计</KeyWord>
-	  <KeyWord>单向应变计</KeyWord>
+      <KeyWord>单向应变计</KeyWord>
     </Ins>
     <Ins Name="应变计组">
       <KeyWord>两向应变计</KeyWord>
-	  <KeyWord>三向应变计</KeyWord>
+      <KeyWord>三向应变计</KeyWord>
       <KeyWord>五向应变计</KeyWord>
     </Ins>
     <Ins Name="无应力计">
@@ -37,13 +37,13 @@
     </Ins>
     <Ins Name="测缝计">
       <KeyWord>测缝计</KeyWord>
-	  <KeyWord>裂缝计</KeyWord>
-	  <KeyWord>位错计</KeyWord>
+      <KeyWord>裂缝计</KeyWord>
+      <KeyWord>位错计</KeyWord>
     </Ins>
     <Ins Name="渗压计">
       <KeyWord>渗压计</KeyWord>
       <KeyWord>水位孔</KeyWord>
-	  <KeyWord>测压管</KeyWord>
+      <KeyWord>测压管</KeyWord>
     </Ins>
     <Ins Name="温度计">
       <KeyWord>温度计</KeyWord>
@@ -66,22 +66,22 @@
     <Ins Name="压应力计">
       <KeyWord>压应力计</KeyWord>
     </Ins>
-	<Ins Name="引张线">
+    <Ins Name="引张线">
       <KeyWord>引张线</KeyWord>
     </Ins>
-	<Ins Name="正倒垂线">
+    <Ins Name="正倒垂线">
       <KeyWord>正倒垂线</KeyWord>
     </Ins>
-	<Ins Name="大地测量">
+    <Ins Name="大地测量">
       <KeyWord>大地测量</KeyWord>
     </Ins>
-	<Ins Name="几何水准">
+    <Ins Name="几何水准">
       <KeyWord>几何水准</KeyWord>
     </Ins>
-	<Ins Name="静力水准">
+    <Ins Name="静力水准">
       <KeyWord>静力水准</KeyWord>
     </Ins>
-	<Ins Name="激光准直">
+    <Ins Name="激光准直">
       <KeyWord>激光准直</KeyWord>
     </Ins>
   </Instruments>

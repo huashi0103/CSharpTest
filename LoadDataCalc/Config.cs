@@ -6,42 +6,26 @@ using System.Xml;
 using System.Reflection;
 using System.IO;
 using NPOI.SS.UserModel;
+using System.Globalization;
 
 namespace LoadDataCalc
 {
     public  static class Config
     {
-        /// <summary>
-        /// 根目录
+        #region//config.xml中保存的配置参数
+        /// <summary> 根目录
         /// </summary>
         public static string DataRoot;
-        /// <summary> 当前项目用到的仪器类型
-        /// </summary>
-        public static  List<InsConfig> Instruments = new List<InsConfig>();
         /// <summary>项目名
         /// </summary>
         public static string ProjectName = "DefaultProject";
-        /// <summary>
-        /// 用户名
+        /// <summary>     //数据库字符串
         /// </summary>
-        public static  string UserName = "sa";
-        /// <summary>
-        /// 用户密码
-        /// </summary>
-        public static  string password = "sa";
-        //数据库字符串
         public static  string DataBase = "";
-        //程序集目录
-        private  static string Assemblydir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         /// <summary>
         /// 项目编码//构造数据处理类
         /// </summary>
         public static string ProCode = "";
-        /// <summary>
-        /// 误差限制默认为20
-        /// </summary>
-        public static double LimitZ = 20;
-        public static double LimitT = 20;
         /// <summary>
         /// 是否是模数//考证表中录入的参数基准录入的是模数还是频率
         /// 主要针对振弦式仪器
@@ -50,6 +34,28 @@ namespace LoadDataCalc
         /// <summary>是否自动化,自动化数据库多一个字段
         /// </summary>
         public static bool IsAuto = true;
+        /// <summary> 当前项目用到的仪器类型
+        /// </summary>
+        public static List<InsConfig> Instruments = new List<InsConfig>();
+        #endregion
+
+        /// <summary>
+        /// 用户名
+        /// </summary>
+        public static string UserName = "sa";
+        /// <summary>
+        /// 用户密码
+        /// </summary>
+        public static string password = "sa";
+        /// <summary>
+        /// 误差限制默认为20
+        /// </summary>
+        public static double LimitZ = 20;
+        public static double LimitT = 20;
+
+        //程序集目录
+        private static string Assemblydir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+
 
 #if TEST
         public static long Tick1 = 0;
@@ -68,12 +74,13 @@ namespace LoadDataCalc
             if (IsReadDefault) filename = "\\config\\Config_Default.xml";//default文件 包含所有种类仪器
             string path = Assemblydir + filename;
             if (!File.Exists(path)) return false;
+            XmlDocument xml = new XmlDocument();
+            XmlReaderSettings settings = new XmlReaderSettings();
+            settings.IgnoreComments = true;
+            XmlReader reader = null;
             try
             {
-                XmlDocument xml = new XmlDocument();
-                XmlReaderSettings settings = new XmlReaderSettings();
-                settings.IgnoreComments = true;
-                XmlReader reader = XmlReader.Create(path, settings);
+                reader = XmlReader.Create(path, settings);
                 xml.Load(reader);
                 var root = xml.DocumentElement;
                 ProjectName = root.Attributes["ProjectName"].Value;
@@ -100,13 +107,17 @@ namespace LoadDataCalc
                     }
                     Instruments.Add(ins);
                 }
-                
+
                 loadIns();
                 return true;
             }
             catch
             {
                 return false;
+            }
+            finally
+            {
+                if(reader!=null)reader.Close();
             }
         }
         private static void loadIns()
@@ -405,6 +416,12 @@ namespace LoadDataCalc
             }
             return false;
         }
+        public static bool CheckStrIgnoreCN(string a,string b)
+        {
+            return CultureInfo.GetCultureInfo("zh-cn").CompareInfo.Compare(a, b.ToUpper().Trim(), 
+                CompareOptions.IgnoreWidth) == 0;
+        }
+    
     }
     
 }

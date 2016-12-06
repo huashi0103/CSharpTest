@@ -115,6 +115,9 @@
     </Compile>
     <None Include="app.config" />
     <None Include="ClassDiagram1.cd" />
+    <None Include="config\CalcExpand.xls" />
+    <None Include="config\MultiDisplacement.xls" />
+    <None Include="config\PointNumberConfig.xls" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -127,7 +130,14 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <EmbeddedResource Include="config\Config.xml" />
+    <None Include="config\Config.xml" />
+    <None Include="config\Config - XJB.xml" />
+    <None Include="config\Config-MW.xml" />
+    <None Include="config\Config_Default.xml" />
+    <None Include="config\FileList-MW.xml" />
+    <None Include="config\FileList-XJB.xml" />
+    <None Include="config\FileList.xml" />
+    <None Include="config\InsConfig.xml" />
     <Content Include="DLLS\ICSharpCode.SharpZipLib.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -66,17 +66,40 @@ namespace LoadDataCalc
                 if (MessageBox.Show("确定写入数据库?", "提示", MessageBoxButtons.OKCancel) == 
                     System.Windows.Forms.DialogResult.Cancel) return;
                 var instype = Config.InsCollection.InstrumentDic[ comboType.Text];
+                //写入之前检查数据，防止多次写入
+                if (!loadData.CheckSurveyDate(instype, Config.InsCollection[comboType.Text].Measure_Table))
+                {
+                    MessageBox.Show("数据库或仪器类型已变动,请重新读取数据");
+                    return;
+                }
+                btnRead.Enabled = false;
                 bool flag = false;
                 flag = loadData.WirteToSurvey();
                 string surveyStatus = String.Format("写入测值{0}", (flag ? "成功" : "失败"));
                 flag = loadData.WirteToResult();
                 string resultSatus = String.Format("写入成果{0}", (flag ? "成功" : "失败"));
                 Status(surveyStatus + "," + resultSatus);
+                btnRead.Enabled = true;
+            };
+            btnBack.Click += (o, eg) => {
+                if (loadData.ID < 0) Status("没有数据可以回滚");
+          
+                var instype = Config.InsCollection.InstrumentDic[comboType.Text];
+                DateTime dt=new DateTime();
+                if (loadData.RollbackCheck(instype, out dt))
+                {
+                    if (MessageBox.Show(string.Format("将回滚{0}以后的数据，确定回滚数据?",dt.ToString()), "提示", MessageBoxButtons.OKCancel) ==
+                            System.Windows.Forms.DialogResult.Cancel) return;
+                }
+                ThreadPool.QueueUserWorkItem((obj) => {
+                    loadData.Rollback(instype);
+                    Status("回滚成功");
+                });
             };
             btnConfig.Click += (o, eg) => {
                 FormConfigFilePath fcf = new FormConfigFilePath();
-                //fcf.ShowDialog();
-                fcf.Show();
+                fcf.ShowDialog();
+                //fcf.Show();
                 Files = Config.ReadFileList();
             };
             numericLimit.ValueChanged += (o, eg) => { Config.LimitZ = (double)numericLimit.Value;
@@ -89,11 +112,12 @@ namespace LoadDataCalc
             pi.SetValue(dataGridView1, true, null);
             comboType.TextChanged+=new EventHandler((send,args)=>{
                 btnShowNonStress.Visible = (comboType.Text == "应变计" || comboType.Text == "应变计组");
+                
             });
             btnShowNonStress.Click += new EventHandler(btnShowNonStress_Click);
             btnSearch.Click+=new EventHandler((send,arg)=>{
                 var data=loadData.SurveyDataCach.Where(p => p.SurveyPoint.ToUpper().Trim()==txNumber.Text.ToUpper().Trim()).FirstOrDefault();
-                if (data == null)
+                if (data == null||data.Datas.Count==0)
                 {
                     MessageBox.Show("没有数据");
                     return;
@@ -105,12 +129,11 @@ namespace LoadDataCalc
                     rowcount += pd.Datas.Count;
                 }
                 this.dataGridView1.CurrentCell = this.dataGridView1.Rows[rowcount].Cells[0];
-                
-                
             });
             btnNext.Click+=new EventHandler((send,arg)=>{
-                if (dataGridView1.SelectedRows.Count < 1) return;
+                if (dataGridView1.CurrentRow == null) return;
                 string current = dataGridView1.CurrentRow.Cells["Survey_point_Number"].Value.ToString();
+                if (current == null) return;
                 int index = dataGridView1.CurrentRow.Index;
                 for (int i = index; i < dataGridView1.Rows.Count-1; i++)
                 {
@@ -125,8 +148,9 @@ namespace LoadDataCalc
             });
             btnlast.Click += new EventHandler((send, arg) =>
             {
-                if (dataGridView1.SelectedRows.Count < 1) return;
+                if (dataGridView1.CurrentRow == null) return;
                 string current = dataGridView1.CurrentRow.Cells["Survey_point_Number"].Value.ToString();
+                if (current == null) return;
                 int index = dataGridView1.CurrentRow.Index;
                 for (int i = index; i >0; i--)
                 {
@@ -141,8 +165,9 @@ namespace LoadDataCalc
             });
             btnNextError.Click += new EventHandler((send, arg) =>
             {
-                if (dataGridView1.SelectedRows.Count < 1) return;
+                if (dataGridView1.CurrentRow == null) return;
                 string current = dataGridView1.CurrentRow.Cells["Survey_point_Number"].Value.ToString();
+                if (current == null) return;
                 int index = dataGridView1.CurrentRow.Index;
                 for (int i = index+1; i < dataGridView1.Rows.Count - 1; i++)
                 {
@@ -166,8 +191,9 @@ namespace LoadDataCalc
                 }
             });
             btnfile.Click += new EventHandler((send, arg) => {
-                if (dataGridView1.SelectedRows.Count < 1) return;
+                if (dataGridView1.CurrentRow == null) return;
                 string current = dataGridView1.CurrentRow.Cells["Survey_point_Number"].Value.ToString();
+                if (current == null) return;
                 var point = loadData.SurveyDataCach.Where(p => p.SurveyPoint == current).FirstOrDefault();
                 if (point != null)
                 {
@@ -237,9 +263,18 @@ namespace LoadDataCalc
                 return true;
             });
            if (!checkFunc()) return;
-
+           if (loadData.SurveyDataCach.Count != 0)
+           {
+               if (MessageBox.Show("数据缓存中还有数据,读取数据将清空该数据缓存,点击‘是’确定读取", "是否读取", MessageBoxButtons.YesNo) ==
+                   DialogResult.No)
+               {
+                   return;
+               }
+           }
            setEnable(false);
            Status("读取数据");
+           loadData.ClearCach();
+           this.dataGridView1.DataSource = null;
            toolStripProgressLoad.Visible = true;
             Action callback = () =>
             {
@@ -257,7 +292,7 @@ namespace LoadDataCalc
             threadLoad = new Thread((cb) =>
             {
                 var type = Config.InsCollection.InstrumentDic[insname];
-                loadData.ClearCach();
+
                 loadData.ReadData(type,Files[insname]);
                 //string path = Environment.CurrentDirectory + "\\templist.xml";
                 //MultiDisplacementCalc mcalc = new MultiDisplacementCalc();

@@ -115,6 +115,7 @@
     </Compile>
     <None Include="app.config" />
     <None Include="ClassDiagram1.cd" />
+    <None Include="config\Anchor_Cable_R0.xlsx" />
     <None Include="config\CalcExpand.xls" />
     <None Include="config\MultiDisplacement.xls" />
     <None Include="config\PointNumberConfig.xls" />

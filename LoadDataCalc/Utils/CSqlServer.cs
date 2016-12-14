@@ -93,6 +93,7 @@ namespace LoadDataCalc
                 SqlCommand cmd = new SqlCommand(sql, sqlConnection);
                 cmd.Parameters.AddRange(parameters);
                 result = cmd.ExecuteNonQuery();
+               
             }
             finally
             {

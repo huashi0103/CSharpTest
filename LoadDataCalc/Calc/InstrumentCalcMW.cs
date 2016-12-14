@@ -1777,8 +1777,6 @@ namespace LoadDataCalc
 
     }
 
-
-    
     /// <summary>
     /// 多点位移计
     /// </summary>
@@ -1886,24 +1884,6 @@ namespace LoadDataCalc
                 var tcalc = Mcalc.FirstOrDefault(c => c.Ins_serial == dic.Key);
                 data.LoadReading = clacAction(pd, data, tcalc);
             }
-        }
-        //获取基准列的最后一次有效值
-       
-        private double getLastStandValue(string surveyPoint,string loadindex)
-        {
-            string sql = @"select {0} from Result_Multi_Displacement where Survey_point_Number='{1}' and
-                        Observation_Date=(select max(Observation_Date) from  Result_Multi_Displacement where 
-                        Survey_point_Number='{2}' and abs({3})>0)";
-            sql = String.Format(sql, loadindex, surveyPoint, surveyPoint, loadindex);
-            var sqlhelper = CSqlServerHelper.GetInstance();
-            var res = sqlhelper.SelectFirst(sql);
-            double result = 0;
-            if (res != DBNull.Value)
-            {
-                result = ConvetToData(res);
-            }
-            return result;
-            
         }
         //计算配置文件中存在的点的一组值
         private void calcOneGroup(ParamData Mparam, SurveyData Mdata, MultiDisplacementCalc[] Mcalc)
@@ -2022,8 +2002,11 @@ namespace LoadDataCalc
             {
                 if (number.EndsWith("A")) serial = number;            
             }
-            li.Remove(serial);
-            li.Add(serial);
+            if (serial != null)
+            {
+                li.Remove(serial);
+                li.Add(serial);
+            }
             for (int i = li.Count - 1; i >= 0; i--)
             {
                 Dic.Add(li[i], Mdata.MultiDatas[li[i]]);

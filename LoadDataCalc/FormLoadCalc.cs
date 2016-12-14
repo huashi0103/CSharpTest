@@ -62,25 +62,7 @@ namespace LoadDataCalc
             #endregion
             #region //窗体事件
             btnRead.Click += new EventHandler(btnRead_Click);
-            btnWrite.Click += (o, eg) => {
-                if (MessageBox.Show("确定写入数据库?", "提示", MessageBoxButtons.OKCancel) == 
-                    System.Windows.Forms.DialogResult.Cancel) return;
-                var instype = Config.InsCollection.InstrumentDic[ comboType.Text];
-                //写入之前检查数据，防止多次写入
-                if (!loadData.CheckSurveyDate(instype, Config.InsCollection[comboType.Text].Measure_Table))
-                {
-                    MessageBox.Show("数据库或仪器类型已变动,请重新读取数据");
-                    return;
-                }
-                btnRead.Enabled = false;
-                bool flag = false;
-                flag = loadData.WirteToSurvey();
-                string surveyStatus = String.Format("写入测值{0}", (flag ? "成功" : "失败"));
-                flag = loadData.WirteToResult();
-                string resultSatus = String.Format("写入成果{0}", (flag ? "成功" : "失败"));
-                Status(surveyStatus + "," + resultSatus);
-                btnRead.Enabled = true;
-            };
+            btnWrite.Click += new EventHandler(btnWrite_Click);
             btnBack.Click += (o, eg) => {
                 if (loadData.ID < 0) Status("没有数据可以回滚");
           
@@ -132,12 +114,12 @@ namespace LoadDataCalc
             });
             btnNext.Click+=new EventHandler((send,arg)=>{
                 if (dataGridView1.CurrentRow == null) return;
-                string current = dataGridView1.CurrentRow.Cells["Survey_point_Number"].Value.ToString();
+                string current = dataGridView1.CurrentRow.Cells["测点"].Value.ToString();
                 if (current == null) return;
                 int index = dataGridView1.CurrentRow.Index;
                 for (int i = index; i < dataGridView1.Rows.Count-1; i++)
                 {
-                    string tempnumber = dataGridView1.Rows[i].Cells["Survey_point_Number"].Value.ToString();
+                    string tempnumber = dataGridView1.Rows[i].Cells["测点"].Value.ToString();
                     if (tempnumber != current)
                     {
                         dataGridView1.CurrentCell = dataGridView1.Rows[i].Cells[0];
@@ -149,12 +131,12 @@ namespace LoadDataCalc
             btnlast.Click += new EventHandler((send, arg) =>
             {
                 if (dataGridView1.CurrentRow == null) return;
-                string current = dataGridView1.CurrentRow.Cells["Survey_point_Number"].Value.ToString();
+                string current = dataGridView1.CurrentRow.Cells["测点"].Value.ToString();
                 if (current == null) return;
                 int index = dataGridView1.CurrentRow.Index;
                 for (int i = index; i >0; i--)
                 {
-                    string tempnumber = dataGridView1.Rows[i].Cells["Survey_point_Number"].Value.ToString();
+                    string tempnumber = dataGridView1.Rows[i].Cells["测点"].Value.ToString();
                     if (tempnumber != current)
                     {
                         dataGridView1.CurrentCell = dataGridView1.Rows[i].Cells[0];
@@ -166,16 +148,16 @@ namespace LoadDataCalc
             btnNextError.Click += new EventHandler((send, arg) =>
             {
                 if (dataGridView1.CurrentRow == null) return;
-                string current = dataGridView1.CurrentRow.Cells["Survey_point_Number"].Value.ToString();
+                string current = dataGridView1.CurrentRow.Cells["测点"].Value.ToString();
                 if (current == null) return;
                 int index = dataGridView1.CurrentRow.Index;
                 for (int i = index+1; i < dataGridView1.Rows.Count - 1; i++)
                 {
-                    string tempnumber = dataGridView1.Rows[i].Cells["Survey_point_Number"].Value.ToString();
+                    string tempnumber = dataGridView1.Rows[i].Cells["测点"].Value.ToString();
                     //if (tempnumber != current)
                     {
-                        double value1 = Convert.ToDouble(dataGridView1.Rows[i].Cells["loadreading"].Value);
-                        double value2 = Convert.ToDouble(dataGridView1.Rows[i].Cells["ExcelResult"].Value);
+                        double value1 = Convert.ToDouble(dataGridView1.Rows[i].Cells["计算结果"].Value);
+                        double value2 = Convert.ToDouble(dataGridView1.Rows[i].Cells["Excel结果"].Value);
                         if (Math.Abs(value1 - value2) > (double)numericError.Value)
                         {
                             dataGridView1.CurrentCell = dataGridView1.Rows[i].Cells[0];
@@ -192,15 +174,135 @@ namespace LoadDataCalc
             });
             btnfile.Click += new EventHandler((send, arg) => {
                 if (dataGridView1.CurrentRow == null) return;
-                string current = dataGridView1.CurrentRow.Cells["Survey_point_Number"].Value.ToString();
+                string current = dataGridView1.CurrentRow.Cells["测点"].Value.ToString();
                 if (current == null) return;
-                var point = loadData.SurveyDataCach.Where(p => p.SurveyPoint == current).FirstOrDefault();
+                PointSurveyData point;
+                if (btnShowNonStress.Text == "无应力计")
+                {
+                    point = loadData.SurveyDataCach.Where(p => p.SurveyPoint == current).FirstOrDefault();
+                    
+                }
+                else
+                {
+                    point = loadData.SurveyDataCachExpand.Where(p => p.SurveyPoint == current).FirstOrDefault();
+                }
                 if (point != null)
                 {
                     if (File.Exists(point.ExcelPath)) Process.Start(point.ExcelPath);
                 }
             });
+            chkCover.CheckedChanged += new EventHandler(chkCover_CheckedChanged);
+            radioTime.CheckedChanged += new EventHandler(radioTime_CheckedChanged);
+            radioAll.CheckedChanged += ((send, arg) => {
+                Config.IsCoveryAll = radioAll.Checked;
+            });
+            dateTimePicker1.ValueChanged += ((send, arg) => {
+                Config.StartTime = dateTimePicker1.Value;
+            });
+            btnLoadFile.Click += new EventHandler(btnLoadFile_Click);
             #endregion
+        }
+
+        void btnWrite_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("确定写入数据库?", "提示", MessageBoxButtons.OKCancel) ==
+                   System.Windows.Forms.DialogResult.Cancel) return;
+            var instype = Config.InsCollection.InstrumentDic[comboType.Text];
+            //写入之前检查数据，防止多次写入
+            if (!loadData.CheckSurveyDate(instype, Config.InsCollection[comboType.Text].Measure_Table))
+            {
+                MessageBox.Show("数据库或仪器类型已变动,请重新读取数据");
+                return;
+            }
+            
+            setEnable(false);
+            toolStripProgressLoad.Visible = true;
+            ThreadPool.QueueUserWorkItem((obj) =>
+            {
+                bool flag = false;
+                flag = loadData.WirteToSurvey();
+                string surveyStatus = String.Format("写入测值{0}", (flag ? "成功" : "失败"));
+                flag = loadData.WirteToResult();
+                string resultSatus = String.Format("写入成果{0}", (flag ? "成功" : "失败"));
+                Status(surveyStatus + "," + resultSatus);
+                this.Invoke(new EventHandler(delegate{setEnable(true);
+                toolStripProgressLoad.Visible = false;
+                }));
+            
+            });
+        }
+
+        void btnLoadFile_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.InitialDirectory = "D:\\";
+            openFileDialog.Filter = "Excel2013|*.xlsx|Excel2007|*.xls";
+            openFileDialog.RestoreDirectory = true;
+            openFileDialog.Multiselect = true;
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                List<string>files=new List<string>();
+                files.AddRange(openFileDialog.FileNames);
+                string insname = comboType.Text;
+                Status("检查文件");
+                Func<bool> checkFunc = new Func<bool>(() =>
+                {
+                    string errfile;
+                    if (!loadData.CheckFiles(files, out errfile))
+                    {
+                        this.Invoke(new EventHandler(delegate { MessageBox.Show(errfile + "被占用!"); }));
+                        return false;
+                    }
+                    return true;
+                });
+                if (!checkFunc()) return;
+                if (loadData.SurveyDataCach.Count != 0)
+                {
+                    if (MessageBox.Show("数据缓存中还有数据,读取数据将清空该数据缓存,点击‘是’确定读取", "是否读取", MessageBoxButtons.YesNo) ==
+                        DialogResult.No)
+                    {
+                        return;
+                    }
+                }
+                setEnable(false);
+                Status("读取数据");
+                loadData.ClearCach();
+                this.dataGridView1.DataSource = null;
+                toolStripProgressLoad.Visible = true;
+                Action callback = () =>
+                {
+                    if (this.IsDisposed) return;
+                    this.Invoke(new EventHandler(delegate
+                    {
+                        toolStripProgressLoad.Visible = false;
+                        setEnable(true);
+                        loaddatagridview(loadData.SurveyDataCach);
+                        ErrorMsg.OpenLog(1);
+                    }));
+                };
+
+                threadLoad = new Thread((cb) =>
+                {
+                    var type = Config.InsCollection.InstrumentDic[insname];
+                    loadData.ReadData(type, files);
+                    Status("计算数据");
+                    loadData.Calc(type);
+                    Action call = cb as Action;
+                    call();
+                });
+                threadLoad.Start(callback);
+            }
+        }
+        void radioTime_CheckedChanged(object sender, EventArgs e)
+        {
+            dateTimePicker1.Visible = radioTime.Checked;
+        }
+        void chkCover_CheckedChanged(object sender, EventArgs e)
+        {
+            radioAll.Visible = chkCover.Checked;
+            radioTime.Visible = chkCover.Checked;
+            dateTimePicker1.Visible = radioTime.Visible && radioTime.Checked;
+            Config.IsCovery = chkCover.Checked;
         }
         void btnShowNonStress_Click(object sender, EventArgs e)
         {
@@ -209,16 +311,14 @@ namespace LoadDataCalc
                 DataTable dt = new DataTable();
                 dt.TableName = "Survey_Leakage_Pressure";
                 dt.Columns.Add("ID");
-                dt.Columns.Add("Survey_point_Number");
-                dt.Columns.Add("Observation_Date");
-                dt.Columns.Add("Observation_Time");
-                dt.Columns.Add("Temperature");
-                dt.Columns.Add("Frequency");
-                dt.Columns.Add("Remark");
-                dt.Columns.Add("UpdateTime");
-                dt.Columns.Add("Tresult");
-                dt.Columns.Add("loadreading");
-                dt.Columns.Add("resultreading");
+                dt.Columns.Add("测点");
+                dt.Columns.Add("观测日期");
+                dt.Columns.Add("观测时间");
+                dt.Columns.Add("温度");
+                dt.Columns.Add("频率");
+                dt.Columns.Add("备注");
+                dt.Columns.Add("温度结果");
+                dt.Columns.Add("计算结果");
                 int id = 0;
                 foreach (PointSurveyData pd in loadData.SurveyDataCachExpand)
                 {
@@ -227,16 +327,14 @@ namespace LoadDataCalc
                         id++;
                         DataRow dr = dt.NewRow();
                         dr["ID"] = id;
-                        dr["Survey_point_Number"] = pd.SurveyPoint;
-                        dr["Observation_Date"] = surveydata.SurveyDate;
-                        dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
-                        dr["Temperature"] = surveydata.Survey_RorT;
-                        dr["Frequency"] = surveydata.Survey_ZorR;
-                        dr["Remark"] = surveydata.Remark;
-                        dr["UpdateTime"] = DateTime.Now;
-                        dr["Tresult"] = surveydata.Tempreture;
-                        dr["loadreading"] = surveydata.LoadReading;
-                        dr["resultreading"] = surveydata.ResultReading;
+                        dr["测点"] = pd.SurveyPoint;
+                        dr["观测日期"] = surveydata.SurveyDate;
+                        dr["观测时间"] = surveydata.SurveyDate.TimeOfDay.ToString();
+                        dr["温度"] = surveydata.Survey_RorT;
+                        dr["频率"] = surveydata.Survey_ZorR;
+                        dr["备注"] = surveydata.Remark;
+                        dr["温度结果"] = surveydata.Tempreture;
+                        dr["计算结果"] = surveydata.LoadReading;
                         dt.Rows.Add(dr);
                     }
                 }
@@ -251,6 +349,11 @@ namespace LoadDataCalc
         }
         void btnRead_Click(object sender, EventArgs e)
         {
+            if (chkCover.Checked)
+            {
+                MessageBox.Show("覆盖导入请使用‘打开指定文件’导入数据");
+                return;
+            }
             string insname = comboType.Text;
             Status("检查文件");
             Func<bool> checkFunc = new Func<bool>(() => {
@@ -340,18 +443,17 @@ namespace LoadDataCalc
             DataTable dt = new DataTable();
             dt.TableName = "showTable";
             dt.Columns.Add("ID");
-            dt.Columns.Add("Survey_point_Number");
-            dt.Columns.Add("Observation_Date");
-            dt.Columns.Add("Observation_Time");
-            dt.Columns.Add("Temperature");
-            dt.Columns.Add("Frequency");
-            dt.Columns.Add("Remark");
-            dt.Columns.Add("UpdateTime");
-            dt.Columns.Add("Tresult");
-            dt.Columns.Add("loadreading");
-            dt.Columns.Add("resultreading");
-            dt.Columns.Add("ExcelResult");
-            dt.Columns.Add("dif");
+            dt.Columns.Add("测点");
+            dt.Columns.Add("观测日期");
+            dt.Columns.Add("观测时间");
+            dt.Columns.Add("温度");
+            dt.Columns.Add("频率");
+            dt.Columns.Add("备注");
+            dt.Columns.Add("温度结果");
+            dt.Columns.Add("计算结果");
+            dt.Columns.Add("最终结果");
+            dt.Columns.Add("Excel结果");
+            dt.Columns.Add("差值");
             
             if (flag)
             {
@@ -379,21 +481,20 @@ namespace LoadDataCalc
                     id++;
                     DataRow dr = dt.NewRow();
                     dr["ID"] = id;
-                    dr["Survey_point_Number"] = pd.SurveyPoint;
-                    dr["Observation_Date"] = surveydata.SurveyDate;
-                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
-                    dr["Temperature"] = surveydata.Survey_RorT;
-                    dr["Frequency"] = surveydata.Survey_ZorR;
-                    dr["Remark"] = surveydata.Remark;
-                    dr["UpdateTime"] = DateTime.Now;
-                    dr["Tresult"] = surveydata.Tempreture;
-                    dr["loadreading"] = surveydata.LoadReading;
-                    dr["resultreading"] = surveydata.ResultReading;
-                    dr["ExcelResult"] = surveydata.ExcelResult;
-                    dr["dif"] = Math.Abs(surveydata.ExcelResult - surveydata.LoadReading).ToString("#0.0000"); 
+                    dr["测点"] = pd.SurveyPoint;
+                    dr["观测日期"] = surveydata.SurveyDate;
+                    dr["观测时间"] = surveydata.SurveyDate.TimeOfDay.ToString();
+                    dr["温度"] = surveydata.Survey_RorT;
+                    dr["频率"] = surveydata.Survey_ZorR;
+                    dr["备注"] = surveydata.Remark;
+                    dr["温度结果"] = surveydata.Tempreture;
+                    dr["计算结果"] = surveydata.LoadReading;
+                    dr["最终结果"] = surveydata.ResultReading;
+                    dr["Excel结果"] = surveydata.ExcelResult;
+                    dr["差值"] = Math.Abs(surveydata.ExcelResult - surveydata.LoadReading).ToString("#0.0000"); 
                     if (flag)
                     {
-                        dr["resultreading"] = surveydata.AfterLock;
+                        dr["最终结果"] = surveydata.AfterLock;
                         int i = 1;
                         foreach (var v in surveydata.MultiDatas)
                         {
@@ -422,17 +523,19 @@ namespace LoadDataCalc
            DataTable dt = new DataTable();
            dt.TableName = "showTable";
            dt.Columns.Add("ID");
-           dt.Columns.Add("Survey_point_Number");
-           dt.Columns.Add("Observation_Date");
-           dt.Columns.Add("Observation_Time");
-           dt.Columns.Add("Temperature");
-           dt.Columns.Add("Frequency");
-           dt.Columns.Add("Remark");
-           dt.Columns.Add("UpdateTime");
-           dt.Columns.Add("Tresult");
-           dt.Columns.Add("loadreading");
-           dt.Columns.Add("resultreading");
-           dt.Columns.Add("ExcelResult");
+           dt.Columns.Add("测点");
+           dt.Columns.Add("观测日期");
+           dt.Columns.Add("观测时间");
+           dt.Columns.Add("温度");
+           dt.Columns.Add("频率");
+           dt.Columns.Add("备注");
+           dt.Columns.Add("温度结果");
+           dt.Columns.Add("计算结果");
+           dt.Columns.Add("最终结果");
+           dt.Columns.Add("Excel结果");
+           dt.Columns.Add("差值");
+           dt.Columns.Add("clacAverage");
+           dt.Columns.Add("Average");
            dt.Columns.Add("dif");
            dt.Columns.Add("F1");
            dt.Columns.Add("F2");
@@ -450,18 +553,19 @@ namespace LoadDataCalc
                    id++;
                    DataRow dr = dt.NewRow();
                    dr["ID"] = id;
-                   dr["Survey_point_Number"] = pd.SurveyPoint;
-                   dr["Observation_Date"] = surveydata.SurveyDate;
-                   dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString();
-                   dr["Temperature"] = surveydata.Survey_RorT;
-                   dr["Frequency"] = surveydata.Survey_ZorR;
-                   dr["Remark"] = surveydata.Remark;
-                   dr["UpdateTime"] = DateTime.Now;
-                   dr["Tresult"] = surveydata.Tempreture;
-                   dr["loadreading"] = surveydata.LoadReading;
-                   dr["resultreading"] = surveydata.AfterLock;
-                   dr["ExcelResult"] = surveydata.ExcelResult;
-                    dr["dif"] = Math.Abs(surveydata.ExcelResult - surveydata.LoadReading).ToString("#0.0000");
+                   dr["测点"] = pd.SurveyPoint;
+                   dr["观测日期"] = surveydata.SurveyDate;
+                   dr["观测时间"] = surveydata.SurveyDate.TimeOfDay.ToString();
+                   dr["温度"] = surveydata.Survey_RorT;
+                   dr["频率"] = surveydata.Survey_ZorR;
+                   dr["备注"] = surveydata.Remark;
+                   dr["温度结果"] = surveydata.Tempreture;
+                   dr["计算结果"] = surveydata.LoadReading;
+                   dr["最终结果"] = surveydata.ResultReading;
+                   dr["Excel结果"] = surveydata.ExcelResult;
+                   dr["clacAverage"] = surveydata.clacAverage;
+                   dr["Average"] = surveydata.Average;
+                    dr["差值"] = Math.Abs(surveydata.ExcelResult - surveydata.LoadReading).ToString("#0.0000");
                     int i = 1;
                     foreach (var v in surveydata.MultiDatas)
                     {
@@ -487,6 +591,8 @@ namespace LoadDataCalc
            comboType.Enabled = status;
            numericLimit.Enabled = status;
            btnShowNonStress.Enabled = status;
+           btnBack.Enabled = status;
+           btnLoadFile.Enabled = status;
        }
 
     }

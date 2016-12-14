@@ -1227,6 +1227,12 @@ namespace LoadDataCalc
                     return false;
                 }
                 sd.Remark = row.GetCell(info.TimeIndex + 2 * info.Sum + 4) == null ? "" : row.GetCell(info.TimeIndex + 2 * info.Sum + 4).ToString();
+                if (!DataUtils.CheckDateTime(sd.SurveyDate))
+                {
+                    err = "观测日期有误";
+                    sd = null;
+                    return false;
+                }
                 return true;
             }
             catch (Exception ex)
@@ -2457,6 +2463,12 @@ namespace LoadDataCalc
                     return false;
                 }
                 sd.Remark = row.GetCell(info.TimeIndex + 2 * info.Sum + 4) == null ? "" : row.GetCell(info.TimeIndex + 2 * info.Sum + 4).ToString();
+                if (!DataUtils.CheckDateTime(sd.SurveyDate))
+                {
+                    err = "观测日期有误";
+                    sd = null;
+                    return false;
+                }
                 return true;
             }
             catch (Exception ex)
@@ -3009,7 +3021,7 @@ namespace LoadDataCalc
                 if (flag) maxDatetime = (DateTime)result;
                 List<SurveyData> lastsd = null;
                 int count = psheet.LastRowNum;
-                for (int j = count - 1; j > 0; j--)
+                for (int j = 1; j < count + 1; j++)
                 {
                     try
                     {
@@ -3042,10 +3054,11 @@ namespace LoadDataCalc
                                 errors.Add(msg);
                             }
                         }
-                        for (int k = 0; k < PointList.Count; k++)
-                        {
-                            PointList[k].Datas.Add(sds[k]);
-                        }
+                        lastsd = sds;
+                        //for (int k = 0; k < PointList.Count; k++)
+                        //{
+                        //    PointList[k].Datas.Add(sds[k]);
+                        //}
                     }
                     catch (Exception ex)
                     {

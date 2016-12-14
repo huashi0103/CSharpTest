@@ -1523,7 +1523,7 @@ namespace LoadDataCalc
         }
         public override double DifBlock(ParamData param,SurveyData data, params double[] expand)
         {
-            return base.DifBlock(param,data,expand);
+            return base.DifBlock(param, data, expand);
         }
         public override double ShakeString(ParamData param,SurveyData data, params double[] expand)
         {
@@ -1641,6 +1641,14 @@ namespace LoadDataCalc
     /// </summary>
     public class Fiducial_Anchor_Cable : BaseInstrument
     {
+
+        /// <summary>
+        ///掉弦后的改正系数，如果掉弦索引不变，系数每次只计算一次
+        ///换点的时候重置为1
+        /// </summary>
+        public double coefficient_K = 1;
+
+
         public Fiducial_Anchor_Cable()
         {
             base.InsType = InstrumentType.Fiducial_Anchor_Cable;
@@ -1654,7 +1662,7 @@ namespace LoadDataCalc
         /// </summary>
         /// <param name="SurveyPoint"></param>
         /// <returns></returns>
-        public double GetC(ParamData param, SurveyData data)
+        public virtual double GetC(ParamData param, SurveyData data,PointSurveyData pd)
         {
             return 1;
         }
@@ -1685,7 +1693,7 @@ namespace LoadDataCalc
             }
             else
             {//掉弦
-                value = (value / count)*GetC(param,data);
+                value = value / count;
             }
            
             result = param.Gorf * (value - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT);
@@ -1708,7 +1716,7 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            string sql = @"select Instrument_Type,Calculate_Coeffi_G,Tempera_Revise_K,Benchmark_Resist_Ratio, Benchmark_Resist,Temperature_Read,Zero_Resistance,Plan_Loading,MAX_Loading,Lock_Value from {0} where Survey_point_Number='{1}'";
+            string sql = @"select Instrument_Type,Calculate_Coeffi_G,Tempera_Revise_K,Benchmark_Resist_Ratio, Benchmark_Resist,Temperature_Read,Zero_Resistance,Plan_Loading,MAX_Loading,Lock_Value,Read_GroupNum from {0} where Survey_point_Number='{1}'";
             sql = string.Format(sql, tablename, Survey_point_Number);
             var SqlHelper = CSqlServerHelper.GetInstance();
             var dt = SqlHelper.SelectData(sql);
@@ -1723,6 +1731,7 @@ namespace LoadDataCalc
                 pd.Plan_Loading =ConvetToData(dt.Rows[0]["Plan_Loading"]);
                 pd.MAX_Loading =ConvetToData(dt.Rows[0]["MAX_Loading"]);
                 pd.Lock_Value =ConvetToData(dt.Rows[0]["Lock_Value"]);
+                pd.Sum = Convert.ToInt16(dt.Rows[0]["Read_GroupNum"]);
                 if (dt.Rows[0]["Tempera_Revise_K"] == null)
                 {
                     pd.Korb = 0;
@@ -1975,7 +1984,20 @@ namespace LoadDataCalc
         }
         public override double ShakeString(ParamData param,SurveyData data, params double[] expand)
         {
-            return base.ShakeString(param,data,expand);
+            double result = 0;
+            if (param.TemperatureRead != 0 && data.Survey_ZorR != 0)
+            {
+                result = param.TemperatureRead * (data.Survey_ZorR - param.ZeroR);
+                data.LoadReading = result;
+                data.Tempreture = result;
+            }
+            else
+            {
+                result = data.Survey_RorT;
+                data.LoadReading = result;
+                data.Tempreture = result;
+            }
+            return result;
         }
         public override double AutoDefined(ParamData param,SurveyData data, string expression)
         {
@@ -2019,7 +2041,6 @@ namespace LoadDataCalc
             dt.Columns.Add("Survey_point_Number");
             dt.Columns.Add("Observation_Date");
             dt.Columns.Add("Observation_Time");
-            dt.Columns.Add("Temperature");
             dt.Columns.Add("loadReading");
             dt.Columns.Add("Remark");
             dt.Columns.Add("UpdateTime");
@@ -2037,7 +2058,6 @@ namespace LoadDataCalc
                     dr["Survey_point_Number"] = pd.SurveyPoint;
                     dr["Observation_Date"] = surveydata.SurveyDate;
                     dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
-                    dr["Temperature"] = Math.Round(surveydata.Tempreture,2);
                     dr["loadReading"] = Math.Round(surveydata.LoadReading,4);
                     dr["Remark"] = surveydata.Remark;
                     dr["UpdateTime"] = DateTime.Now;

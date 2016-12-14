@@ -214,10 +214,12 @@ namespace LoadDataCalc
         void getFiles(List<string> list,string path,string pattern)
         {
             DirectoryInfo di = new DirectoryInfo(path);
-            var allfiles = di.GetFiles(pattern);
+            //var allfiles = di.GetFiles(pattern,SearchOption.TopDirectoryOnly);
+            var allfiles = di.GetFiles();
             foreach (FileInfo fi in allfiles)
             {
-                if ((fi.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden)
+                if ((fi.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden &&
+                         (fi.FullName.EndsWith(".xls") || fi.FullName.EndsWith(".xlsx")))
                 {
                     list.Add(fi.FullName);
                 }
@@ -228,7 +230,7 @@ namespace LoadDataCalc
         {
             List<string> list = new List<string>();
             getFiles(list, path, "*.xls");
-            getFiles(list, path, "*.xlsx");
+            //getFiles(list, path, "*.xlsx");
 
             //list.AddRange(Directory.GetFiles(path, "*.xls"));
             //list.AddRange(Directory.GetFiles(path, "*.xlsx"));

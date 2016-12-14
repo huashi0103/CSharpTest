@@ -10,18 +10,49 @@ using System.Diagnostics;
 
 namespace CSharpTest
 {
+
+    public class test1
+    {
+        public int a;
+        public string b;
+    }
     class Program
     {
 
         static void Main(string[] args) 
         {
-            Pic pic = new Pic();
-            var bit = pic.pic1(3);
-            string path = "D:\\2.jpg";
-            if (File.Exists(path)) File.Delete(path);
-            bit.Save(path);
-            Process.Start(path);
-            Console.WriteLine("OK");
+            List<test1> list = new List<test1>{new test1(){a=9,b="9"},
+            new test1(){a=11,b="11"},
+            new test1(){a=3,b="3"},
+            new test1(){a=7,b="7"}};
+
+            //list.Sort((x, y) => {
+            //    return x.a.CompareTo(y.a);
+            //});
+            foreach (var t in list)
+            {
+                Console.WriteLine(t.b);
+            }
+
+            Dictionary<string, test1> dic = new Dictionary<string, test1>();
+            foreach (var t in list)
+            {
+                dic.Add(t.b, t);
+            }
+           var dict= dic.OrderBy(x => x.Value.a).ToDictionary(x => x.Key, x => x.Value);
+
+           foreach (var d in dict)
+           {
+               Console.WriteLine(d.Value.b);
+           }
+
+            //Pic pic = new Pic();
+            //var bit = pic.pic1(3);
+            //string path = "D:\\2.jpg";
+            //if (File.Exists(path)) File.Delete(path);
+            //bit.Save(path);
+            //Process.Start(path);
+            //Console.WriteLine("OK");
             //NExcel excel = new NExcel();
             //string filepath = @"D:\WORK\Project\三峡\三峡工程自动化文件\XIN三峡枢纽考证表格式.xls";
             //excel.Open(filepath);

@@ -15,6 +15,10 @@ namespace LoadDataCalc
     /// </summary>
     public abstract class ProcessData
     {
+
+        /// <summary>
+        /// 读取sheet变更委托
+        /// </summary>
         public Action<string> StatusAction = null;
         /// <summary>仪器类型
         /// </summary>
@@ -125,13 +129,19 @@ namespace LoadDataCalc
         /// 获取测值表中最大日期
         /// </summary>
         /// <returns></returns>
-        protected bool GetMaxDate(string surveyNumber, out DateTime maxDatetime)
+        protected bool GetMaxDate(string surveyNumber, out DateTime maxDatetime,string tablename=null)
         {
+            if (Config.IsCovery)//覆盖导入
+            {
+                maxDatetime = Config.StartTime;//指定覆盖的起始时间//指定从某个时间起始覆盖时有用
+                return !Config.IsCoveryAll;
+            }
             var sqlhelper = CSqlServerHelper.GetInstance();
             maxDatetime = new DateTime();
             string sql = Config.IsAuto?"select max(Observation_Date) from {0} where Survey_point_Number=@Survey_point_Number and RecordMethod='人工'":
                 "select max(Observation_Date) from {0} where Survey_point_Number=@Survey_point_Number";
-            sql = String.Format(sql,Config.InsCollection[this.Instrument_Name].Measure_Table);
+            string table = tablename == null ? Config.InsCollection[this.Instrument_Name].Measure_Table : tablename;
+            sql = String.Format(sql, table);
             var result = sqlhelper.SelectFirst(sql, new SqlParameter("@Survey_point_Number", surveyNumber));
             bool flag = (result != DBNull.Value);
             if (flag) maxDatetime = (DateTime)result;
@@ -149,16 +159,30 @@ namespace LoadDataCalc
         {
             err = new ErrorMsg();
             if (sd.Remark.Contains("已复测")) return true;
-            if (lastsd == null) return true;//上一行数据为空不处理
-            //先跟上一次的数据做比较，不超过限值直接return
-            if (Math.Abs(sd.Survey_ZorR - lastsd.Survey_ZorR) < Config.LimitZ) return true;
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            string sql;
+            if (lastsd == null)
+            {
+                sql = Config.IsAuto ? "select top 1 * from {0} where Survey_point_Number='{1}' and Observation_Date<'{2}' and RecordMethod='人工' Order by Observation_Date desc" :
+               "select  top 1 * from {0} where Survey_point_Number='{1}' and Observation_Date<'{2}'Order by Observation_Date desc ";
+                var data = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, sd.SurveyDate.Date.ToString()));
+                if (data.Rows.Count == 0) return true;
+                double f = Convert.ToDouble(data.Rows[0]["Frequency"]);
+                //数据库里边不确定写的是频率还是模数
+                if (Math.Abs(sd.Survey_ZorR - f) < Config.LimitZ||
+                   Math.Abs(sd.Survey_ZorR - Math.Sqrt(f*1000)) < Config.LimitZ) return true;
+            }
+            else
+            {
+                //先跟上一次的数据做比较，不超过限值直接return
+                if (Math.Abs(sd.Survey_ZorR - lastsd.Survey_ZorR) < Config.LimitZ) return true;
+            }
 
             //超过限值跟上一个月同一天作比较
-            var sqlhelper = CSqlServerHelper.GetInstance();
             DateTime dt = sd.SurveyDate.Date.AddMonths(-1);
-            string sql = Config.IsAuto?"select * from {0} where Survey_point_Number='{1}' and Observation_Date>='{2}' and Observation_Date<'{3}' and RecordMethod='人工'":
-                "select * from {0} where Survey_point_Number='{1}' and Observation_Date>='{2}' and Observation_Date<'{3}'" ;
-            var table = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, dt.AddDays(-3).ToString(), dt.AddDays(3).ToString()));
+            sql = Config.IsAuto ? "select * from {0} where Survey_point_Number='{1}' and abs(datediff(d,Observation_Date,'{2}'))<3 and RecordMethod='人工' Order by abs(datediff(dd,Observation_Date,'{3}'))" :
+                "select * from {0} where Survey_point_Number='{1}' and abs(datediff(d,Observation_Date,'{2}'))<3 Order by abs(datediff(dd,Observation_Date,'{3}')) ";
+            var table = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, dt.ToString(), dt.ToString()));
             double szr = 0;
             SurveyData lastMorYData = null;
             if (table.Rows.Count > 0)
@@ -173,7 +197,7 @@ namespace LoadDataCalc
             if (Math.Abs(sd.Survey_ZorR - szr) < Config.LimitZ) return true;
             //跟上一年的同一天做对比
             dt = sd.SurveyDate.Date.AddYears(-1);
-            table = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, dt.AddDays(-3).ToString(), dt.AddDays(3)));
+            table = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, dt.ToString(), dt.ToString()));
             if (table.Rows.Count > 0)
             {
                 szr = Convert.ToDouble(table.Rows[0]["Frequency"]);
@@ -277,11 +301,6 @@ namespace LoadDataCalc
                 bool FirstFlag = (ZStandard == 0);//是否找到基准行
                 SurveyData lastsd = null;
                 int count = psheet.PhysicalNumberOfRows;
-                if (pd.SurveyPoint == " ASb-9-2")
-                {
-
-                }
-
                 //for (int j = count - 1; j > 0; j--)//从后往前读，没法滤掉有问题的数据
                 for (int j = 1; j <count+1; j++)//从前往后读
                 {

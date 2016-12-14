@@ -16,6 +16,9 @@ namespace LoadDataCalc
         {
             base.InsType = InstrumentType.Fiducial_Multi_Displacement;
         }
+
+        //基准值最后的结果
+        public double  Laststandard = 0;
         public override double DifBlock(ParamData Mparam, SurveyData Mdata, params double[] expand)
         {
             double result = 0;
@@ -41,7 +44,7 @@ namespace LoadDataCalc
             return result;
         }
        //获取基准值的serial编码
-        private string GetStanderd(Dictionary<string, SurveyData> Mdatas)
+        private string GetStandard(Dictionary<string, SurveyData> Mdatas)
         {
             foreach(var dic in Mdatas)
             {
@@ -66,7 +69,6 @@ namespace LoadDataCalc
                     loadindex = "loadReading" + pd.MParamData.Count.ToString();
                 }
                 return getLastStandValue(surveypoint, loadindex);
-
             }
             double result = 0;
             if (calc.IsMoshu == 1)//测值是否是模数
@@ -116,9 +118,9 @@ namespace LoadDataCalc
             }
         }
         //获取基准列的最后一次有效值
-       
-        private double getLastStandValue(string surveyPoint,string loadindex)
+        public virtual double getLastStandValue(string surveyPoint,string loadindex)
         {
+            if (Laststandard != 0) return Laststandard;
             string sql = @"select {0} from Result_Multi_Displacement where Survey_point_Number='{1}' and
                         Observation_Date=(select max(Observation_Date) from  Result_Multi_Displacement where 
                         Survey_point_Number='{2}' and abs({3})>0)";
@@ -133,6 +135,8 @@ namespace LoadDataCalc
             return result;
             
         }
+       
+        
         //计算配置文件中存在的点的一组值
         private void calcOneGroup(ParamData Mparam, SurveyData Mdata, MultiDisplacementCalc[] Mcalc)
         {
@@ -267,7 +271,7 @@ namespace LoadDataCalc
         private void calcOneGroupNull(ParamData Mparam, SurveyData Mdata)
         {
             double result=0;
-            string skey = GetStanderd(Mdata.MultiDatas);//获取基准值
+            string skey = GetStandard(Mdata.MultiDatas);//获取基准值
             if (skey != null)
             {
                 SurveyData sd = Mdata.MultiDatas[skey];
@@ -557,7 +561,7 @@ namespace LoadDataCalc
             if (dt.Rows.Count < 1) return null;
             ParamData Mpd = new ParamData();
             Mpd.SurveyPoint = Survey_point_Number;
-            Mpd.NonStressNumber = dt.Rows[0]["Nonstress_Number"].ToString();
+            Mpd.NonStressNumber = dt.Rows[0]["Nonstress_Number"].ToString().ToUpper().Trim();
             if(String.IsNullOrEmpty(Mpd.NonStressNumber))Mpd.IsHasNonStress=false;
             for (int i = 0; i < dt.Rows.Count; i++)
             {

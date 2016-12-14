@@ -456,6 +456,10 @@ namespace LoadDataCalc
         /// 锚索测力计锁定荷载
         /// </summary>
         public double Lock_Value;
+        /// <summary>
+        /// 弦数
+        /// </summary>
+        public int Sum;
     }
     /// <summary>
     /// 固定测斜仪参数
@@ -595,6 +599,8 @@ namespace LoadDataCalc
         /// 锚索测力计的平均值
         /// </summary>
         public double Average;
+        //计算出的平均值
+        public double clacAverage;
         public static string[] ParamList = new[] {"Survey_ZorR", "Survey_RorT" };
 
 
@@ -974,4 +980,20 @@ namespace LoadDataCalc
         }
     }
 
+
+    public class Anchor_CableCalc
+    {
+        /// <summary>
+        /// 掉弦索引
+        /// </summary>
+        public Dictionary<int, List<int>> DicCach = new Dictionary<int, List<int>>();
+        /// <summary>
+        /// 新的基准
+        /// </summary>
+        public double Average;
+        /// <summary>
+        /// 算出来的转换系数
+        /// </summary>
+        public double Coefficient;
+    }
 }

@@ -12,8 +12,7 @@ using System.Text;
 namespace LoadDataCalc
 {
 
-    /// <summary>
-    /// 渗压计
+    /// <summary>渗压计
     /// </summary>
     public class Fiducial_Leakage_PressureXJB : Fiducial_Leakage_Pressure
     {
@@ -38,25 +37,18 @@ namespace LoadDataCalc
         {
             double result = 0;
             //录入的是频率或者模数
-
-            if (Math.Abs(param.Gorf * 10000) > 1)
+            if (data.Survey_ZorR > 3000)//用Z值判断是频率还是模数
             {
                 result = (param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT));
                 // data.Survey_ZorRMoshu = data.Survey_ZorR;
             }
             else
             {
-                if (Config.IsMoshu)
-                {
-                    result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) / 1000.0 - param.ZorR) +
-                        param.Korb * (data.Survey_RorT - param.RorT);
-                }
-                else
-                {
-                    result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) - param.ZorR * param.ZorR) +
-                                            param.Korb * (data.Survey_RorT - param.RorT);
-                }
+
+                result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) / 1000.0 - param.ZorR) +
+                    param.Korb * (data.Survey_RorT - param.RorT);
             }
+
             // if (Math.Abs(param.Gorf * 100) > 1) param.KpaToMpa = 0.001;
             result += param.Constant_b;
             result = result * param.KpaToMpa;
@@ -259,23 +251,6 @@ namespace LoadDataCalc
                 data.LoadReading = clacAction(pd, data, tcalc);
             }
         }
-        //获取基准列的最后一次有效值
-        private double getLastStandValue(string surveyPoint, string loadindex)
-        {
-            string sql = @"select {0} from Result_Multi_Displacement where Survey_point_Number='{1}' and
-                        Observation_Date=(select max(Observation_Date) from  Result_Multi_Displacement where 
-                        Survey_point_Number='{2}' and abs({3})>0)";
-            sql = String.Format(sql, loadindex, surveyPoint, surveyPoint, loadindex);
-            var sqlhelper = CSqlServerHelper.GetInstance();
-            var res = sqlhelper.SelectFirst(sql);
-            double result = 0;
-            if (res != DBNull.Value)
-            {
-                result = ConvetToData(res);
-            }
-            return result;
-
-        }
         //计算配置文件中存在的点的一组值
         private void calcOneGroup(ParamData Mparam, SurveyData Mdata, MultiDisplacementCalc[] Mcalc)
         {
@@ -366,16 +341,16 @@ namespace LoadDataCalc
 
                     break;
             }
-            if (Mcalc[0].R0IsZero != 0)//倒序排列下//默认是从深到浅。当孔口为0的时候为从浅到深
-            {
-                Dictionary<string, SurveyData> Dic = new Dictionary<string, SurveyData>();
-                List<string> li = new List<string>(Mdata.MultiDatas.Keys);
-                for (int i = li.Count - 1; i >= 0; i--)
-                {
-                    Dic.Add(li[i], Mdata.MultiDatas[li[i]]);
-                }
-                Mdata.MultiDatas = Dic;
-            }
+            //if (Mcalc[0].R0IsZero != 0)//倒序排列下//默认是从深到浅。当孔口为0的时候为从浅到深
+            //{
+            //    Dictionary<string, SurveyData> Dic = new Dictionary<string, SurveyData>();
+            //    List<string> li = new List<string>(Mdata.MultiDatas.Keys);
+            //    for (int i = li.Count - 1; i >= 0; i--)
+            //    {
+            //        Dic.Add(li[i], Mdata.MultiDatas[li[i]]);
+            //    }
+            //    Mdata.MultiDatas = Dic;
+            //}
 
         }
         public override double ShakeString(ParamData Mparam, SurveyData Mdata, params double[] expand)
@@ -390,7 +365,26 @@ namespace LoadDataCalc
             {
                 calcOneGroupNull(Mparam, Mdata);
             }
+            //倒序排列下//默认是从深到浅。当孔口为0的时候为从浅到深
+            Dictionary<string, SurveyData> Dic = new Dictionary<string, SurveyData>();
+            List<string> li = new List<string>(Mdata.MultiDatas.Keys);
+            string serial = null;
+            foreach (string number in li)
+            {
+                if (number.EndsWith("A")) serial = number;
+            }
+            if (serial != null)
+            {
+                li.Remove(serial);
+                li.Add(serial);
+            }
+            for (int i = li.Count - 1; i >= 0; i--)
+            {
+                Dic.Add(li[i], Mdata.MultiDatas[li[i]]);
 
+            }
+            Mdata.MultiDatas = Dic;
+ 
             return result;
         }
         //计算配置文件中没有的点的一组值
@@ -489,7 +483,7 @@ namespace LoadDataCalc
             Fiducial_Strain_Gauge FStrain_Gauge = new Fiducial_Strain_Gauge();
             foreach (var sd in data.MultiDatas)
             {
-                FStrain_Gauge.ShakeString(param.MParamData[sd.Key], sd.Value);
+                FStrain_Gauge.ShakeString(param.MParamData[sd.Key.ToUpper().Trim()], sd.Value);
             }
             if (data.MultiDatas.Keys.Count == 5)
             {
@@ -510,6 +504,10 @@ namespace LoadDataCalc
     {
         public override double DifBlock(ParamData param, SurveyData data, params double[] expand)
         {
+            if (param.SurveyPoint == "Sa1-1dc")
+            {
+
+            }
             double result = 0;
             if (Math.Abs(data.Survey_ZorR) > 1)
             {
@@ -536,6 +534,7 @@ namespace LoadDataCalc
         public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
         {
             //Gorf*(Survey_ZorR-ZorR)+Korb*(Survey_RorT-RorT)
+
             double result = 0;
             if (Math.Abs(data.Survey_ZorR) > 1)
             {
@@ -699,7 +698,18 @@ namespace LoadDataCalc
     {
         public override double DifBlock(ParamData param, SurveyData data, params double[] expand)
         {
-            return base.DifBlock(param, data, expand);
+
+            double result = 0;
+            if (Math.Abs(data.Survey_ZorR) > 1)
+            {
+                //加了一个负号
+                result = -param.Gorf * (data.Survey_ZorR - param.ZorR) +
+                    param.Korb * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) - param.TemperatureRead * (param.RorT - param.ZeroR));
+            }
+            data.ResultReading = result;//这里要乘以系数
+            data.Tempreture = param.TemperatureRead * (data.Survey_RorT - param.ZeroR);
+            data.LoadReading = result;
+            return result;
         }
         public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
         {
@@ -730,22 +740,258 @@ namespace LoadDataCalc
         }
     }
 
+    
+
     /// <summary>锚索测力计
     /// </summary>
     public class Fiducial_Anchor_CableXJB : Fiducial_Anchor_Cable
     {
+        public Fiducial_Anchor_CableXJB()
+            : base()
+        {
+            //DicR0 = Config.GetAnchor_Cable_R0();
+        }
+  
+        //private Dictionary<string, List<double>> DicR0 = new Dictionary<string, List<double>>();
+        //掉弦索引缓存
+        private List<string> ListCach = new List<string>();
+        private string[] sbStrlist =new string[]{ "Reading_Red", "Reading_Black", "Reading_Yellow", "Reading_Blue", "Reading_Ash", "Reading_Purple" };
+
         public override double DifBlock(ParamData param, SurveyData data, params double[] expand)
         {
             return base.DifBlock(param, data, expand);
         }
+        
+
         /// <summary>
-        /// 计算掉弦的系数
+        ///         //从当前数据中查询有不为0的数据
+        /// </summary>
+        /// <param name="end">截至时间</param>
+        /// <param name="key">查询的key</param>
+        /// <param name="pd">本次数据缓存</param>
+        /// <param name="IgnoreKey">被忽略的点</param>
+        /// <returns></returns>
+        SurveyData GetLastData(DateTime end, string key,PointSurveyData pd,List<string>IgnoreKey=null)
+        {
+            if (pd.Datas.Count == 0) return null;
+            SurveyData lastData = new SurveyData();
+            bool flag = true;
+            foreach (var sd in pd.Datas)
+            {
+                if (sd.SurveyDate.CompareTo(end) >= 0) break;
+                bool Zflag = true;
+                if (sd.MultiDatas[key].Survey_ZorR != 0)
+                {
+                    foreach (var d in sd.MultiDatas)
+                    {
+                        if (IgnoreKey != null && IgnoreKey.Contains(d.Key)) continue;
+                        if (d.Key != key&& d.Value.Survey_ZorR == 0)
+                        {
+                            Zflag = false;
+                        }
+                    }
+                    if (Zflag)
+                    {
+                        flag = false;
+                        lastData = sd;
+                    }
+                }
+            }
+            if (flag) return null;//没找到
+            return lastData;
+
+        }
+        //掉一根弦
+        private void GetCOne(ParamData param,SurveyData sd, string key, PointSurveyData pd)
+        {
+            Anchor_CableParam p = param as Anchor_CableParam;
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            SurveyData lastSD = GetLastData(sd.SurveyDate, key, pd);
+            string ignorestr = "";
+            for (int i = 0; i < p.Sum; i++)
+            {
+                if (key!=i.ToString())
+                {
+                    ignorestr += " and " + sbStrlist[i] + ">0";
+                }
+            }
+
+            if (lastSD == null)
+            {
+                lastSD = new SurveyData();
+                string sql = "select top 1 * from Survey_Anchor_Cable where Survey_point_Number='{0}' and {1}>0 {2} order by Observation_Date desc";
+                string anchorName = sbStrlist[Convert.ToInt16(key)];
+                var dt = sqlhelper.SelectData(string.Format(sql, p.SurveyPoint, anchorName,ignorestr));
+                if (dt.Rows.Count < 1) return;
+                sd.SurveyDate = (DateTime)dt.Rows[0]["Observation_Date"];
+                for (int i = 0; i < p.Sum; i++)
+                {
+                    SurveyData s = new SurveyData();
+                    s.Survey_ZorR = Convert.ToDouble(dt.Rows[0][sbStrlist[i]]);
+                    lastSD.MultiDatas.Add(i.ToString(), s);
+                }
+            }
+
+            double sum = 0;
+            double badZ = 0;
+            foreach (var d in lastSD.MultiDatas)
+            {
+                double moshu = d.Value.Survey_ZorR;
+                if (d.Value.Survey_ZorR < 3000)
+                {
+                    moshu=moshu*moshu/1000.0;
+                }
+                sum += moshu;
+                if (d.Key == key) badZ = moshu;
+            }
+            coefficient_K= ((sum - badZ) / (p.Sum - 1)) / (sum / p.Sum);
+        }
+        //掉两根或者三根弦
+        private void GetCTwo(ParamData param, SurveyData data, List<string> keys, PointSurveyData pd)
+        {
+            Anchor_CableParam p = param as Anchor_CableParam;
+            //查询每次掉弦前一次的数据
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            Dictionary<string, SurveyData> DataDIc = new Dictionary<string, SurveyData>();
+            List<string> ignoreKey = new List<string>();//呗忽略的点
+            string ignorestr = "";
+            for (int i = 0; i < p.Sum; i++)
+            {
+                   ignorestr += " and " + sbStrlist[i] + ">0";
+            }
+            var ls = GetLastData(data.SurveyDate, keys[0], pd, keys);
+            SurveyData sd = new SurveyData();
+            if (ls != null)
+            {
+                sd = ls;
+            }
+            else
+            {
+                string sql = "select top 1 * from Survey_Anchor_Cable where Survey_point_Number='{0}'  {1} order by Observation_Date desc";
+                //string anchorName = sbStrlist[Convert.ToInt16(k)];
+                var dt = sqlhelper.SelectData(string.Format(sql, p.SurveyPoint, ignorestr));
+                if (dt.Rows.Count < 1) return  ;
+                sd.SurveyDate = (DateTime)dt.Rows[0]["Observation_Date"];
+                for (int i = 0; i < p.Sum; i++)
+                {
+                    SurveyData s = new SurveyData();
+                    s.Survey_ZorR = Convert.ToDouble(dt.Rows[0][sbStrlist[i]]);
+                    sd.MultiDatas.Add(i.ToString(), s);
+                }
+            }
+            double K = 1;
+            double sum = 0;
+            double badZ = 0;
+            foreach (var d in sd.MultiDatas)
+            {
+                double moshu = d.Value.Survey_ZorR;
+                if (d.Value.Survey_ZorR < 3000)
+                {
+                    moshu = moshu * moshu / 1000.0;
+                }
+                sum += moshu;
+                if (keys.Contains(d.Key)) badZ += moshu;
+            }
+            K = ((sum - badZ) / (p.Sum - keys.Count)) / (sum / p.Sum);
+            
+            //foreach (string k in keys)
+            //{
+            //    var ls = GetLastData(data.SurveyDate, k, pd, keys);
+            //    if (ls != null)
+            //    {
+            //        DataDIc.Add(k, ls);//在本次数据中找到了数据，直接下一根弦
+            //        continue;
+            //    }
+            //    SurveyData sd = new SurveyData();
+            //    string sql = "select top 1 * from Survey_Anchor_Cable where Survey_point_Number='{0}'  {1} order by Observation_Date desc";
+            //    //string anchorName = sbStrlist[Convert.ToInt16(k)];
+            //    var dt = sqlhelper.SelectData(string.Format(sql, p.SurveyPoint, ignorestr));
+            //    if (dt.Rows.Count < 1) continue;
+            //    sd.SurveyDate = (DateTime)dt.Rows[0]["Observation_Date"];
+            //    for (int i = 0; i < p.Sum; i++)
+            //    {
+            //        SurveyData s = new SurveyData();
+            //        s.Survey_ZorR = Convert.ToDouble(dt.Rows[0][sbStrlist[i]]);
+            //        sd.MultiDatas.Add(i.ToString(), s);
+            //    }
+            //    DataDIc.Add(k, sd);
+            //}
+            ////按时间排序
+            //var dic = DataDIc.OrderBy(x => x.Value.SurveyDate).ToDictionary(x => x.Key, x => x.Value);
+            //double K = 1;
+            //int cn = 0;//有多根掉弦，可能要循环计算多次
+            ////计算改正系数
+            //foreach (var di in dic)
+            //{
+            //    cn++;
+            //    double sum = 0;
+            //    double badZ = 0;
+            //    foreach (var d in di.Value.MultiDatas)
+            //    {
+            //        double moshu = d.Value.Survey_ZorR;
+            //        if (d.Value.Survey_ZorR < 3000)
+            //        {
+            //            moshu = moshu * moshu / 1000.0;
+            //        }
+            //        sum += moshu;
+            //        if (keys.Contains(d.Key)) badZ += moshu;
+            //    }
+            //    //sum = (sum / (p.Sum - cn + 1) / K) * (p.Sum - cn +1);//循环计算
+            //    K = ((sum - badZ) / (p.Sum - keys.Count)) / (sum / p.Sum);
+            //    break;
+            //}
+            //result = ((lastSum - dieZ) / (p.Sum - count)) / (lastSum / p.Sum);
+            coefficient_K = K;
+            ListCach = keys;
+            return;
+        }
+
+        /// <summary>计算掉弦的系数
         /// </summary>
         /// <param name="SurveyPoint"></param>
         /// <returns></returns>
-        public double GetC(ParamData param, SurveyData data)
+        public override double GetC(ParamData param, SurveyData data,PointSurveyData pd)
         {
-            return 1;
+ 
+            var dicCach = new Dictionary<int, List<string>>();
+            int count = 0;//掉弦的弦数
+            List<string> keys = new List<string>();//获取掉弦的索引
+            foreach (var d in data.MultiDatas)
+            {
+                if (d.Value.Survey_ZorR == 0)
+                {
+                    keys.Add(d.Key);
+                    count++;
+                }
+            }
+            if (count == 0) return 1;
+            Anchor_CableParam p = param as Anchor_CableParam;
+            if (count > p.Sum / 2) return 1;
+
+            if (keys.Count == ListCach.Count)//掉弦状况没变
+            {
+                bool flag = true;
+                for (int i = 0; i < keys.Count; i++)
+                {
+                    if (keys[i] != ListCach[i])
+                    {
+                        flag = false;
+                    }
+                }
+                if (flag) return coefficient_K;
+            }
+
+            if (keys.Count == 1)
+            {
+                GetCOne(param, data, keys[0], pd);
+            }
+            else
+            {
+                GetCTwo(param, data, keys, pd);
+            }
+            ListCach = keys;
+            return coefficient_K;
+   
         }
         public override double ShakeString(ParamData paramd, SurveyData data, params double[] expand)
         {
@@ -757,26 +1003,22 @@ namespace LoadDataCalc
             {
                 if (dic.Value.Survey_ZorR <= 0) continue;
                 count++;
-                if (dic.Value.Survey_ZorR >= 4000)
+                if (dic.Value.Survey_ZorR >= 3000)
                 {
                     value += dic.Value.Survey_ZorR;
                     //dic.Value.Survey_ZorRMoshu = dic.Value.Survey_ZorR;
                 }
                 else
                 {
-                    dic.Value.Survey_ZorRMoshu = Math.Pow(dic.Value.Survey_ZorR, 2) / 1000.0;
-                    value += dic.Value.Survey_ZorRMoshu;
+                   // dic.Value.Survey_ZorRMoshu = Math.Pow(dic.Value.Survey_ZorR, 2) / 1000.0;
+                    value += Math.Pow(dic.Value.Survey_ZorR, 2) / 1000.0;
                 }
             }
-            if (count == data.MultiDatas.Keys.Count)
-            {
-                value = value / count;
-            }
-            else
-            {//掉弦
-                value = (value / count) * GetC(param, data);
-            }
-
+            if (param.Sum - count > param.Sum / 2) return result;//掉弦的数量超过半数，不再计算
+            value = value / count;//直接算平均值
+            value = value / coefficient_K;//把改正系数带入计算
+            
+            data.clacAverage = value;
             result = param.Gorf * (value - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT);
             //data.Survey_ZorRMoshu = value;
             data.LoadReading = result;
@@ -787,7 +1029,6 @@ namespace LoadDataCalc
             data.ResultReading = result;//这里要乘以系数每种仪器不一样
             data.Tempreture = data.Survey_RorT;
             data.LoadReading = result;
-
             return result;
         }
         public override double AutoDefined(ParamData param, SurveyData data, string expression)

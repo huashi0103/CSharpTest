@@ -1,7 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <ProConfig ProjectName="苗尾">
   <DataRoot>D:\AWORK\苗尾\苗尾监测数据</DataRoot>
-  <DataBase IsAuto="1">Data Source =127.0.0.1;Network Library = DBMSSOCN;Initial Catalog = MWDatabase;User ID = sa;Password = sa;</DataBase>
+<!--   <DataBase IsAuto="1">Data Source =127.0.0.1;Initial Catalog = MWDatabase;User ID = sa;Password = sa;</DataBase> -->
+  <DataBase IsAuto="1">Data Source =XJ;Initial Catalog = MWDatabase;User ID = sa;Password = 123;</DataBase>
   <ProCode IsMoshu="0">MW</ProCode>
   <Instruments>
     <Ins Name="单点位移计">
@@ -73,6 +74,13 @@
     </Ins>
     <Ins Name="锚杆应力计">
       <KeyWord>锚杆应力计</KeyWord>
+	  <KeyWord>钢筋计</KeyWord>
+	  <KeyWord>钢筋应力计</KeyWord>
+    </Ins>
+	<Ins Name="多点锚杆应力计">
+      <KeyWord>锚杆应力计</KeyWord>
+	  <KeyWord>钢筋计</KeyWord>
+	  <KeyWord>钢筋应力计</KeyWord>
     </Ins>
     <Ins Name="锚索测力计">
       <KeyWord>锚索测力计</KeyWord>

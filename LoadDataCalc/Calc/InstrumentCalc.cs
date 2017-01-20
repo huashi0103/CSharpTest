@@ -310,7 +310,25 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.ToString());
+            string sql = @"select * from {0} where Survey_point_Number='{1}'";
+            sql = string.Format(sql, tablename, Survey_point_Number);
+            var SqlHelper = CSqlServerHelper.GetInstance();
+            var dt = SqlHelper.SelectData(sql);
+            if (dt.Rows.Count < 1) return null;
+            try
+            {
+                Survey_Slant_FixedParam pd = new Survey_Slant_FixedParam();
+                pd.SurveyPoint = Survey_point_Number;
+                pd.A_US = ConvetToData(dt.Rows[0]["A_US"]);
+                pd.A_DS = ConvetToData(dt.Rows[0]["A_DS"]);
+                pd.A_BS = ConvetToData(dt.Rows[0]["A_BS"]);
+                pd.A_C0 = ConvetToData(dt.Rows[0]["A_C0"]);
+                return pd;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
     }
@@ -942,7 +960,7 @@ namespace LoadDataCalc
             }
             data.ResultReading = result;
             data.LoadReading = result;
-            if (data.NonStressSurveyData != null)
+            if (param.IsHasNonStress&&data.NonStressSurveyData != null && Math.Abs(data.Survey_ZorR) > 1)
             {
                 data.LoadReading = data.LoadReading - data.NonStressSurveyData.LoadReading;
             }
@@ -978,7 +996,7 @@ namespace LoadDataCalc
             data.ResultReading = result;
             data.Tempreture = data.Survey_RorT;
             data.LoadReading = result;
-            if (param.IsHasNonStress&&data.NonStressSurveyData != null)
+            if (param.IsHasNonStress && data.NonStressSurveyData != null && Math.Abs(data.Survey_ZorR) > 1)
             {
                 data.LoadReading = data.LoadReading - data.NonStressSurveyData.LoadReading;
             }
@@ -1060,7 +1078,7 @@ namespace LoadDataCalc
             dt.Columns.Add("Non_Frequency");
             dt.Columns.Add("Remark");
             dt.Columns.Add("UpdateTime");
-            dt.Columns.Add("RecordMethod");
+            if (Config.IsAuto) dt.Columns.Add("RecordMethod");
             var sqlhelper = CSqlServerHelper.GetInstance();
             var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
             int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
@@ -1083,7 +1101,7 @@ namespace LoadDataCalc
                     }
                     dr["Remark"] = surveydata.Remark;
                     dr["UpdateTime"] = DateTime.Now;
-                    dr["RecordMethod"] = "人工";
+                    if (Config.IsAuto) dr["RecordMethod"] = "人工";
                     dt.Rows.Add(dr);
                 }
             }
@@ -1104,7 +1122,7 @@ namespace LoadDataCalc
             dt.Columns.Add("Non_loadReading");
             dt.Columns.Add("Remark");
             dt.Columns.Add("UpdateTime");
-            dt.Columns.Add("RecordMethod");
+            if (Config.IsAuto) dt.Columns.Add("RecordMethod");
             var sqlhelper = CSqlServerHelper.GetInstance();
             var sid = sqlhelper.SelectFirst("select max(ID) as sid  from  " + TableName);
             int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
@@ -1127,7 +1145,7 @@ namespace LoadDataCalc
                     }
                     dr["Remark"] = surveydata.Remark;
                     dr["UpdateTime"] = DateTime.Now;
-                    dr["RecordMethod"] = "人工";
+                    if (Config.IsAuto) dr["RecordMethod"] = "人工";
                     dt.Rows.Add(dr);
                 }
             }
@@ -1389,7 +1407,17 @@ namespace LoadDataCalc
         }
         public override double DifBlock(ParamData param,SurveyData data, params double[] expand)
         {
-            return base.DifBlock(param,data,expand);
+            //Gorf*(Survey_ZorR-ZorR)+Korb*(TemperatureRead*(Survey_RorT-ZeroR)-RorT)
+            double result = 0;
+            if (Math.Abs(data.Survey_ZorR) > 1)
+            {
+                result = param.Gorf * (data.Survey_ZorR - param.ZorR) +
+                    param.Korb * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) - param.TemperatureRead * (param.RorT - param.ZeroR));
+            }
+            data.Tempreture = (Math.Abs(data.Survey_RorT) > 1) ? param.TemperatureRead * (data.Survey_RorT - param.ZeroR) : 0;
+            data.LoadReading = result;
+            data.ResultReading = (param.Steel_Diameter_L != 0) ? result * 1000 / (Math.PI * Math.Pow(param.Steel_Diameter_L / 2.0, 2)) : data.LoadReading;
+            return result;
         }
         public override double ShakeString(ParamData param,SurveyData data, params double[] expand)
         {
@@ -1399,13 +1427,32 @@ namespace LoadDataCalc
             double Tcorrect = (data.Survey_RorT != 0) ? param.Korb * (data.Survey_RorT - param.RorT) : 0;
             if (Math.Abs(data.Survey_ZorR) > 1)
             {
-                result = param.Gorf * (data.Survey_ZorR - param.ZorR) + Tcorrect;
-                //data.Survey_ZorRMoshu = data.Survey_ZorR;
+                if (data.Survey_ZorR > 4000)//模数
+                {
+                    result = param.Gorf * (data.Survey_ZorR - param.ZorR) + Tcorrect;
+                    //data.Survey_ZorRMoshu = data.Survey_ZorR;
+                }
+                else//频率
+                {
+
+                    //录入的是频率或者模数
+                    if (Config.IsMoshu)
+                    {
+
+                        result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) / 1000.0 - param.ZorR) + Tcorrect;
+                    }
+                    else
+                    {
+                        result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) - param.ZorR * param.ZorR) + Tcorrect;
+                    }
+                    //data.Survey_ZorRMoshu = Math.Pow(data.Survey_ZorR, 2) / 1000;
+                }
+
             }
             data.Tempreture = data.Survey_RorT;
             data.LoadReading = result;
-            data.ResultReading = result * 1000 / (Math.PI * Math.Pow(param.Steel_Diameter_L / 2.0, 2));
-
+            data.ResultReading = (param.Steel_Diameter_L != 0) ?
+                result * 1000 / (Math.PI * Math.Pow(param.Steel_Diameter_L / 2.0, 2)) : data.LoadReading;
             return result;
         }
         public override double AutoDefined(ParamData param,SurveyData data, string expression)
@@ -1543,7 +1590,40 @@ namespace LoadDataCalc
         }
         public override int WriteResultToDB(List<PointSurveyData> datas)
         {
-            return base.WriteResultToDB(datas);
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Result_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("Temperature");
+            dt.Columns.Add("loadReading");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("UpdateTime");
+            if (Config.IsAuto) dt.Columns.Add("RecordMethod");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from  " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
+                    dr["Temperature"] = Math.Round(surveydata.Tempreture, 2);
+                    dr["loadReading"] = Math.Round(surveydata.LoadReading, 4);
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    if (Config.IsAuto) dr["RecordMethod"] = "人工";
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
         }
 
     }
@@ -1695,9 +1775,11 @@ namespace LoadDataCalc
             {//掉弦
                 value = value / count;
             }
-           
+
+            data.Survey_ZorR = value;
             result = param.Gorf * (value - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT);
             result += param.Constant_b;
+            
             //data.Survey_ZorRMoshu = value;
             data.LoadReading = result;
             data.AfterLock = ((param.Lock_Value - result) / param.Lock_Value) * 100;
@@ -1772,11 +1854,11 @@ namespace LoadDataCalc
             dt.Columns.Add("Observation_Date");
             dt.Columns.Add("Observation_Time");
             dt.Columns.Add("Temperature");
-            dt.Columns.Add("Average");
             foreach (string s in list)
             {
                 dt.Columns.Add(s);
             }
+            dt.Columns.Add("Average");
             dt.Columns.Add("Remark");
             dt.Columns.Add("UpdateTime");
             if (Config.IsAuto) dt.Columns.Add("RecordMethod");
@@ -1794,13 +1876,14 @@ namespace LoadDataCalc
                     dr["Observation_Date"] = surveydata.SurveyDate;
                     dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
                     dr["Temperature"] = Math.Round(surveydata.Survey_RorT, 2);
-                    dr["Average"] = Math.Round(surveydata.Survey_ZorR, 4);
+         
                     int index = 0;
                     foreach (var dic in surveydata.MultiDatas)
                     {
                         dr[list[index]] = Math.Round(dic.Value.Survey_ZorR, 4);
                         index++;
                     }
+                    dr["Average"] = Math.Round(surveydata.Survey_ZorR, 4);
                     dr["Remark"] = surveydata.Remark;
                     dr["UpdateTime"] = DateTime.Now;
                     if (Config.IsAuto) dr["RecordMethod"] = "人工";
@@ -2030,7 +2113,44 @@ namespace LoadDataCalc
         }
         public override int WriteSurveyToDB(List<PointSurveyData> datas)
         {
-            return base.WriteSurveyToDB(datas);
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Measure_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("Reading");
+            dt.Columns.Add("Real_Temperature");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("UpdateTime");
+            if (Config.IsAuto) dt.Columns.Add("RecordMethod");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
+                    dr["Reading"] = (float)surveydata.Survey_ZorR;
+                    dr["Real_Temperature"] = Math.Round(surveydata.LoadReading, 2);
+                    if (Encoding.Default.GetBytes(surveydata.Remark).Length > 60)
+                    {
+                        surveydata.Remark = "";
+                    }
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    if (Config.IsAuto) dr["RecordMethod"] = "人工";
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
         }
         public override int WriteResultToDB(List<PointSurveyData> datas)
         {
@@ -2687,6 +2807,130 @@ namespace LoadDataCalc
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
             return base.GetParam(Survey_point_Number, this.InsType.ToString());
+        }
+    }
+    public class Fiducial_Water_Level_Hole : BaseInstrument
+    {
+        public Fiducial_Water_Level_Hole()
+        {
+            base.InsType = InstrumentType.Fiducial_Water_Level_Hole;
+        }
+        public override double DifBlock(ParamData param,SurveyData data, params double[] expand)
+        {
+            return 0;        
+        }
+        public override double ShakeString(ParamData param,SurveyData data, params double[] expand)
+        {
+            if (data.Survey_RorT != 0)
+            {
+                data.LoadReading = data.Survey_RorT - data.Survey_ZorR;
+            }
+            else
+            {
+                data.Survey_RorT = param.RorT;
+                data.LoadReading = param.RorT - data.Survey_ZorR;
+            }
+       
+            data.ResultReading = data.LoadReading - expand[0];
+           
+            return 0;   
+        }
+        public override double AutoDefined(ParamData param,SurveyData data, string expression)
+        {
+            return base.AutoDefined(param,data,expression);
+        }
+        public override ParamData GetParam(string Survey_point_Number, string tablename = null)
+        {
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            string sql = "SELECT Srart_PipeElev from Fiducial_Water_Level_Hole where Survey_point_Number='{0}' ";
+            var result = sqlhelper.SelectFirst(string.Format(sql, Survey_point_Number));
+            var param = new ParamData();
+            if (result != DBNull.Value)
+            {
+                param.SurveyPoint = Survey_point_Number;
+                param.RorT = Convert.ToDouble(result);
+                
+            }
+            return param;
+            
+        }
+        public override int WriteSurveyToDB(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Measure_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("Elevtion");
+            dt.Columns.Add("Reading");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("UpdateTime");
+            if (Config.IsAuto) dt.Columns.Add("RecordMethod");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
+                    dr["Elevtion"] = (float)surveydata.Survey_RorT;
+                    dr["Reading"] = (float)surveydata.Survey_ZorR;
+                    if (Encoding.Default.GetBytes(surveydata.Remark).Length > 60)
+                    {
+                        surveydata.Remark = "";
+                    }
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    if (Config.IsAuto) dr["RecordMethod"] = "人工";
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+        public override int WriteResultToDB(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Result_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("Water_Level");
+            dt.Columns.Add("Water_Level_Change");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("UpdateTime");
+            if (Config.IsAuto) dt.Columns.Add("RecordMethod");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from  " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
+                    dr["Water_Level"] = Math.Round(surveydata.LoadReading, 4);
+                    dr["Water_Level_Change"] = Math.Round(surveydata.ResultReading, 4);
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    if (Config.IsAuto) dr["RecordMethod"] = "人工";
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
         }
     }
 }

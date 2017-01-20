@@ -27,7 +27,6 @@ namespace LoadDataCalc
         /// </summary>
         public InstrumentType InsType = InstrumentType.BaseInstrument;
 
-
         public  BaseInstrument()
         {
             FuncDic.Add(CalcType.DifBlock, DifBlockExpand);
@@ -62,7 +61,7 @@ namespace LoadDataCalc
                     param.Korb * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) - param.TemperatureRead * (param.RorT - param.ZeroR));
             }
             data.ResultReading = result;//这里要乘以系数
-            data.Tempreture = param.TemperatureRead * (data.Survey_RorT - param.ZeroR);
+            data.Tempreture =(Math.Abs(data.Survey_RorT)>1)? param.TemperatureRead * (data.Survey_RorT - param.ZeroR):0;
             data.LoadReading = result;
             return result;
         }
@@ -943,6 +942,11 @@ namespace LoadDataCalc
         /// </summary>
         [Description("精密水准")]
         Fiducial_Geometry_Level,
+        /// <summary>
+        /// 水位孔
+        /// </summary>
+        [Description("水位孔")]
+        Fiducial_Water_Level_Hole
     }
     /// <summary> 获取枚举的描述信息
     /// </summary>
@@ -981,19 +985,4 @@ namespace LoadDataCalc
     }
 
 
-    public class Anchor_CableCalc
-    {
-        /// <summary>
-        /// 掉弦索引
-        /// </summary>
-        public Dictionary<int, List<int>> DicCach = new Dictionary<int, List<int>>();
-        /// <summary>
-        /// 新的基准
-        /// </summary>
-        public double Average;
-        /// <summary>
-        /// 算出来的转换系数
-        /// </summary>
-        public double Coefficient;
-    }
 }

@@ -16,22 +16,29 @@ namespace LoadDataCalc
     public partial class FormLoadCalc : Form
     {
         private LoadDataClass loadData;
+        //文件列表
         private List<string> loadFiles = new List<string>();
         /// <summary>各仪器对应文件列表
         /// </summary>
         private Dictionary<string, List<string>> Files = new Dictionary<string, List<string>>();
         private Thread threadLoad = null;
+        //数据缓存，删除数据的时候用
+        private Dictionary<int, object> CurrentCach = new Dictionary<int, object>();
+        //datagridview的列名,不能随便修改，查找和删除数据的时候会用到
+        private string[] headers =new string[]{"ID", "测点", "观测日期", "观测时间", "温度", "频率", "备注", "温度结果" ,"计算结果","最终结果","Excel结果","差值" };
 
         public FormLoadCalc()
         {
             InitializeComponent();
+            SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
         }
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
             #region//初始化
+            skinEngine1.SkinFile = Application.StartupPath + "\\DLLS\\MSN.ssk";
             Status("初始化...");
-            btnRead.Enabled = false;
+            toolStripButtonRead.Enabled = false;
             toolStripProgressLoad.Visible = true;
             Thread loadThread = new Thread(() =>
             {
@@ -45,9 +52,16 @@ namespace LoadDataCalc
                 {
                     Thread.Sleep(1000);
                     loadData.ClearDirTmp();
+                    
                     Status("初始化成功");
                 }
                 loadData.StatusAction = new Action<string>((msg) => { Status("正在读取文件:" + msg); });
+                loadData.FileIndexAction = new Action<int>((index) => {
+                    this.Invoke(new EventHandler(delegate {
+                        if (toolStripProgressLoad.Visible) toolStripProgressLoad.Value = index;
+                    }));
+
+                });
                 Files = Config.ReadFileList();
                 if (this.IsDisposed) return;
                 this.Invoke(new EventHandler(delegate {
@@ -55,15 +69,49 @@ namespace LoadDataCalc
                     if(comboType.Items.Count>0)comboType.SelectedIndex = 0;
                     toolStripProgressLoad.Visible = false;
                     this.Text = Config.ProjectName;
-                    btnRead.Enabled = true;
+                    toolStripButtonRead.Enabled = true;
+                    Type type = dataGridView1.GetType();
+                    PropertyInfo pi = type.GetProperty("DoubleBuffered",
+                        BindingFlags.Instance | BindingFlags.NonPublic);
+                    pi.SetValue(dataGridView1, true, null);
+
+                    ContextMenu menu = new ContextMenu();
+                    MenuItem item = new MenuItem("删除数据");
+                    item.Click += (send, arg) =>
+                    {
+                        if (MessageBox.Show("确认删除数据？", "删除数据", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                        {
+                            this.dataGridView1.BeginInvoke(new Action(()=>
+                            {
+                                foreach (var obj in dataGridView1.SelectedRows)
+                                {
+                                    var row = obj as DataGridViewRow;
+                                    int id = Convert.ToInt32(row.Cells["ID"].Value);
+                                    string point = row.Cells["测点"].Value.ToString();
+                                    var pt = loadData.SurveyDataCach.FirstOrDefault(p => p.SurveyPoint == point);
+                                    if (pt != null && CurrentCach.Keys.Contains(id))
+                                    {
+                                        pt.Datas.Remove(CurrentCach[id] as SurveyData);
+                                    }
+                                    this.dataGridView1.Rows.Remove(row);
+                                }
+                            }));
+                        }
+                    };
+                    menu.MenuItems.Add(item);
+                    this.dataGridView1.ContextMenu = menu;
+
                 }));
             });
             loadThread.Start();
+
             #endregion
             #region //窗体事件
-            btnRead.Click += new EventHandler(btnRead_Click);
-            btnWrite.Click += new EventHandler(btnWrite_Click);
-            btnBack.Click += (o, eg) => {
+            
+            toolStripButtonRead.Click += new EventHandler(btnRead_Click);
+            toolStripButtonWrite.Click += new EventHandler(btnWrite_Click);
+            toolStripButtonRollback.Click += (o, eg) =>
+            {
                 if (loadData.ID < 0) Status("没有数据可以回滚");
           
                 var instype = Config.InsCollection.InstrumentDic[comboType.Text];
@@ -78,7 +126,8 @@ namespace LoadDataCalc
                     Status("回滚成功");
                 });
             };
-            btnConfig.Click += (o, eg) => {
+            toolStripButtonConfig.Click += (o, eg) =>
+            {
                 FormConfigFilePath fcf = new FormConfigFilePath();
                 fcf.ShowDialog();
                 //fcf.Show();
@@ -88,29 +137,50 @@ namespace LoadDataCalc
             Config.LimitT = (double)numericLimit.Value;
             };
 
-            Type type = dataGridView1.GetType();
-            PropertyInfo pi = type.GetProperty("DoubleBuffered",
-                BindingFlags.Instance | BindingFlags.NonPublic);
-            pi.SetValue(dataGridView1, true, null);
             comboType.TextChanged+=new EventHandler((send,args)=>{
                 btnShowNonStress.Visible = (comboType.Text == "应变计" || comboType.Text == "应变计组");
                 
             });
             btnShowNonStress.Click += new EventHandler(btnShowNonStress_Click);
+            #region 查找数据相关
             btnSearch.Click+=new EventHandler((send,arg)=>{
-                var data=loadData.SurveyDataCach.Where(p => p.SurveyPoint.ToUpper().Trim()==txNumber.Text.ToUpper().Trim()).FirstOrDefault();
-                if (data == null||data.Datas.Count==0)
+                //var data=loadData.SurveyDataCach.Where(p => p.SurveyPoint.ToUpper().Trim()==txNumber.Text.ToUpper().Trim()).FirstOrDefault();
+                PointSurveyData data;
+                string current = txNumber.Text.ToUpper().Trim();
+                if (btnShowNonStress.Text == "无应力计")
                 {
-                    MessageBox.Show("没有数据");
-                    return;
+                    data = loadData.SurveyDataCach.Where(p => DataUtils.CheckStrIgnoreCN(p.SurveyPoint.ToUpper(), current)).FirstOrDefault();
+                    if (data == null || data.Datas.Count == 0)
+                    {
+                        MessageBox.Show("没有数据");
+                        return;
+                    }
+                    int rowcount = 0;
+                    foreach (var pd in loadData.SurveyDataCach)
+                    {
+                        if (pd.SurveyPoint == data.SurveyPoint) break;
+                        rowcount += pd.Datas.Count;
+                    }
+                    this.dataGridView1.CurrentCell = this.dataGridView1.Rows[rowcount].Cells[0];
                 }
-                int rowcount = 0;
-                foreach (var pd in loadData.SurveyDataCach)
+                else
                 {
-                    if (pd.SurveyPoint == data.SurveyPoint) break;
-                    rowcount += pd.Datas.Count;
+                    data = loadData.SurveyDataCachExpand.Where(p => DataUtils.CheckStrIgnoreCN(p.SurveyPoint.ToUpper(),current)).FirstOrDefault();
+                    if (data == null || data.Datas.Count == 0)
+                    {
+                        MessageBox.Show("没有数据");
+                        return;
+                    }
+                    int rowcount = 0;
+                    foreach (var pd in loadData.SurveyDataCachExpand)
+                    {
+                        if (pd.SurveyPoint == data.SurveyPoint) break;
+                        rowcount += pd.Datas.Count;
+                    }
+                    this.dataGridView1.CurrentCell = this.dataGridView1.Rows[rowcount].Cells[0];
                 }
-                this.dataGridView1.CurrentCell = this.dataGridView1.Rows[rowcount].Cells[0];
+
+
             });
             btnNext.Click+=new EventHandler((send,arg)=>{
                 if (dataGridView1.CurrentRow == null) return;
@@ -172,6 +242,7 @@ namespace LoadDataCalc
                     }
                 }
             });
+
             btnfile.Click += new EventHandler((send, arg) => {
                 if (dataGridView1.CurrentRow == null) return;
                 string current = dataGridView1.CurrentRow.Cells["测点"].Value.ToString();
@@ -191,6 +262,7 @@ namespace LoadDataCalc
                     if (File.Exists(point.ExcelPath)) Process.Start(point.ExcelPath);
                 }
             });
+            #endregion
             chkCover.CheckedChanged += new EventHandler(chkCover_CheckedChanged);
             radioTime.CheckedChanged += new EventHandler(radioTime_CheckedChanged);
             radioAll.CheckedChanged += ((send, arg) => {
@@ -199,8 +271,94 @@ namespace LoadDataCalc
             dateTimePicker1.ValueChanged += ((send, arg) => {
                 Config.StartTime = dateTimePicker1.Value;
             });
-            btnLoadFile.Click += new EventHandler(btnLoadFile_Click);
+            toolStripButtonReadFile.Click += new EventHandler(btnLoadFile_Click);
+            toolStripButtonCount.Click += ((send, arg) => { FormCount fc = new FormCount(); fc.ShowDialog(); });
+            dataGridView1.MouseClick += (send, arg) => {
+                if (arg.Button == System.Windows.Forms.MouseButtons.Right && dataGridView1.SelectedRows.Count > 0)
+                {
+                    dataGridView1.ContextMenu.Show(dataGridView1, arg.Location);
+                }
+            };
+            dataGridView1.DataSourceChanged += (send, arg) => { changeBackColor(); };
+            chkShowback.CheckedChanged += (send, arg) => { changeBackColor(); };
+            numericError.ValueChanged += (send, ar) => { changeBackColor(); };
+            toolStripButtonCheck.Click += new EventHandler(toolStripButtonCheck_Click);
             #endregion
+       
+        }
+
+        void toolStripButtonCheck_Click(object sender, EventArgs e)
+        {
+            string insname = comboType.Text;
+            Status("检查文件");
+            Func<bool> checkFunc = new Func<bool>(() =>
+            {
+                string errfile;
+                if (!loadData.CheckFiles(Files[insname], out errfile))
+                {
+                    this.Invoke(new EventHandler(delegate { MessageBox.Show(errfile + "被占用!"); }));
+                    return false;
+                }
+                return true;
+            });
+            if (!checkFunc()) return;
+            if (loadData.SurveyDataCach.Count != 0)
+            {
+                if (MessageBox.Show("数据缓存中还有数据,读取数据将清空该数据缓存,点击‘是’确定读取", "提示", MessageBoxButtons.YesNo) ==
+                    DialogResult.No)
+                {
+                    return;
+                }
+            }
+            setEnable(false);
+            Status("校验基准");
+            loadData.ClearCach();
+            this.dataGridView1.DataSource = null;
+            toolStripProgressLoad.Visible = true;
+            toolStripProgressLoad.Maximum = Files[insname].Count;
+            toolStripProgressLoad.Value = 0;
+            Action callback = () =>
+            {
+                if (this.IsDisposed) return;
+                this.Invoke(new EventHandler(delegate
+                {
+                    toolStripProgressLoad.Visible = false;
+                    setEnable(true);
+                    //ErrorMsg.OpenLog(1);
+                    //MessageBox.Show(Config.Tick1.ToString() + "__" + Config.Tick2.ToString());
+                }));
+            };
+
+            threadLoad = new Thread((cb) =>
+            {
+                var type = Config.InsCollection.InstrumentDic[insname];
+
+                var res = loadData.CheckStandard(type, Files[insname]);
+                this.Invoke(new EventHandler(delegate{
+                    DataTable dt = new DataTable();
+                    dt.TableName = "showTable";
+                    dt.Columns.Add("测点");
+                    dt.Columns.Add("行数");
+                    dt.Columns.Add("文件");
+                    for (int i = 0; i < res.Count;i++ )
+                    {
+                        DataRow dr = dt.NewRow();
+                        dr["测点"] = res[i].name;
+                        dr["行数"] = res[i].index;
+                        dr["文件"] = res[i].spath;
+                        dt.Rows.Add(dr);
+                    }
+                    dataGridView1.DataSource = dt;
+                    dataGridView1.Update();
+                    for (int i = 0; i < res.Count; i++)
+                    {
+                        if (res[i].index < 1) dataGridView1.Rows[i].DefaultCellStyle.BackColor = Color.Red;
+                    }
+                }));
+                Action call = cb as Action;
+                call();
+            });
+            threadLoad.Start(callback);
         }
 
         void btnWrite_Click(object sender, EventArgs e)
@@ -217,6 +375,7 @@ namespace LoadDataCalc
             
             setEnable(false);
             toolStripProgressLoad.Visible = true;
+            Status("开始写入数据...");
             ThreadPool.QueueUserWorkItem((obj) =>
             {
                 bool flag = false;
@@ -236,7 +395,7 @@ namespace LoadDataCalc
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.InitialDirectory = "D:\\";
-            openFileDialog.Filter = "Excel2013|*.xlsx|Excel2007|*.xls";
+            openFileDialog.Filter = "Excel2013|*.xlsx|Excel2007|*.xls|所有文件|*.*";
             openFileDialog.RestoreDirectory = true;
             openFileDialog.Multiselect = true;
             if (openFileDialog.ShowDialog() == DialogResult.OK)
@@ -308,6 +467,7 @@ namespace LoadDataCalc
         {
             if (btnShowNonStress.Text == "无应力计")
             {
+                CurrentCach.Clear();
                 DataTable dt = new DataTable();
                 dt.TableName = "Survey_Leakage_Pressure";
                 dt.Columns.Add("ID");
@@ -335,10 +495,12 @@ namespace LoadDataCalc
                         dr["备注"] = surveydata.Remark;
                         dr["温度结果"] = surveydata.Tempreture;
                         dr["计算结果"] = surveydata.LoadReading;
+                        CurrentCach.Add(id, surveydata);
                         dt.Rows.Add(dr);
                     }
                 }
                 this.dataGridView1.DataSource = dt;
+                dataGridView1.Columns["测点"].Frozen = true;
                 btnShowNonStress.Text = "应变计";
             }
             else
@@ -351,8 +513,13 @@ namespace LoadDataCalc
         {
             if (chkCover.Checked)
             {
-                MessageBox.Show("覆盖导入请使用‘打开指定文件’导入数据");
+                MessageBox.Show("覆盖导入功能请选择指定文件进行导入!");
                 return;
+                //if (MessageBox.Show("选择了全部覆盖导入,会进行全部覆盖导入该类仪器的数据", "是否继续", MessageBoxButtons.YesNo) ==
+                //   DialogResult.No)
+                //{
+                //    return;
+                //}
             }
             string insname = comboType.Text;
             Status("检查文件");
@@ -368,7 +535,7 @@ namespace LoadDataCalc
            if (!checkFunc()) return;
            if (loadData.SurveyDataCach.Count != 0)
            {
-               if (MessageBox.Show("数据缓存中还有数据,读取数据将清空该数据缓存,点击‘是’确定读取", "是否读取", MessageBoxButtons.YesNo) ==
+               if (MessageBox.Show("数据缓存中还有数据,读取数据将清空该数据缓存,点击‘是’确定读取", "提示", MessageBoxButtons.YesNo) ==
                    DialogResult.No)
                {
                    return;
@@ -379,6 +546,8 @@ namespace LoadDataCalc
            loadData.ClearCach();
            this.dataGridView1.DataSource = null;
            toolStripProgressLoad.Visible = true;
+           toolStripProgressLoad.Maximum = Files[insname].Count;
+           toolStripProgressLoad.Value = 0;
             Action callback = () =>
             {
                 if (this.IsDisposed) return;
@@ -439,43 +608,31 @@ namespace LoadDataCalc
                 loaddatagridviewExpand(datas);
                 return;
             }
-            bool flag = comboType.Text == "多点位移计"||comboType.Text=="应变计组";
+            bool flag = comboType.Text == "多点位移计" || comboType.Text == "应变计组" || comboType.Text == "多点锚杆应力计";
+            CurrentCach.Clear();
             DataTable dt = new DataTable();
             dt.TableName = "showTable";
-            dt.Columns.Add("ID");
-            dt.Columns.Add("测点");
-            dt.Columns.Add("观测日期");
-            dt.Columns.Add("观测时间");
-            dt.Columns.Add("温度");
-            dt.Columns.Add("频率");
-            dt.Columns.Add("备注");
-            dt.Columns.Add("温度结果");
-            dt.Columns.Add("计算结果");
-            dt.Columns.Add("最终结果");
-            dt.Columns.Add("Excel结果");
-            dt.Columns.Add("差值");
-            
+            foreach (var h in headers)
+            {
+                dt.Columns.Add(h);
+            }
             if (flag)
             {
-                dt.Columns.Add("F1");
-                dt.Columns.Add("F2");
-                dt.Columns.Add("F3");
-                dt.Columns.Add("F4");
-                dt.Columns.Add("F5");
-                dt.Columns.Add("F6");
-                dt.Columns.Add("R1");
-                dt.Columns.Add("R2");
-                dt.Columns.Add("R3");
-                dt.Columns.Add("R4");
-                dt.Columns.Add("R5");
-                dt.Columns.Add("R6");
-                
+                for (int i = 1; i < 7; i++)
+                {
+                    dt.Columns.Add("F"+i.ToString());
+                    dt.Columns.Add("R" + i.ToString());
+                    if (comboType.Text == "应变计组" || comboType.Text == "多点锚杆应力计") dt.Columns.Add("T" + i.ToString());
+                }                
             }
             int id = 0;//总数据
             int Pcount = 0;//点数
+            int PcountEx = 0;//计算下仪器支数
             foreach (PointSurveyData pd in datas)
             {
+                
                 Pcount++;
+                if (flag && pd.Datas.Count > 0) PcountEx += pd.Datas[0].MultiDatas.Count;
                 foreach (var surveydata in pd.Datas)
                 {
                     id++;
@@ -491,7 +648,7 @@ namespace LoadDataCalc
                     dr["计算结果"] = surveydata.LoadReading;
                     dr["最终结果"] = surveydata.ResultReading;
                     dr["Excel结果"] = surveydata.ExcelResult;
-                    dr["差值"] = Math.Abs(surveydata.ExcelResult - surveydata.LoadReading).ToString("#0.0000"); 
+                    dr["差值"] =  Math.Abs(surveydata.ExcelResult - surveydata.LoadReading).ToString("#0.0000"); 
                     if (flag)
                     {
                         dr["最终结果"] = surveydata.AfterLock;
@@ -500,49 +657,47 @@ namespace LoadDataCalc
                         {
                             dr["F" + i.ToString()] = v.Value.Survey_ZorR;
                             dr["R" + i.ToString()] = v.Value.LoadReading;
-                            //if (comboType.Text == "应变计组")
-                            //{
-                            //    dr["R" + i.ToString()] = v.Value.Survey_RorT;
-                            //}
+                            if (comboType.Text == "应变计组" || comboType.Text == "多点锚杆应力计") dr["T" + i.ToString()] = v.Value.Tempreture;
+                            
                             i++;
                         }
                     }
+                    CurrentCach.Add(id, surveydata);
                     dt.Rows.Add(dr);
                 }
             }
+           
             this.dataGridView1.DataSource = dt;
+            dataGridView1.Columns["测点"].Frozen = true;
             for (int i = 0; i < this.dataGridView1.Columns.Count; i++)
             {
                 this.dataGridView1.Columns[i].SortMode = DataGridViewColumnSortMode.NotSortable;
             }
-            Status(String.Format("读取{0}个点，总共{1}条数据",Pcount, id));
+            if (flag)
+            {
+                Status(String.Format("读取{0}个点,{1}支仪器,总共{2}条数据", Pcount,PcountEx, id));
+            }
+            else
+            {
+                Status(String.Format("读取{0}个点，总共{1}条数据", Pcount, id));
+            }
            
         }
        void loaddatagridviewExpand(List<PointSurveyData> datas)
        {
+           CurrentCach.Clear();
            DataTable dt = new DataTable();
            dt.TableName = "showTable";
-           dt.Columns.Add("ID");
-           dt.Columns.Add("测点");
-           dt.Columns.Add("观测日期");
-           dt.Columns.Add("观测时间");
-           dt.Columns.Add("温度");
-           dt.Columns.Add("频率");
-           dt.Columns.Add("备注");
-           dt.Columns.Add("温度结果");
-           dt.Columns.Add("计算结果");
-           dt.Columns.Add("最终结果");
-           dt.Columns.Add("Excel结果");
-           dt.Columns.Add("差值");
+           foreach (var h in headers)
+           {
+               dt.Columns.Add(h);
+           }
            dt.Columns.Add("clacAverage");
            dt.Columns.Add("Average");
-           dt.Columns.Add("dif");
-           dt.Columns.Add("F1");
-           dt.Columns.Add("F2");
-           dt.Columns.Add("F3");
-           dt.Columns.Add("F4");
-           dt.Columns.Add("F5");
-           dt.Columns.Add("F6");
+           for (int i = 1; i < 7; i++)
+           {
+               dt.Columns.Add("F" + i.ToString());
+           }   
            int id = 0;//总数据
            int Pcount = 0;//点数
            foreach (PointSurveyData pd in datas)
@@ -572,10 +727,12 @@ namespace LoadDataCalc
                         dr["F" + i.ToString()] = v.Value.Survey_ZorR;
                         i++;
                     }
+                    CurrentCach.Add(id, surveydata);
                    dt.Rows.Add(dr);
                }
            }
            this.dataGridView1.DataSource = dt;
+           dataGridView1.Columns["测点"].Frozen = true;
            for (int i = 0; i < this.dataGridView1.Columns.Count; i++)
            {
                this.dataGridView1.Columns[i].SortMode = DataGridViewColumnSortMode.NotSortable;
@@ -585,15 +742,33 @@ namespace LoadDataCalc
        }
        void setEnable(bool status)
        {
-           btnWrite.Enabled = status;
-           btnConfig.Enabled = status;
-           btnRead.Enabled = status;
+
+           toolStripButtonWrite.Enabled = status;
+           toolStripButtonConfig.Enabled = status;
+           toolStripButtonRead.Enabled = status;
            comboType.Enabled = status;
            numericLimit.Enabled = status;
            btnShowNonStress.Enabled = status;
-           btnBack.Enabled = status;
-           btnLoadFile.Enabled = status;
+           toolStripButtonRollback.Enabled = status;
+           toolStripButtonReadFile.Enabled = status;
        }
-
+       void changeBackColor()
+       {
+           if (!dataGridView1.Columns.Contains("差值")) return;
+           foreach (var r in dataGridView1.Rows)
+           {
+               var row = r as DataGridViewRow;
+               var cell = row.Cells["差值"];
+               double dif = Convert.ToDouble(cell.Value);
+               if (dif > (double)numericError.Value)
+               {
+                   row.DefaultCellStyle.BackColor = chkShowback.Checked ? Color.White : Color.Gray;
+               }
+               else
+               {
+                   row.DefaultCellStyle.BackColor = Color.White;
+               }
+           }
+       }
     }
 }

@@ -15,3 +15,6 @@ D:\wokspace\CSharpTest\LoadDataCalc\bin\Release\DLLS\NPOI.OpenXml4Net.dll
 D:\wokspace\CSharpTest\LoadDataCalc\bin\Release\DLLS\NPOI.OpenXml4Net.XML
 D:\wokspace\CSharpTest\LoadDataCalc\bin\Release\DLLS\NPOI.OpenXmlFormats.dll
 D:\wokspace\CSharpTest\LoadDataCalc\bin\Release\DLLS\NPOI.xml
+D:\wokspace\CSharpTest\LoadDataCalc\obj\x86\Release\LoadDataCalc.FormCount.resources
+D:\wokspace\CSharpTest\LoadDataCalc\bin\Release\DLLS\IrisSkin2.dll
+D:\wokspace\CSharpTest\LoadDataCalc\bin\Release\DLLS\MSN.ssk

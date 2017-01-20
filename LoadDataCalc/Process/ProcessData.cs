@@ -48,6 +48,12 @@ namespace LoadDataCalc
         /// </summary>
         protected Dictionary<string, string> PointNumberCach = new Dictionary<string, string>();
 
+        /// <summary> 从excel文件中读取数据
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public abstract void ReadData(string path, out List<PointSurveyData> datas, out List<ErrorMsg> errors);
+
         protected virtual void AddErroSheetname(string filename, string errorsheetname)
         {
             if (ErrorSheetName.Keys.Contains(filename))
@@ -59,11 +65,6 @@ namespace LoadDataCalc
                 ErrorSheetName.Add(filename, new List<string>() { errorsheetname });
             }
         }
-        /// <summary> 从excel文件中读取数据
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public abstract void ReadData(string path, out List<PointSurveyData> datas, out List<ErrorMsg> errors);
 
         /// <summary> 获取数据索引
         /// </summary>
@@ -125,28 +126,6 @@ namespace LoadDataCalc
             }
             return info;
         }
-        /// <summary>
-        /// 获取测值表中最大日期
-        /// </summary>
-        /// <returns></returns>
-        protected bool GetMaxDate(string surveyNumber, out DateTime maxDatetime,string tablename=null)
-        {
-            if (Config.IsCovery)//覆盖导入
-            {
-                maxDatetime = Config.StartTime;//指定覆盖的起始时间//指定从某个时间起始覆盖时有用
-                return !Config.IsCoveryAll;
-            }
-            var sqlhelper = CSqlServerHelper.GetInstance();
-            maxDatetime = new DateTime();
-            string sql = Config.IsAuto?"select max(Observation_Date) from {0} where Survey_point_Number=@Survey_point_Number and RecordMethod='人工'":
-                "select max(Observation_Date) from {0} where Survey_point_Number=@Survey_point_Number";
-            string table = tablename == null ? Config.InsCollection[this.Instrument_Name].Measure_Table : tablename;
-            sql = String.Format(sql, table);
-            var result = sqlhelper.SelectFirst(sql, new SqlParameter("@Survey_point_Number", surveyNumber));
-            bool flag = (result != DBNull.Value);
-            if (flag) maxDatetime = (DateTime)result;
-            return flag;
-        }
 
         /// <summary>检查数据正确性
         /// </summary>
@@ -194,7 +173,7 @@ namespace LoadDataCalc
                 lastMorYData = GetData(dt.AddDays(-3),dt.AddDays(3),Datas);
                 if (lastMorYData != null) szr = lastMorYData.Survey_ZorR;
             }
-            if (Math.Abs(sd.Survey_ZorR - szr) < Config.LimitZ) return true;
+            if (szr!=0&&Math.Abs(sd.Survey_ZorR - szr) < Config.LimitZ) return true;
             //跟上一年的同一天做对比
             dt = sd.SurveyDate.Date.AddYears(-1);
             table = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, dt.ToString(), dt.ToString()));
@@ -207,19 +186,10 @@ namespace LoadDataCalc
                 lastMorYData = GetData(dt.AddDays(-3), dt.AddDays(3), Datas);
                 if (lastMorYData != null) szr = lastMorYData.Survey_ZorR;
             }
-            if (Math.Abs(sd.Survey_ZorR - szr) < Config.LimitZ) return true;
+            if (szr != 0 && Math.Abs(sd.Survey_ZorR - szr) < Config.LimitZ) return true;
             err.Exception = "数据误差超限";
+            
             return false;
-
-        }
-        protected SurveyData GetData(DateTime Start, DateTime End,List<SurveyData>list)
-        {
-            for (int i =0; i<list.Count; i++)
-            {
-                if (list[i].SurveyDate.CompareTo(Start) >= 0 && list[i].SurveyDate.CompareTo(End) <= 0) return list[i];
-                if (list[i].SurveyDate.CompareTo(Start) < 0) break;
-            }
-            return null;
 
         }
 
@@ -231,17 +201,115 @@ namespace LoadDataCalc
         {
             string sql = "select  Benchmark_Resist_Ratio from {0}  where Survey_point_Number='{1}'";
             CSqlServerHelper sqlhelper = CSqlServerHelper.GetInstance();
-            var res=sqlhelper.SelectFirst(String.Format(sql,Config.InsCollection[Instrument_Name].Fiducial_Table,point));
-            if(res!=DBNull.Value)
+            var res = sqlhelper.SelectFirst(String.Format(sql, Config.InsCollection[Instrument_Name].Fiducial_Table, point));
+            if (res != DBNull.Value)
             {
                 return Convert.ToDouble(res);
             }
             else
             {
-                 return 0;
+                return 0;
             }
         }
 
+        /// <summary> 校核基准值
+        /// </summary>
+        public virtual dynamic CheckStandard(string path)
+        {
+            IFormatProvider culture = CultureInfo.CurrentCulture;
+            var workbook = WorkbookFactory.Create(path);
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            List<dynamic> Results = new List<dynamic>();
+            for (int i = 0; i < workbook.NumberOfSheets; i++)
+            {
+                var psheet = workbook.GetSheetAt(i);
+                string pointnumber = psheet.SheetName;
+                if (!CheckName(pointnumber))
+                {
+                    if (PointNumberCach.ContainsKey(pointnumber.ToUpper().Trim()))
+                    {
+                        pointnumber = PointNumberCach[pointnumber.ToUpper().Trim()];
+                    }
+                    else
+                    {
+                        AddErroSheetname(path, psheet.SheetName);
+                        continue;
+                    }
+                }
+                if (StatusAction != null) StatusAction(path + "-" + psheet.SheetName);
+                DataInfo dinfo = GetInfo(psheet);
+                double ZStandard=0;
+                ZStandard = GetZorRStandard(pointnumber);
+                bool FirstFlag = (ZStandard == 0);//是否找到基准行
+                int count = psheet.PhysicalNumberOfRows;
+                //for (int j = count - 1; j > 0; j--)//从后往前读，没法滤掉有问题的数据
+                for (int j = 1; j <count+1; j++)//从前往后读
+                {
+                    try
+                    {
+                        IRow row = psheet.GetRow(j);
+                        if (row == null) continue;
+                        DateTime dt;
+                        //获取时间，不是时间进入下一次循环
+                        if (!GetDateTime(row, dinfo, out dt)) continue;
+                        SurveyData sd = new SurveyData();
+                        string errmsg = null;
+                        if (!ReadRow(row, dinfo, sd, out  errmsg))//读当前行
+                        {
+                            continue;
+                        }
+                        if (!FirstFlag && Math.Abs(sd.Survey_ZorR - ZStandard) <= 0.1
+                            ||(Config.IsMoshu && Math.Abs(sd.Survey_ZorR - Math.Sqrt(ZStandard * 1000)) < 1))
+                        {
+                            FirstFlag = true;
+                            Results.Add(new{name = pointnumber,spath = path, index = j + 1});
+                            break;
+                        }
+                        
+                    }
+                    catch (Exception ex)
+                    {
+                        continue;
+                    }
+                }
+                if (!FirstFlag) Results.Add(new { name = pointnumber, spath = path, index = -1});
+            }
+            workbook.Close();
+            return Results;
+        }
+        
+        protected SurveyData GetData(DateTime Start, DateTime End,List<SurveyData>list)
+        {
+            for (int i =0; i<list.Count; i++)
+            {
+                if (list[i].SurveyDate.CompareTo(Start) >= 0 && list[i].SurveyDate.CompareTo(End) <= 0) return list[i];
+                if (list[i].SurveyDate.CompareTo(Start) < 0) break;
+            }
+            return null;
+
+        }
+        /// <summary>
+        /// 获取测值表中最大日期
+        /// </summary>
+        /// <returns></returns>
+        protected bool GetMaxDate(string surveyNumber, out DateTime maxDatetime, string tablename = null)
+        {
+            if (Config.IsCovery)//覆盖导入
+            {
+                maxDatetime = Config.StartTime;//指定覆盖的起始时间//指定从某个时间起始覆盖时有用
+                return !Config.IsCoveryAll;
+            }
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            maxDatetime = new DateTime();
+            string sql = Config.IsAuto ? "select max(Observation_Date) from {0} where Survey_point_Number=@Survey_point_Number and RecordMethod='人工'" :
+                "select max(Observation_Date) from {0} where Survey_point_Number=@Survey_point_Number";
+            string table = tablename == null ? Config.InsCollection[this.Instrument_Name].Measure_Table : tablename;
+            sql = String.Format(sql, table);
+            var result = sqlhelper.SelectFirst(sql, new SqlParameter("@Survey_point_Number", surveyNumber));
+            bool flag = (result != DBNull.Value);
+            if (flag) maxDatetime = (DateTime)result;
+            return flag;
+        }
         /// <summary> 读取数据
         /// </summary>
         /// <param name="path"></param>
@@ -327,7 +395,8 @@ namespace LoadDataCalc
                         //数据库没有数据，用基准值做对比，从基准值行开始读
                         if (!flag)
                         {
-                            if (!FirstFlag && Math.Abs(sd.Survey_ZorR - ZStandard) <= 0.01)
+                            if (!FirstFlag && Math.Abs(sd.Survey_ZorR - ZStandard) <= 0.01
+                                ||(Config.IsMoshu && Math.Abs(sd.Survey_ZorR - Math.Sqrt(ZStandard * 1000)) < 1))
                             {
                                 FirstFlag = true;
                             }
@@ -353,11 +422,11 @@ namespace LoadDataCalc
                         continue;
                     }
                 }
+                if (!flag &&!FirstFlag) AddErroSheetname(path, psheet.SheetName+",-1");
                 datas.Add(pd);
             }
             workbook.Close();
         }
-
         private bool ReadRow(IRow row, DataInfo info, SurveyData sd, out string err, bool last = false)
         {
             err = null;
@@ -434,6 +503,11 @@ namespace LoadDataCalc
                 else value = cell.NumericCellValue;
                 return true;
             }
+            else if (cell.CellType == CellType.Error && cell.ToString() == "#N/A")
+            {
+                value = 0;
+                return true;
+            }
             else
             {
                 return double.TryParse(cell.ToString(), out value);
@@ -458,7 +532,6 @@ namespace LoadDataCalc
                 }
             }
             return SurveyNumberCach.Exists(p => DataUtils.CheckStrIgnoreCN(p,name.ToUpper().Trim()));
-              
         }
         /// <summary>
         /// 检查扩展数据(无应力计)点名是否在数据库/不区分大小写，去空格
@@ -500,6 +573,10 @@ namespace LoadDataCalc
                     if (double.TryParse(cell.StringCellValue, out  dvalue))
                     {
                         DateSp = DateTime.FromOADate(dvalue);
+                        flag = true;
+                    }
+                    else if (DateTime.TryParse(cell.StringCellValue, out DateSp))
+                    {
                         flag = true;
                     }
                     else
@@ -605,6 +682,10 @@ namespace LoadDataCalc
         /// 锚索测力计平均值列
         /// </summary>
         public int Average = 6;
+        /// <summary>
+        /// 多点仪器的数据步长，仅用于多点锚杆
+        /// </summary>
+        public int step = 1;
 
         public object Clone()
         {

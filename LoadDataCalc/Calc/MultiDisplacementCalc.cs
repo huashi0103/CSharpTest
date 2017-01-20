@@ -47,6 +47,7 @@ namespace LoadDataCalc
        /// 孔口是否为0，孔口为0有基准值的情况下，基准值取自己
        /// 孔口不为0的情况下基准值取0，孔口取基准值的值
        /// 该值为0 表示孔口为0
+       /// 
        /// </summary>
        public int R0IsZero = 0;
 

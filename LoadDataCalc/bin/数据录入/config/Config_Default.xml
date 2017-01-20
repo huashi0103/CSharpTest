@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<ProConfig ProjectName="DefaultProject">
+  <DataRoot>D:\wokspace\CSharpTest\LoadDataCalc\bin\Debug</DataRoot>
+  <ProCode IsMoshu="0">
+  </ProCode>
+  <Instruments>
+    <Ins Name="未知">未知<KeyWord>未知</KeyWord></Ins>
+    <Ins Name="钢丝位移计">钢丝位移计<KeyWord>钢丝位移计</KeyWord></Ins>
+    <Ins Name="双金属标">双金属标<KeyWord>双金属标</KeyWord></Ins>
+    <Ins Name="大地测量">大地测量<KeyWord>大地测量</KeyWord></Ins>
+    <Ins Name="正倒垂线">正倒垂线<KeyWord>正倒垂线</KeyWord></Ins>
+    <Ins Name="视准线">视准线<KeyWord>视准线</KeyWord></Ins>
+    <Ins Name="引张线">引张线<KeyWord>引张线</KeyWord></Ins>
+    <Ins Name="激光准直">激光准直<KeyWord>激光准直</KeyWord></Ins>
+    <Ins Name="静力水准">静力水准<KeyWord>静力水准</KeyWord></Ins>
+    <Ins Name="伸缩仪">伸缩仪<KeyWord>伸缩仪</KeyWord></Ins>
+    <Ins Name="测斜仪">测斜仪<KeyWord>测斜仪</KeyWord></Ins>
+    <Ins Name="单点位移计">单点位移计<KeyWord>单点位移计</KeyWord></Ins>
+    <Ins Name="多点位移计">多点位移计<KeyWord>多点位移计</KeyWord></Ins>
+    <Ins Name="滑动测微计">滑动测微计<KeyWord>滑动测微计</KeyWord></Ins>
+    <Ins Name="基岩变形计">基岩变形计<KeyWord>基岩变形计</KeyWord></Ins>
+    <Ins Name="电磁沉降环">电磁沉降环<KeyWord>电磁沉降环</KeyWord></Ins>
+    <Ins Name="水管式沉降仪">水管式沉降仪<KeyWord>水管式沉降仪</KeyWord></Ins>
+    <Ins Name="引张线式水平位移计">引张线式水平位移计<KeyWord>引张线式水平位移计</KeyWord></Ins>
+    <Ins Name="土体位移计">土体位移计<KeyWord>土体位移计</KeyWord></Ins>
+    <Ins Name="测缝计">测缝计<KeyWord>测缝计</KeyWord></Ins>
+    <Ins Name="渗压计">渗压计<KeyWord>渗压计</KeyWord></Ins>
+    <Ins Name="测压管">测压管<KeyWord>测压管</KeyWord></Ins>
+    <Ins Name="量水堰">量水堰<KeyWord>量水堰</KeyWord></Ins>
+    <Ins Name="水位计">水位计<KeyWord>水位计</KeyWord></Ins>
+    <Ins Name="应变计">应变计<KeyWord>应变计</KeyWord></Ins>
+    <Ins Name="应变计组">应变计组<KeyWord>应变计组</KeyWord></Ins>
+    <Ins Name="无应力计">无应力计<KeyWord>无应力计</KeyWord></Ins>
+    <Ins Name="钢筋计">钢筋计<KeyWord>钢筋计</KeyWord></Ins>
+    <Ins Name="锚杆应力计">锚杆应力计<KeyWord>锚杆应力计</KeyWord></Ins>
+    <Ins Name="压应力计">压应力计<KeyWord>压应力计</KeyWord></Ins>
+    <Ins Name="土压力计">土压力计<KeyWord>土压力计</KeyWord></Ins>
+    <Ins Name="锚索测力计">锚索测力计<KeyWord>锚索测力计</KeyWord></Ins>
+    <Ins Name="钢板计">钢板计<KeyWord>钢板计</KeyWord></Ins>
+    <Ins Name="温度计">温度计<KeyWord>温度计</KeyWord></Ins>
+    <Ins Name="裂缝计">裂缝计<KeyWord>裂缝计</KeyWord></Ins>
+    <Ins Name="竖直传高">竖直传高<KeyWord>竖直传高</KeyWord></Ins>
+    <Ins Name="日平均气温">日平均气温<KeyWord>日平均气温</KeyWord></Ins>
+    <Ins Name="上游水位">上游水位<KeyWord>上游水位</KeyWord></Ins>
+    <Ins Name="日降雨量">日降雨量<KeyWord>日降雨量</KeyWord></Ins>
+    <Ins Name="姊妹杆">姊妹杆<KeyWord>姊妹杆</KeyWord></Ins>
+    <Ins Name="位错计">位错计<KeyWord>位错计</KeyWord></Ins>
+    <Ins Name="多点锚杆应力计">多点锚杆应力计<KeyWord>多点锚杆应力计</KeyWord></Ins>
+    <Ins Name="表面测缝计">表面测缝计<KeyWord>表面测缝计</KeyWord></Ins>
+    <Ins Name="弦式沉降仪">弦式沉降仪<KeyWord>弦式沉降仪</KeyWord></Ins>
+    <Ins Name="多向土压力计">多向土压力计<KeyWord>多向土压力计</KeyWord></Ins>
+    <Ins Name="双向测缝计">双向测缝计<KeyWord>双向测缝计</KeyWord></Ins>
+    <Ins Name="横梁式沉降仪">横梁式沉降仪<KeyWord>横梁式沉降仪</KeyWord></Ins>
+    <Ins Name="剪变形计">剪变形计<KeyWord>剪变形计</KeyWord></Ins>
+    <Ins Name="弦式沉降系统">弦式沉降系统<KeyWord>弦式沉降系统</KeyWord></Ins>
+    <Ins Name="土体位移计组">土体位移计组<KeyWord>土体位移计组</KeyWord></Ins>
+    <Ins Name="固定测斜仪">固定测斜仪<KeyWord>固定测斜仪</KeyWord></Ins>
+    <Ins Name="下游水位">下游水位<KeyWord>下游水位</KeyWord></Ins>
+    <Ins Name="心墙填筑高程">心墙填筑高程<KeyWord>心墙填筑高程</KeyWord></Ins>
+    <Ins Name="精密水准">精密水准<KeyWord>精密水准</KeyWord></Ins>
+  </Instruments>
+</ProConfig>

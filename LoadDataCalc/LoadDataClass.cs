@@ -22,10 +22,10 @@ namespace LoadDataCalc
     /// <summary>
     /// 读取计算表格和配置文件
     /// </summary>
-    public class LoadDataClass
+    public  sealed class LoadDataClass
     {
        //唯一实例
-        private static  LoadDataClass loadData = null;
+        private static   LoadDataClass loadData = null;
         //数据库实例
         private CSqlServerHelper sqlhelper = null;
         //程序集目录
@@ -37,6 +37,9 @@ namespace LoadDataCalc
         /// <summary>写入数据的其实行ID，默认-1;每次写数据的时候重新赋值
         /// </summary>
         public int ID = -1;
+
+        private int FileIndex = 0;
+        public Action<int> FileIndexAction;
 
         private LoadDataClass()
         {
@@ -58,7 +61,7 @@ namespace LoadDataCalc
         /// 0-写默认模板 1-读取配置文件，2-初始化数据库 3-全部完成
         /// </summary>
         /// <returns></returns>
-        public string Init()
+        public   string Init()
         {
             string res = "";
             try
@@ -210,6 +213,7 @@ namespace LoadDataCalc
             process.ErrorLimitZR = Config.LimitZ;
             process.ErrorLimitZR = Config.LimitT;
             process.LoadPointCach(instype);
+            FileIndex = 0;
             //files.AsParallel().ForAll((file) => {
             foreach (string file in files){
                 List<PointSurveyData> datas = new List<PointSurveyData>();
@@ -226,8 +230,9 @@ namespace LoadDataCalc
                     {
                         ErrorMsgCach.Add(file, msgs);
                     }
-
                 }
+                FileIndex++;
+                FileIndexAction(FileIndex);
             }
             //});
 
@@ -271,6 +276,9 @@ namespace LoadDataCalc
         /// </summary>
         public void Calc(InstrumentType instype, string expression=null)
         {
+            inscalc = CalcFactoryClass.CreateInstCalc(instype);
+            inscalc.CalcExpandList = CalcExpand.LoadList(instype);
+            List<string> Errors = new List<string>();
             //应变计和应变计组
             switch (instype)
             {
@@ -284,12 +292,31 @@ namespace LoadDataCalc
                 case  InstrumentType.Fiducial_Anchor_Cable:
                         CalcAnchor_Cable(instype, expression);
                         break;
+                case InstrumentType.Fiducial_Water_Level_Hole://水位孔数据//需要上一次的测值
+                        foreach (var pd in SurveyDataCach)
+                        {
+                            ParamData param = inscalc.GetParam(pd.SurveyPoint, instype.ToString());
+                            if (param == null)
+                            {
+                                Errors.Add(String.Format("PARAM:{0},{1}", pd.SurveyPoint, "找不到测点参数"));//保存读取参数的错误
+                                pd.IsCalc = false;
+                                continue;
+                            }
+                            if (expression != null) param.InsCalcType = CalcType.AutoDefine;
+                            double lastWaterLevel = -99999;
+                            foreach (SurveyData sd in pd.Datas)
+                            {
+                                if (lastWaterLevel == -99999)
+                                {
+                                    lastWaterLevel = GetLasWaterLevelHole(pd, sd);
+                                }
+                                inscalc.ShakeString(param, sd, lastWaterLevel);
+                                lastWaterLevel = sd.LoadReading;
+                            }
+                            pd.IsCalc = true;
+                        }
+                        break;
                 default:
-                        inscalc = CalcFactoryClass.CreateInstCalc(instype);
-                        inscalc.CalcExpandList = CalcExpand.LoadList(instype);
-                        List<string> Errors = new List<string>();
-                        //多点位移计，先导入计算表格
-                        if (instype == InstrumentType.Fiducial_Multi_Displacement) Config.LoadMultiDisplacementCalcs();
                         foreach (var pd in SurveyDataCach)
                         {
                             ParamData param = inscalc.GetParam(pd.SurveyPoint, instype.ToString());
@@ -306,9 +333,9 @@ namespace LoadDataCalc
                             }
                             pd.IsCalc = true;
                         }
-                        ErrorMsg.Log(Errors);
                         break;
             }
+            ErrorMsg.Log(Errors);
         }
 
         #region//多点仪器需要特殊处理
@@ -320,9 +347,9 @@ namespace LoadDataCalc
             inscalc.CalcExpandList = CalcExpand.LoadList(instype);
             List<string> Errors = new List<string>();
             //先计算无应力计
+            var fn = CalcFactoryClass.CreateInstCalc(InstrumentType.Fiducial_Nonstress) as Fiducial_Nonstress;
             foreach (var pd in SurveyDataCachExpand)
             {
-                Fiducial_Nonstress fn = new Fiducial_Nonstress();
                 ParamData nonpd = fn.GetParam(pd.SurveyPoint, "Fiducial_Nonstress");
                 foreach (var sd in pd.Datas)
                 {
@@ -331,15 +358,15 @@ namespace LoadDataCalc
             }
             foreach (var pd in SurveyDataCach)
             {
-
                 ParamData param = inscalc.GetParam(pd.SurveyPoint, instype.ToString());
                 PointSurveyData NonStressPoint = null;
                 if (param.IsHasNonStress)
                 {
-                    NonStressPoint = SurveyDataCachExpand.Where(p => p.SurveyPoint == param.NonStressNumber).FirstOrDefault();
-                    if (NonStressPoint == null || NonStressPoint.Datas.Count < 1)
+                    // 查下本次数据中有没有找到对应的无应力计数据
+                    NonStressPoint = SurveyDataCachExpand.Where(p => p.SurveyPoint.ToUpper().Trim() == param.NonStressNumber.ToUpper()).FirstOrDefault();
+                    if (NonStressPoint == null || NonStressPoint.Datas.Count == 0)
                     {
-                        Errors.Add(String.Format("PARAM:{0},{1}", pd.SurveyPoint, "找不到对应的无应力计数据"));
+                        Errors.Add(String.Format("PARAM:{0},{1},{2}", pd.SurveyPoint,param.NonStressNumber ,"本次数据中找不到对应的无应力计数据"));
                     }
                 }
                 if (param == null)
@@ -351,10 +378,11 @@ namespace LoadDataCalc
                 if (expression != null) param.InsCalcType = CalcType.AutoDefine;
                 foreach (SurveyData sd in pd.Datas)
                 {
+
                     //应变计和应变计组额外计算无应力计的数据
-                    if (param.IsHasNonStress&&NonStressPoint != null && NonStressPoint.Datas.Count >= 1)
+                    if (param.IsHasNonStress)
                     {
-                        var nondata = GetNonStressSurveyData(NonStressPoint, sd);
+                        var nondata = GetNonStressSurveyData(NonStressPoint, sd,param.NonStressNumber);
                         if (nondata != null)
                         {
                             sd.NonStressSurveyData = nondata;
@@ -378,21 +406,30 @@ namespace LoadDataCalc
             ErrorMsg.Log(Errors);
         }
         //获取应变计和应变机组对应的无应力计数据
-        SurveyData GetNonStressSurveyData(PointSurveyData pd, SurveyData sd)
+        SurveyData GetNonStressSurveyData(PointSurveyData pd, SurveyData sd,string NonNumber)
         {
-            if (pd == null) return null;
-            foreach (var nsd in pd.Datas)
+            if (pd != null&&pd.Datas.Count>0)
             {
-                if (nsd.SurveyDate.Date == sd.SurveyDate.Date)
+                SurveyData DNsd = null;
+                foreach (var nsd in pd.Datas)
                 {
-                    return nsd;
+                    if (nsd.SurveyDate.Date.CompareTo(sd.SurveyDate.Date) > 0) break;
+                    if (nsd.Survey_ZorR != 0)
+                    {
+                        DNsd = nsd;
+                    }
                 }
+                if (DNsd != null) return DNsd;
             }
-            //当前数据中找不到数据，在数据库里边找,查7天以内最近的数据
             var sqlhelper = CSqlServerHelper.GetInstance();
-            string sql = Config.IsAuto ? "select * from Result_Nonstress where Survey_point_Number='{0}' and abs(datediff(d,Observation_Date,'{1}'))<7  and RecordMethod='人工' Order by abs(datediff(dd,Observation_Date,'{2}'))" :
-                "select * from Result_Nonstress where Survey_point_Number='{0}' and abs(datediff(d,Observation_Date,'{1}'))<7 Order by abs(datediff(dd,Observation_Date,'{2}'))";
-            var result = sqlhelper.SelectData(String.Format(sql, pd.SurveyPoint, sd.SurveyDate.Date.ToString(), sd.SurveyDate.Date.ToString()));
+            //当前数据中找不到数据，在数据库里边找,查7天以内最近的数据//这个不好使
+            //string sql = Config.IsAuto ? "select * from Result_Nonstress where Survey_point_Number='{0}' and abs(datediff(d,Observation_Date,'{1}'))<7  and RecordMethod='人工' Order by abs(datediff(dd,Observation_Date,'{2}'))" :
+            //    "select * from Result_Nonstress where Survey_point_Number='{0}' and abs(datediff(d,Observation_Date,'{1}'))<7 Order by abs(datediff(dd,Observation_Date,'{2}'))";
+            //查最后一次的数据
+            string sql = Config.IsAuto ? "select top 1 * from Result_Nonstress where Survey_point_Number='{0}' and Observation_Date<='{1}' and RecordMethod='人工' Order by Observation_Date desc" :
+                "select  top 1 * from Result_Nonstress where Survey_point_Number='{0}' and Observation_Date<='{1}' Order by  Observation_Date desc";
+
+            var result = sqlhelper.SelectData(String.Format(sql, NonNumber, sd.SurveyDate.Date.ToString(), sd.SurveyDate.Date.ToString()));
             if (result.Rows.Count > 0)
             {
                 SurveyData DNsd = new SurveyData();
@@ -503,7 +540,7 @@ namespace LoadDataCalc
             if (flag) maxDatetime = (DateTime)dtresult;
             if (flag)
             {
-                if (firstPd.Datas[0].SurveyDate.Date.CompareTo(maxDatetime) <= 0)
+                if (firstPd.Datas[0].SurveyDate.Date.CompareTo(maxDatetime.Date) <= 0)
                 {
                     return false;
                 }
@@ -530,7 +567,8 @@ namespace LoadDataCalc
             if (Config.IsCovery)
             {
                 string tablename = Config.InsCollection[inscalc.InsType.GetDescription()].Measure_Table;
-                string sql = "delete from {0} where Survey_point_Number='{1}'  and Observation_Date>'{2}'";
+                string sql = Config.IsAuto?"delete from {0} where Survey_point_Number='{1}'  and Observation_Date>'{2}' and RecordMethod='人工' ":
+                    "delete from {0} where Survey_point_Number='{1}'  and Observation_Date>'{2}'";
                 if (Config.IsCoveryAll)//全部覆盖导入
                 {
                     foreach (var pd in SurveyDataCach)
@@ -555,6 +593,28 @@ namespace LoadDataCalc
            //应变计和应变计组,还需要写入无应力计的数据
             if ((inscalc.InsType == InstrumentType.Fiducial_Strain_Gauge || inscalc.InsType == InstrumentType.Fiducial_Strain_Group))
             {
+                if (Config.IsCovery)
+                {
+                    string sql = Config.IsAuto ? "DELETE FROM Survey_Nonstress where Survey_point_Number='{0}' and Observation_Date>'{1}'and RecordMethod='人工'" :
+                        "DELETE FROM Survey_Nonstress where Survey_point_Number='{0}' and Observation_Date>'{1}'";
+                    if (Config.IsCoveryAll)//全部覆盖导入
+                    {
+                        foreach (var pd in SurveyDataCachExpand)
+                        {
+                            if (pd.Datas.Count == 0) continue;
+                            DateTime dt = pd.Datas[0].SurveyDate;
+                            sqlhelper.InsertDelUpdate(String.Format(sql, pd.SurveyPoint, dt.Date.ToString()));
+                        }
+                    }
+                    else
+                    {
+                        foreach (var pd in SurveyDataCachExpand)
+                        {
+                            if (pd.Datas.Count == 0) continue;
+                            sqlhelper.InsertDelUpdate(String.Format(sql, pd.SurveyPoint, Config.StartTime.Date.ToString()));
+                        }
+                    }
+                }
                 Fiducial_Nonstress fn = new Fiducial_Nonstress();
                 fn.WriteSurveyToDB(SurveyDataCachExpand);
             }
@@ -578,7 +638,8 @@ namespace LoadDataCalc
             if (Config.IsCovery)
             {
                 string tablename = Config.InsCollection[inscalc.InsType.GetDescription()].Result_Table;
-                string sql = "delete from {0} where Survey_point_Number='{1}'  and Observation_Date>'{2}'";
+                string sql = Config.IsAuto ? "delete from {0} where Survey_point_Number='{1}'  and Observation_Date>'{2}' and RecordMethod='人工'" :
+                    "delete from {0} where Survey_point_Number='{1}'  and Observation_Date>'{2}'";
                 if (Config.IsCoveryAll)//全部覆盖导入
                 {
                     foreach (var pd in SurveyDataCach)
@@ -603,6 +664,28 @@ namespace LoadDataCalc
             //应变计和应变计组,还需要写入无应力计的数据
             if ((inscalc.InsType == InstrumentType.Fiducial_Strain_Gauge || inscalc.InsType == InstrumentType.Fiducial_Strain_Group))
             {
+                if (Config.IsCovery)
+                {
+                    string sql = Config.IsAuto ? "DELETE FROM Result_Nonstress where Survey_point_Number='{0}' and Observation_Date>'{1}' and RecordMethod='人工'" :
+                        "DELETE FROM Result_Nonstress where Survey_point_Number='{0}' and Observation_Date>'{1}' ";
+                    if (Config.IsCoveryAll)//全部覆盖导入
+                    {
+                        foreach (var pd in SurveyDataCachExpand)
+                        {
+                            if (pd.Datas.Count == 0) continue;
+                            DateTime dt = pd.Datas[0].SurveyDate;
+                            sqlhelper.InsertDelUpdate(String.Format(sql, pd.SurveyPoint, dt.Date.ToString()));
+                        }
+                    }
+                    else
+                    {
+                        foreach (var pd in SurveyDataCachExpand)
+                        {
+                            if (pd.Datas.Count == 0) continue;
+                            sqlhelper.InsertDelUpdate(String.Format(sql, pd.SurveyPoint, Config.StartTime.Date.ToString()));
+                        }
+                    }
+                }
                 Fiducial_Nonstress fn = new Fiducial_Nonstress();
                 fn.WriteResultToDB(SurveyDataCachExpand);
             }
@@ -635,9 +718,46 @@ namespace LoadDataCalc
                 "select UpdateTime from {0} where ID>{1}";
             sql = String.Format(sql,table,ID);
             var result = sqlhelper.SelectFirst(sql);
-            bool flag=(result != DBNull.Value);
+            bool flag=(result != DBNull.Value||result==null);
             if(flag)dt = (DateTime)result;
             return flag;
+        }
+        
+        /// <summary>
+        /// 检查基准值
+        /// </summary>
+        /// <param name="instype"></param>
+        /// <param name="files"></param>
+        /// <returns></returns>
+        public dynamic CheckStandard(InstrumentType instype, List<string> files)
+        {
+            ProcessData process = ProcessFactory.CreateInstance(instype);
+            if (process == null) return null;
+            process.StatusAction = this.StatusAction;
+            process.ErrorLimitZR = Config.LimitZ;
+            process.ErrorLimitZR = Config.LimitT;
+            process.LoadPointCach(instype);
+            FileIndex = 0;
+            List<dynamic> res = new List<dynamic>();
+            //files.AsParallel().ForAll((file) => {
+            foreach (string file in files)
+            {
+                List<dynamic> fres = new List<dynamic>();
+                lock (DataLock)
+                {
+                    res.AddRange(process.CheckStandard(file));
+                }
+                FileIndex++;
+                FileIndexAction(FileIndex);
+            }
+            //});
+            return res;
+            ////应变计和应变计组同时也读一遍无应力计的数据
+            //if (instype == InstrumentType.Fiducial_Strain_Gauge || instype == InstrumentType.Fiducial_Strain_Group)
+            //{
+            //    SurveyDataCachExpand = process.ExpandDataCach;
+            //}
+            //if (StatusAction != null) StatusAction("读取完成,正在写入日志文件");
         }
 
         public void getDir(string path, List<string> FileList)
@@ -659,6 +779,7 @@ namespace LoadDataCalc
                 return;
             }
         }
+       
         void getFiles(List<string> list, string path, string pattern)
         {
             DirectoryInfo di = new DirectoryInfo(path);
@@ -667,12 +788,38 @@ namespace LoadDataCalc
             foreach (FileInfo fi in allfiles)
             {
                 if ((fi.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden&&
-                    (fi.FullName.EndsWith(".xls")||fi.FullName.EndsWith(".xlsx")))
+                    (fi.FullName.EndsWith(".xls")||fi.FullName.EndsWith(".xlsx")||
+                    fi.FullName.EndsWith(".xlsm")))
                 {
                     list.Add(fi.FullName);
                 }
 
             }
+        }
+        double GetLasWaterLevelHole(PointSurveyData pd, SurveyData sd)
+        {
+            if (pd == null) return 0;
+            foreach (var wsd in pd.Datas)
+            {
+                if (wsd.SurveyDate.CompareTo(sd.SurveyDate) >= 0) break;
+                if (wsd.SurveyDate.Date.CompareTo(sd.SurveyDate.Date) < 0
+                    && wsd.SurveyDate.Date.CompareTo(sd.SurveyDate.Date.AddDays(-3)) > 0)
+                {
+                    return wsd.LoadReading;
+                }
+            }
+
+            //查上一次的数据
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            string sql = Config.IsAuto ? "select top 1 Water_Level from Result_Water_Level_Hole where Survey_point_Number='{0}' and Observation_Date<'{1}' and RecordMethod='人工' Order by Observation_Date desc" :
+                "select  top 1 Water_Level from Result_Water_Level_Hole where Survey_point_Number='{0}' and Observation_Date<'{1}' Order by  Observation_Date desc";
+            var result = sqlhelper.SelectFirst(String.Format(sql, pd.SurveyPoint, sd.SurveyDate.Date.ToString()));
+            if (result != DBNull.Value)
+            {
+                return Convert.ToDouble(result);
+            }
+            return 0;
+
         }
 
         
@@ -680,7 +827,7 @@ namespace LoadDataCalc
 
    /// <summary>处理数据类的工厂类
    /// </summary>
-   public class ProcessFactory
+    public sealed class ProcessFactory
    {
        public static ProcessData CreateInstance(InstrumentType type)
        {
@@ -693,7 +840,7 @@ namespace LoadDataCalc
 
    /// <summary>仪器计算方法构造类
    /// </summary>
-   public class CalcFactoryClass
+    public sealed class CalcFactoryClass
    {
        /// <summary>仪器工厂类
        /// </summary>

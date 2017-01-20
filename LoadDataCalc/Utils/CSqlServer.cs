@@ -8,7 +8,7 @@ using System.Data.SqlClient;
 
 namespace LoadDataCalc
 {
-    public  class CSqlServerHelper
+    public sealed class CSqlServerHelper
     {
        //private static SqlConnection sqlConnection = null;
         private static CSqlServerHelper cSqlServer=null;
@@ -115,10 +115,10 @@ namespace LoadDataCalc
                 {
                     bulk.BatchSize = dt.Rows.Count;
                     bulk.DestinationTableName = dt.TableName;
-                    //for (int i = 0; i < dt.Columns.Count; i++)
-                    //{
-                    //    bulk.ColumnMappings.Add(dt.Columns[i].ColumnName, dt.Columns[i].ColumnName);
-                    //}
+                    for (int i = 0; i < dt.Columns.Count; i++)
+                    {
+                        bulk.ColumnMappings.Add(dt.Columns[i].ColumnName, dt.Columns[i].ColumnName);
+                    }
                     bulk.WriteToServer(dt);
                 
                 }

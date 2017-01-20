@@ -34,6 +34,8 @@ namespace LoadDataCalc
             loadAll();
             Files = Config.ReadFileList();
             if (Files != null) loadListView();
+            changeBackColor();
+
 
             btnChekAll.Click += new EventHandler(btnChekAll_Click);
             btnPath.Click += new EventHandler(btnPath_Click);
@@ -180,6 +182,7 @@ namespace LoadDataCalc
                 Files.Add(insname, list);
             }
             loadListView();
+            changeBackColor();
         }
 
         void loadAll()
@@ -219,7 +222,8 @@ namespace LoadDataCalc
             foreach (FileInfo fi in allfiles)
             {
                 if ((fi.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden &&
-                         (fi.FullName.EndsWith(".xls") || fi.FullName.EndsWith(".xlsx")))
+                         (fi.FullName.EndsWith(".xls") || fi.FullName.EndsWith(".xlsx")||
+                         fi.FullName.EndsWith(".xlsm")))
                 {
                     list.Add(fi.FullName);
                 }
@@ -289,5 +293,33 @@ namespace LoadDataCalc
             listviewFiles.EndUpdate();
             status();
         }
+        void changeBackColor()
+        {
+            if (Files.Count < 1) return;
+            var nodes = treeViewDir.Nodes;
+            foreach (TreeNode node in nodes)
+            {
+                checkNode(node);
+            }
+        }
+        void checkNode(TreeNode node)
+        {
+            bool flag = true;
+            if (node.Tag != null)
+            {
+                string file = node.Tag as string;
+                foreach (var dic in Files)
+                {
+                    if (dic.Value.Contains(file)) flag = false;
+                }
+                if (flag) node.BackColor = Color.Yellow;
+            }
+            foreach (TreeNode tnode in node.Nodes)
+            {
+                checkNode(tnode);
+            }
+        }
+        
+         
     }
 }

@@ -21,30 +21,15 @@ namespace CSharpTest
 
         static void Main(string[] args) 
         {
-            List<test1> list = new List<test1>{new test1(){a=9,b="9"},
-            new test1(){a=11,b="11"},
-            new test1(){a=3,b="3"},
-            new test1(){a=7,b="7"}};
 
-            //list.Sort((x, y) => {
-            //    return x.a.CompareTo(y.a);
-            //});
-            foreach (var t in list)
-            {
-                Console.WriteLine(t.b);
-            }
+            //List<test1> list = new List<test1>{new test1(){a=9,b="9"},
+            //new test1(){a=11,b="11"},
+            //new test1(){a=3,b="3"},
+            //new test1(){a=7,b="7"}};
 
-            Dictionary<string, test1> dic = new Dictionary<string, test1>();
-            foreach (var t in list)
-            {
-                dic.Add(t.b, t);
-            }
-           var dict= dic.OrderBy(x => x.Value.a).ToDictionary(x => x.Key, x => x.Value);
-
-           foreach (var d in dict)
-           {
-               Console.WriteLine(d.Value.b);
-           }
+            //string str = "2009-06-15";
+            //DateTime dt = DateTime.Parse(str);
+            Console.WriteLine(Regex.Match("K2YD-B4-1-(1)", @".*(?=\-\()").Groups[0].ToString());
 
             //Pic pic = new Pic();
             //var bit = pic.pic1(3);

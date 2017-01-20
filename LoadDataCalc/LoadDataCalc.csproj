@@ -34,7 +34,14 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>background_data_on_48px_1067671_easyicon.net.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
+    <Reference Include="IrisSkin2">
+      <HintPath>DLLS\IrisSkin2.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Microsoft.Office.Interop.Excel, Version=12.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
@@ -73,6 +80,12 @@
     <Compile Include="Calc\CalcClass.cs" />
     <Compile Include="Calc\InstrumentCalcMW.cs" />
     <Compile Include="Calc\InstrumentCalcXJB.cs" />
+    <Compile Include="FormCount.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormCount.Designer.cs">
+      <DependentUpon>FormCount.cs</DependentUpon>
+    </Compile>
     <Compile Include="Process\InstrumentProcessMW.cs" />
     <Compile Include="Process\ProcessData.cs" />
     <Compile Include="Config.cs" />
@@ -100,6 +113,9 @@
     <EmbeddedResource Include="FormConfigFilePath.resx">
       <DependentUpon>FormConfigFilePath.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FormCount.resx">
+      <DependentUpon>FormCount.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormLoadCalc.resx">
       <DependentUpon>FormLoadCalc.cs</DependentUpon>
     </EmbeddedResource>
@@ -119,6 +135,9 @@
     <None Include="config\CalcExpand.xls" />
     <None Include="config\MultiDisplacement.xls" />
     <None Include="config\PointNumberConfig.xls" />
+    <None Include="DLLS\MSN.ssk">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -131,6 +150,21 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <None Include="ICO\check36.png" />
+    <None Include="ICO\check48.png" />
+    <None Include="ICO\write48.png" />
+    <None Include="ICO\write32.png" />
+    <None Include="ICO\rollback48.png" />
+    <None Include="ICO\rollback32.png" />
+    <None Include="ICO\read48.png" />
+    <None Include="ICO\read32.png" />
+    <None Include="ICO\loadfile48.png" />
+    <None Include="ICO\loadfile32.png" />
+    <None Include="ICO\count48.png" />
+    <None Include="ICO\count32.png" />
+    <None Include="ICO\config48.png" />
+    <None Include="ICO\config36.png" />
+    <None Include="Resources\Image1.png" />
     <None Include="config\Config.xml" />
     <None Include="config\Config - XJB.xml" />
     <None Include="config\Config-MW.xml" />
@@ -139,7 +173,11 @@
     <None Include="config\FileList-XJB.xml" />
     <None Include="config\FileList.xml" />
     <None Include="config\InsConfig.xml" />
+    <Content Include="background_data_on_48px_1067671_easyicon.net.ico" />
     <Content Include="DLLS\ICSharpCode.SharpZipLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DLLS\IrisSkin2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DLLS\NPOI.dll">

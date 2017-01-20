@@ -407,6 +407,7 @@ namespace LoadDataCalc
    /// </summary>
     public class InsTableCollection
     {
+       
         /// <summary>所有仪器名和枚举类型词典
         /// </summary>
         public  Dictionary<string, InstrumentType> InstrumentDic = new Dictionary<string, InstrumentType>();
@@ -415,7 +416,7 @@ namespace LoadDataCalc
         public List<InsTableInfo> InsTables = new List<InsTableInfo>();
         public InsTableInfo this[string Instrument_Name]
         {
-            get { return InsTables.Where(ins => ins.Instrument_Name == Instrument_Name).First(); }
+            get { return InsTables.Where(ins => ins.Instrument_Name == Instrument_Name).FirstOrDefault(); }
         }
         public InsTableInfo GetFromFiducial(string Fiducial_Table)
         {
@@ -456,6 +457,7 @@ namespace LoadDataCalc
         {
             return CultureInfo.GetCultureInfo("zh-cn").CompareInfo.Compare(a, b, CompareOptions.IgnoreWidth) == 0;
         }
+       
     
     }
     

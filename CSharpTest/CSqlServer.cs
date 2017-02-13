@@ -79,7 +79,7 @@ namespace CSharpTest
         /// <summary> 批量插入数据
         /// </summary>
         /// <param name="dt">插入的数据,根据dt的表名和列名进行匹配</param>
-        public void BulkCopy(DataTable dt)
+        public void BulkCopy(DataTable dt,bool IsMap=true)
         {
             try
             {
@@ -88,9 +88,12 @@ namespace CSharpTest
                 {
                     bulk.BatchSize = 1000;
                     bulk.DestinationTableName = dt.TableName;
-                    for (int i=0;i<dt.Columns.Count;i++)
+                    if (IsMap)
                     {
-                        bulk.ColumnMappings.Add(dt.Columns[0].ColumnName, dt.Columns[0].ColumnName);
+                        for (int i = 0; i < dt.Columns.Count; i++)
+                        {
+                            bulk.ColumnMappings.Add(dt.Columns[0].ColumnName, dt.Columns[0].ColumnName);
+                        }
                     }
                     bulk.WriteToServer(dt);
                 }
@@ -100,7 +103,6 @@ namespace CSharpTest
                 sqlConnection.Close();
             }
         }
-
         public static void test()
         {
             string connstr = " Data Source = 10.6.179.9,1433;Network Library = DBMSSOCN;Initial Catalog = MWDatabase;User ID = sa;Password = sa;";

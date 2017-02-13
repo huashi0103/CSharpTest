@@ -288,6 +288,17 @@ namespace LoadDataCalc
             return 0;
         }
 
+        /// <summary>
+        /// 写扩展数据库 流域监测项目
+        /// </summary>
+        /// <param name="datas"></param>
+        /// <returns></returns>
+        public virtual int  WriteDBExpand(List<PointSurveyData> datas)
+        {
+            return 0;
+        }
+
+
         protected double ConvetToData(object obj)
         {
             if(obj!=null&&obj!=DBNull.Value)
@@ -326,6 +337,7 @@ namespace LoadDataCalc
                 return 0.001;
             }
         }
+        
     }
 
 
@@ -419,6 +431,11 @@ namespace LoadDataCalc
         /// 混凝土膨胀系数//应变计无应力计专用
         /// </summary>
         public double Concrete_Expansion_ac;
+
+        /// <summary>
+        /// 高程
+        /// </summary>
+        public double Elevation = 0;
 
         public string NonStressNumber;
         /// <summary>
@@ -598,10 +615,17 @@ namespace LoadDataCalc
         /// 锚索测力计的平均值
         /// </summary>
         public double Average;
-        //计算出的平均值
+
+        /// <summary>
+        ///         //计算出的平均值
+        /// </summary>
         public double clacAverage;
         public static string[] ParamList = new[] {"Survey_ZorR", "Survey_RorT" };
 
+        /// <summary>
+        /// 渗压水位(m)  计算出的水位+高程
+        /// </summary>
+        public double SW;
 
         /// <summary>根据变量名获取变量值
         /// </summary>

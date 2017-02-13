@@ -477,6 +477,57 @@ namespace LoadDataCalc
             return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
         
         }
+
+        public override int WriteDBExpand(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = "Table_Result_SM";
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("FREQ");
+            dt.Columns.Add("TEMPC");
+            dt.Columns.Add("Temperature");
+            dt.Columns.Add("Disp");
+            dt.Columns.Add("Broken");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("RecordMethod");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
+                    if (surveydata.Tempreture > 100)
+                    {
+                        continue;
+                    }
+                    dr["FREQ"] = Math.Round(surveydata.Survey_ZorR, 1);
+                    dr["TEMPC"] = Math.Round(surveydata.Survey_RorT, 2);
+                    dr["Temperature"] = Math.Round(surveydata.Tempreture, 2);
+                    dr["Disp"] = Math.Round(surveydata.LoadReading, 3);
+                    if (Encoding.Default.GetBytes(surveydata.Remark).Length > 60)
+                    {
+                        surveydata.Remark = "";
+                    }
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dr["RecordMethod"] = "人工";
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
     }
 
     /// <summary>
@@ -734,6 +785,58 @@ namespace LoadDataCalc
             }
             return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
         }
+
+        public override int WriteDBExpand(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = "Table_Result_J";
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("FREQ");
+            dt.Columns.Add("TEMPC");
+            dt.Columns.Add("Temperature");
+            dt.Columns.Add("Disp");
+            dt.Columns.Add("Broken");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("RecordMethod");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
+                    if (surveydata.Tempreture > 100)
+                    {
+                        continue;
+                    }
+                    dr["FREQ"] = Math.Round(surveydata.Survey_ZorR, 1);
+                    dr["TEMPC"] = Math.Round(surveydata.Survey_RorT, 2);
+                    dr["Temperature"] = Math.Round(surveydata.Tempreture, 2);
+                    dr["Disp"] = Math.Round(surveydata.LoadReading, 3);
+                    if (Encoding.Default.GetBytes(surveydata.Remark).Length > 60)
+                    {
+                        surveydata.Remark = "";
+                    }
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dr["RecordMethod"] = "人工";
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+    
     }
 
     /// <summary>
@@ -810,7 +913,7 @@ namespace LoadDataCalc
         public override ParamData GetParam(string Survey_point_Number, string tablename=null)
         {
 
-            string sql = @"select Instrument_Type,Calculate_Coeffi_G,Tempera_Revise_K,Benchmark_Resist_Ratio,Benchmark_Resist,Temperature_Read,Zero_Resistance,WaterHead_Coeffi_C from {0} where Survey_point_Number='{1}'";
+            string sql = @"select * from {0} where Survey_point_Number='{1}'";
             sql = string.Format(sql, tablename, Survey_point_Number);
             var SqlHelper = CSqlServerHelper.GetInstance();
             var dt = SqlHelper.SelectData(sql);
@@ -823,6 +926,7 @@ namespace LoadDataCalc
                 pd.Gorf = ConvetToData(dt.Rows[0]["Calculate_Coeffi_G"]);
                 pd.WaterHead_Coeffi_C = ConvetToData(dt.Rows[0]["WaterHead_Coeffi_C"]);
                 pd.ZorR = ConvetToData(dt.Rows[0]["Benchmark_Resist_Ratio"]);
+                pd.Elevation = ConvetToData(dt.Rows[0]["Elevation"]);
                 if (dt.Rows[0]["Tempera_Revise_K"] == null)
                 {
                     pd.Korb = 0;
@@ -845,6 +949,59 @@ namespace LoadDataCalc
             {
                 return null;
             }
+        }
+        
+        public override int WriteDBExpand(List<PointSurveyData> datas)
+        {
+           DataTable dt = new DataTable();
+           string TableName = "Table_Result_P";
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("FREQ");
+            dt.Columns.Add("TEMPC");
+            dt.Columns.Add("Press");
+            dt.Columns.Add("ST");
+            dt.Columns.Add("SW");
+            dt.Columns.Add("Broken");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("RecordMethod");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
+                    if (surveydata.Tempreture > 100)
+                    {
+                        continue;
+                    }
+                    dr["FREQ"] = Math.Round(surveydata.Survey_ZorR, 1);
+                    dr["TEMPC"] = Math.Round(surveydata.Tempreture,2);
+                    dr["Press"] = Math.Round(surveydata.LoadReading,3);
+                    dr["ST"] = Math.Round(surveydata.ResultReading,3);
+                    dr["SW"] = Math.Round(surveydata.SW,3);
+                    if (Encoding.Default.GetBytes(surveydata.Remark).Length > 60)
+                    {
+                        surveydata.Remark = "";
+                    }
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dr["RecordMethod"] = "人工";
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
         }
 
     }
@@ -1153,6 +1310,57 @@ namespace LoadDataCalc
         }
 
 
+        public override int WriteDBExpand(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = "Table_Result_S";
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("FREQ");
+            dt.Columns.Add("TEMPC");
+            dt.Columns.Add("Temperature");
+            dt.Columns.Add("ResultPress");
+            dt.Columns.Add("Broken");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("RecordMethod");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
+                    if (surveydata.Tempreture > 100)
+                    {
+                        continue;
+                    }
+                    dr["FREQ"] = Math.Round(surveydata.Survey_ZorR, 1);
+                    dr["TEMPC"] = Math.Round(surveydata.Survey_RorT, 2);
+                    dr["Temperature"] = Math.Round(surveydata.Tempreture, 3);
+                    dr["ResultPress"] = Math.Round(surveydata.ResultReading, 3);
+                    if (Encoding.Default.GetBytes(surveydata.Remark).Length > 60)
+                    {
+                        surveydata.Remark = "";
+                    }
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dr["RecordMethod"] = "人工";
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+
     }
 
     /// <summary>
@@ -1289,6 +1497,60 @@ namespace LoadDataCalc
             }
             return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
         }
+
+
+        public override int WriteDBExpand(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = "Table_Result_N";
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("FREQ");
+            dt.Columns.Add("TEMPC");
+            dt.Columns.Add("Temperature");
+            dt.Columns.Add("ResultPress");
+            dt.Columns.Add("Broken");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("RecordMethod");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
+                    if (surveydata.Tempreture > 100)
+                    {
+                        continue;
+                    }
+                    dr["FREQ"] = Math.Round(surveydata.Survey_ZorR, 1);
+                    dr["TEMPC"] = Math.Round(surveydata.Survey_RorT, 2);
+                    dr["Temperature"] = Math.Round(surveydata.Tempreture, 3);
+                    dr["ResultPress"] = Math.Round(surveydata.ResultReading, 3);
+                    if (Encoding.Default.GetBytes(surveydata.Remark).Length > 60)
+                    {
+                        surveydata.Remark = "";
+                    }
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dr["RecordMethod"] = "人工";
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+
+    
     }
 
     /// <summary>
@@ -1393,7 +1655,58 @@ namespace LoadDataCalc
                 return null;
             }
         }
-    
+
+        public override int WriteDBExpand(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = "Table_Result_R";
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("FREQ");
+            dt.Columns.Add("TEMPC");
+            dt.Columns.Add("Press");
+            dt.Columns.Add("ResultPress");
+            dt.Columns.Add("Broken");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("RecordMethod");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
+                    if (surveydata.Tempreture > 100)
+                    {
+                        continue;
+                    }
+                    dr["FREQ"] = Math.Round(surveydata.Survey_ZorR, 1);
+                    dr["TEMPC"] = Math.Round(surveydata.Tempreture, 2);
+                    dr["Press"] = Math.Round(surveydata.LoadReading, 3);
+                    dr["ResultPress"] = Math.Round(surveydata.ResultReading, 3);
+                    if (Encoding.Default.GetBytes(surveydata.Remark).Length > 60)
+                    {
+                        surveydata.Remark = "";
+                    }
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dr["RecordMethod"] = "人工";
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+
     }
 
     /// <summary>
@@ -1550,6 +1863,58 @@ namespace LoadDataCalc
                     dr["Remark"] = surveydata.Remark;
                     dr["UpdateTime"] = DateTime.Now;
                     if (Config.IsAuto) dr["RecordMethod"] = "人工";
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+        public override int WriteDBExpand(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = "Table_Result_AS";
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("FREQ");
+            dt.Columns.Add("TEMPC");
+            dt.Columns.Add("Temperature");
+            dt.Columns.Add("Press");
+            dt.Columns.Add("ResultPress");
+            dt.Columns.Add("Broken");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("RecordMethod");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
+                    if (surveydata.Tempreture > 100)
+                    {
+                        continue;
+                    }
+                    dr["FREQ"] = Math.Round(surveydata.Survey_ZorR, 1);
+                    dr["TEMPC"] = Math.Round(surveydata.Survey_RorT, 2);
+                    dr["Temperature"] = Math.Round(surveydata.Tempreture, 2);
+                    dr["Press"] = Math.Round(surveydata.LoadReading, 3);
+                    dr["ResultPress"] = Math.Round(surveydata.ResultReading, 3);
+                    if (Encoding.Default.GetBytes(surveydata.Remark).Length > 60)
+                    {
+                        surveydata.Remark = "";
+                    }
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dr["RecordMethod"] = "人工";
                     dt.Rows.Add(dr);
                 }
             }
@@ -1942,6 +2307,73 @@ namespace LoadDataCalc
             return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
         }
 
+        public override int WriteDBExpand(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = "Table_Result_PR";
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            for (int i = 1; i < 8; i++)
+            {
+                dt.Columns.Add("FREQ"+i.ToString());
+            }
+            dt.Columns.Add("AVERAGE");
+            dt.Columns.Add("TEMPC1");
+            dt.Columns.Add("Temperature1");
+            dt.Columns.Add("Result1");
+            dt.Columns.Add("AfterLock");
+            dt.Columns.Add("PlanLock");
+            dt.Columns.Add("ResultLock");
+            dt.Columns.Add("Broken");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("RecordMethod");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
+                    if (surveydata.Tempreture > 100)
+                    {
+                        continue;
+                    }
+                    int index = 1;
+                    foreach (var dic in surveydata.MultiDatas)
+                    {
+                        dr["FREQ" + index.ToString()] = Math.Round(dic.Value.Survey_ZorR, 4);
+                        index++;
+                    }
+                    dr["TEMPC1"] = Math.Round(surveydata.Survey_RorT, 2);
+                    dr["Temperature1"] = Math.Round(surveydata.Tempreture, 2);
+                    dr["AVERAGE"] = Convert.ToDecimal(surveydata.clacAverage);
+                    dr["Result1"] = Convert.ToDecimal(surveydata.LoadReading);
+                    dr["AfterLock"] = Convert.ToDecimal(surveydata.AfterLock);
+                    dr["PlanLock"] = Convert.ToDecimal(surveydata.PlanLock);
+                    dr["ResultLock"] = Convert.ToDecimal(surveydata.ResultLock);
+                    if (Encoding.Default.GetBytes(surveydata.Remark).Length > 60)
+                    {
+                        surveydata.Remark = "";
+                    }
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dr["RecordMethod"] = "人工";
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+
     }
 
     /// <summary>
@@ -2030,6 +2462,57 @@ namespace LoadDataCalc
                     dr["Remark"] = surveydata.Remark;
                     dr["UpdateTime"] = DateTime.Now;
                     if (Config.IsAuto) dr["RecordMethod"] = "人工";
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+
+        public override int WriteDBExpand(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = "Table_Result_GB";
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("FREQ");
+            dt.Columns.Add("TEMPC");
+            dt.Columns.Add("Temperature");
+            dt.Columns.Add("ResultPress");
+            dt.Columns.Add("Broken");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("RecordMethod");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
+                    if (surveydata.Tempreture > 100)
+                    {
+                        continue;
+                    }
+                    dr["FREQ"] = Math.Round(surveydata.Survey_ZorR, 1);
+                    dr["TEMPC"] = Math.Round(surveydata.Survey_RorT, 2);
+                    dr["Temperature"] = Math.Round(surveydata.Tempreture, 3);
+                    dr["ResultPress"] = Math.Round(surveydata.ResultReading, 3);
+                    if (Encoding.Default.GetBytes(surveydata.Remark).Length > 60)
+                    {
+                        surveydata.Remark = "";
+                    }
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dr["RecordMethod"] = "人工";
                     dt.Rows.Add(dr);
                 }
             }
@@ -2182,6 +2665,50 @@ namespace LoadDataCalc
                     dr["Remark"] = surveydata.Remark;
                     dr["UpdateTime"] = DateTime.Now;
                     if (Config.IsAuto) dr["RecordMethod"] = "人工";
+                    dt.Rows.Add(dr);
+                }
+            }
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+        public override int WriteDBExpand(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = "Table_Result_T";
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Observation_Time");
+            dt.Columns.Add("Result");
+            dt.Columns.Add("Broken");
+            dt.Columns.Add("Remark");
+            dt.Columns.Add("RecordMethod");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
+                    if (surveydata.Tempreture > 100)
+                    {
+                        continue;
+                    }
+                    dr["Result"] = Math.Round(surveydata.LoadReading, 1);
+                    if (Encoding.Default.GetBytes(surveydata.Remark).Length > 60)
+                    {
+                        surveydata.Remark = "";
+                    }
+                    dr["Remark"] = surveydata.Remark;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dr["RecordMethod"] = "人工";
                     dt.Rows.Add(dr);
                 }
             }

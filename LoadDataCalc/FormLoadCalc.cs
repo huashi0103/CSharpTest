@@ -283,8 +283,39 @@ namespace LoadDataCalc
             chkShowback.CheckedChanged += (send, arg) => { changeBackColor(); };
             numericError.ValueChanged += (send, ar) => { changeBackColor(); };
             toolStripButtonCheck.Click += new EventHandler(toolStripButtonCheck_Click);
+            toolStripButtonTest.Click += new EventHandler(toolStripButtonTest_Click);
             #endregion
        
+        }
+
+        void toolStripButtonTest_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("确定写入数据库?", "提示", MessageBoxButtons.OKCancel) ==
+                   System.Windows.Forms.DialogResult.Cancel) return;
+            var instype = Config.InsCollection.InstrumentDic[comboType.Text];
+            //写入之前检查数据，防止多次写入
+            if (!loadData.CheckSurveyDate(instype, Config.InsCollection[comboType.Text].Measure_Table))
+            {
+                MessageBox.Show("数据库或仪器类型已变动,请重新读取数据");
+                return;
+            }
+
+            setEnable(false);
+            toolStripProgressLoad.Visible = true;
+            Status("开始写入数据...");
+            ThreadPool.QueueUserWorkItem((obj) =>
+            {
+                bool flag = false;
+                flag = loadData.WriteDBExpand();
+                string surveyStatus = String.Format("写入{0}", (flag ? "成功" : "失败"));
+                Status(surveyStatus + "," + surveyStatus);
+                this.Invoke(new EventHandler(delegate
+                {
+                    setEnable(true);
+                    toolStripProgressLoad.Visible = false;
+                }));
+
+            });
         }
 
         void toolStripButtonCheck_Click(object sender, EventArgs e)
@@ -513,13 +544,13 @@ namespace LoadDataCalc
         {
             if (chkCover.Checked)
             {
-                MessageBox.Show("覆盖导入功能请选择指定文件进行导入!");
-                return;
-                //if (MessageBox.Show("选择了全部覆盖导入,会进行全部覆盖导入该类仪器的数据", "是否继续", MessageBoxButtons.YesNo) ==
-                //   DialogResult.No)
-                //{
-                //    return;
-                //}
+                //MessageBox.Show("覆盖导入功能请选择指定文件进行导入!");
+                //return;
+                if (MessageBox.Show("选择了全部覆盖导入,会进行全部覆盖导入该类仪器的数据", "是否继续", MessageBoxButtons.YesNo) ==
+                   DialogResult.No)
+                {
+                    return;
+                }
             }
             string insname = comboType.Text;
             Status("检查文件");

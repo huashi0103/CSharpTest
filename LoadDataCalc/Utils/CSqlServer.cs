@@ -12,6 +12,9 @@ namespace LoadDataCalc
     {
        //private static SqlConnection sqlConnection = null;
         private static CSqlServerHelper cSqlServer=null;
+        /// <summary>
+        /// 使用之前赋值
+        /// </summary>
         public static string Connectionstr = "";
         private CSqlServerHelper()
         { }
@@ -105,7 +108,7 @@ namespace LoadDataCalc
         /// <summary> 批量插入数据
         /// </summary>
         /// <param name="dt">插入的数据,根据dt的表名和列名进行匹配</param>
-        public bool BulkCopy(DataTable dt)
+        public bool BulkCopy(DataTable dt,bool IsMap=true)
         {
             var sqlConnection = new SqlConnection(Connectionstr);
             try
@@ -115,9 +118,12 @@ namespace LoadDataCalc
                 {
                     bulk.BatchSize = dt.Rows.Count;
                     bulk.DestinationTableName = dt.TableName;
-                    for (int i = 0; i < dt.Columns.Count; i++)
+                    if (IsMap)
                     {
-                        bulk.ColumnMappings.Add(dt.Columns[i].ColumnName, dt.Columns[i].ColumnName);
+                        for (int i = 0; i < dt.Columns.Count; i++)
+                        {
+                            bulk.ColumnMappings.Add(dt.Columns[i].ColumnName, dt.Columns[i].ColumnName);
+                        }
                     }
                     bulk.WriteToServer(dt);
                 

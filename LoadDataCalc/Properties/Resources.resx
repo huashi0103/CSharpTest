@@ -118,32 +118,8 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="check36" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ICO\check36.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="check48" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ICO\check48.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="config36" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ICO\config36.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="config48" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ICO\config48.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="count32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ICO\count32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="count48" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ICO\count48.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="loadfile32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ICO\loadfile32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="loadfile48" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ICO\loadfile48.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="read32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ICO\read32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="read48" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ICO\read48.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -151,13 +127,40 @@
   <data name="rollback32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ICO\rollback32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="rollback48" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ICO\rollback48.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="check36" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ICO\check36.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="read32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ICO\read32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="loadfile32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ICO\loadfile32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="config48" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ICO\config48.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="loadfile48" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ICO\loadfile48.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="count32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ICO\count32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="config36" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ICO\config36.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="check48" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ICO\check48.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="write32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ICO\write32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="rollback48" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ICO\rollback48.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="write48" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ICO\write48.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="test32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ICO\test32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

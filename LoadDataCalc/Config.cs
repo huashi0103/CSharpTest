@@ -71,13 +71,17 @@ namespace LoadDataCalc
 
         //程序集目录
         private static string Assemblydir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-
-
+        //0 为叶方毅数据库1为程翔数据库
+        private static  int DataBaseType = 0;
+      
+        /// <summary>
+        /// 扩展数据库，流域监测系统写数据
+        /// </summary>
+        public static string DatabaseExpand = @"Data Source =127.0.0.1\MSSQLSERVER08;Initial Catalog = WHDT;User ID = sa;Password = 12345678;";
 #if TEST
         public static long Tick1 = 0;
         public static long Tick2 = 0;
 #endif
-
 
 
         /// <summary>从默认路径加载配置文件
@@ -102,6 +106,7 @@ namespace LoadDataCalc
                 DataRoot = dataroot.InnerText;
                 var database = root.SelectSingleNode("DataBase");
                 IsAuto = int.Parse(database.Attributes["IsAuto"].Value) == 0 ? false : true;
+                //DataBaseType = int.Parse(database.Attributes["DataBaseType"].Value);
                 DataBase = database.InnerText;
                 var DataProCode = root.SelectSingleNode("ProCode");
                 IsMoshu = int.Parse(DataProCode.Attributes["IsMoshu"].Value) == 0 ? false : true;
@@ -120,9 +125,16 @@ namespace LoadDataCalc
                         ins.KeyWord.Add(keyent.InnerText);
                     }
                     Instruments.Add(ins);
-                }
 
-                loadIns();
+                }
+                //if (DataBaseType == 0)
+                //{ 
+                    loadIns();
+                //}
+                //else if (DataBaseType == 1)
+                //{
+                //    loadNewIns();
+                //}
                 return true;
             }
             catch
@@ -134,6 +146,7 @@ namespace LoadDataCalc
                 if(reader!=null)reader.Close();
             }
         }
+        //导入仪器类型对应的考证表和数据表
         private static void loadIns()
         {
             string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -164,9 +177,36 @@ namespace LoadDataCalc
             }
             InsCollection.InstrumentDic = InsDic;
         }
+        private static void loadNewIns()
+        {
+            CSqlServerHelper.Connectionstr = Config.DataBase;
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            string sql = @"SELECT * FROM Table_PointTableName";
+            var table = sqlhelper.SelectData(sql);
+            List<InsTableInfo> list = new List<InsTableInfo>();
+            for (int i = 0; i < table.Rows.Count; i++)
+            {
+                InsTableInfo info = new InsTableInfo();
+                info.Instrument_Name = table.Rows[i]["Point_Name"].ToString();
+                info.Measure_Table = table.Rows[i]["Result_Number"].ToString();
+                info.Fiducial_Table = table.Rows[i]["Info_Number"].ToString();
+                list.Add(info);
+            }
+            InsCollection.InsTables = list;
+            Dictionary<string, InstrumentType> InsDic = new Dictionary<string, InstrumentType>();
+            foreach (int myCode in Enum.GetValues(typeof(InstrumentType)))
+            {
+                var instype = (InstrumentType)myCode;
+                string insname = instype.GetDescription();
+                InsDic.Add(insname, (InstrumentType)myCode);
+            }
+            InsCollection.InstrumentDic = InsDic;
+
+        }
+
         /// <summary>加载多点位移计计算excel
         /// </summary>
-        public  static void LoadMultiDisplacementCalcs()
+        public static void LoadMultiDisplacementCalcs()
         {
             string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\config\\MultiDisplacement.xls";
             if (!File.Exists(path)) return;
@@ -391,8 +431,7 @@ namespace LoadDataCalc
         public string InsName;
         public List<string> KeyWord = new List<string>();
     }
-    /// <summary>
-    /// 仪器名，考证表，测值表，成果表参照类
+    /// <summary> 仪器名，考证表，测值表，成果表参照类
     /// </summary>
     public class InsTableInfo
     {
@@ -402,8 +441,7 @@ namespace LoadDataCalc
         public string Monitor_Name;
         public string Result_Table;
     }
-   /// <summary>
-   /// 集合类
+   /// <summary>仪器类型集合类
    /// </summary>
     public class InsTableCollection
     {

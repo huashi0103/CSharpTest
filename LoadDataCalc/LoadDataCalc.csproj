@@ -150,6 +150,7 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <None Include="ICO\test32.png" />
     <None Include="ICO\check36.png" />
     <None Include="ICO\check48.png" />
     <None Include="ICO\write48.png" />

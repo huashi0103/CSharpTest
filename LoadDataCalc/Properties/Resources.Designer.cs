@@ -183,6 +183,16 @@ namespace LoadDataCalc.Properties {
         /// <summary>
         ///   查找 System.Drawing.Bitmap 类型的本地化资源。
         /// </summary>
+        internal static System.Drawing.Bitmap test32 {
+            get {
+                object obj = ResourceManager.GetObject("test32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
         internal static System.Drawing.Bitmap write32 {
             get {
                 object obj = ResourceManager.GetObject("write32", resourceCulture);

@@ -40,7 +40,8 @@ namespace LoadDataCalc
                 data.ResultReading = -1 * result * param.WaterHead_Coeffi_C;//这里要乘以系数每种仪器不一样
             }
             data.Tempreture = param.TemperatureRead * (data.Survey_RorT - param.ZeroR);//温度
-          
+
+            data.SW = data.ResultReading + param.Elevation;
             return result;
         }
         public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
@@ -74,6 +75,8 @@ namespace LoadDataCalc
             }
             //data.ExcelResult = data.ExcelResult * 0.001;//把excel中的结果乘以0.001，方便对数据
             data.Tempreture = data.Survey_RorT;
+
+            data.SW = data.ResultReading + param.Elevation;
             return result;
         }
         public override double AutoDefined(ParamData param, SurveyData data, string expression)
@@ -124,7 +127,7 @@ namespace LoadDataCalc
         /// </summary>
         /// <param name="datas"></param>
         /// <returns></returns>
-        public virtual int WriteResultToDB(List<PointSurveyData> datas)
+        public override int WriteResultToDB(List<PointSurveyData> datas)
         {
             DataTable dt = new DataTable();
             string TableName = Config.InsCollection[InsType.GetDescription()].Result_Table;

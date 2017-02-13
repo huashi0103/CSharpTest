@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAccess", "CAccess\CAccess.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoadDataCalc", "LoadDataCalc\LoadDataCalc.csproj", "{4BB98847-4F23-4D19-9789-0C3B9B65D8E1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataTrans", "DataTrans\DataTrans.csproj", "{B5AA8E40-8D91-4928-AE0A-422CA2A68774}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,12 @@ Global
 		{4BB98847-4F23-4D19-9789-0C3B9B65D8E1}.Release|Any CPU.ActiveCfg = Release|x86
 		{4BB98847-4F23-4D19-9789-0C3B9B65D8E1}.Release|x86.ActiveCfg = Release|x86
 		{4BB98847-4F23-4D19-9789-0C3B9B65D8E1}.Release|x86.Build.0 = Release|x86
+		{B5AA8E40-8D91-4928-AE0A-422CA2A68774}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{B5AA8E40-8D91-4928-AE0A-422CA2A68774}.Debug|x86.ActiveCfg = Debug|x86
+		{B5AA8E40-8D91-4928-AE0A-422CA2A68774}.Debug|x86.Build.0 = Debug|x86
+		{B5AA8E40-8D91-4928-AE0A-422CA2A68774}.Release|Any CPU.ActiveCfg = Release|x86
+		{B5AA8E40-8D91-4928-AE0A-422CA2A68774}.Release|x86.ActiveCfg = Release|x86
+		{B5AA8E40-8D91-4928-AE0A-422CA2A68774}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

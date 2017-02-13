@@ -779,7 +779,56 @@ namespace LoadDataCalc
                 return;
             }
         }
-       
+        /// <summary>
+        /// 写扩展数据库
+        /// </summary>
+        /// <returns></returns>
+        public bool WriteDBExpand()
+        {
+            //换数据库
+            CSqlServerHelper.Connectionstr = Config.DatabaseExpand;
+            if (inscalc == null) return false;
+            int icount = 0;
+            foreach (var pd in SurveyDataCach)
+            {
+                icount += pd.Datas.Count;
+            }
+
+            #region //覆盖导入//导入前删除要覆盖的数据
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            string insname = inscalc.InsType.GetDescription();
+            string sql = @"SELECT Result_Number from Table_PointTableName where Point_Name='{0}'";
+            string tablename = sqlhelper.SelectFirst(string.Format(sql, insname)).ToString();
+
+            sql = "delete from {0} where Point_Number='{1}' ";
+            foreach (var pd in SurveyDataCach)
+            {
+                if (pd.Datas.Count == 0) continue;
+                DateTime dt = pd.Datas[0].SurveyDate;
+                sqlhelper.InsertDelUpdate(String.Format(sql, tablename, pd.SurveyPoint, dt.Date.ToString()));
+            }
+            #endregion
+            int result = inscalc.WriteDBExpand(SurveyDataCach);
+            ErrorMsg.Log(String.Format("写入{0}行测值", result));
+            //应变计和应变计组,还需要写入无应力计的数据
+            if ((inscalc.InsType == InstrumentType.Fiducial_Strain_Gauge || inscalc.InsType == InstrumentType.Fiducial_Strain_Group))
+            {
+                sql = "DELETE FROM Table_Result_N where Point_Number='{0}'";
+                foreach (var pd in SurveyDataCachExpand)
+                {
+                    if (pd.Datas.Count == 0) continue;
+                    DateTime dt = pd.Datas[0].SurveyDate;
+                    sqlhelper.InsertDelUpdate(String.Format(sql, pd.SurveyPoint, dt.Date.ToString()));
+                }
+                Fiducial_Nonstress fn = new Fiducial_Nonstress();
+                fn.WriteDBExpand(SurveyDataCachExpand);
+            }
+            //换回去
+            CSqlServerHelper.Connectionstr = Config.DataBase;
+            return icount != 0;
+            //return result == icount;
+        }
+
         void getFiles(List<string> list, string path, string pattern)
         {
             DirectoryInfo di = new DirectoryInfo(path);
@@ -821,6 +870,7 @@ namespace LoadDataCalc
             return 0;
 
         }
+
 
         
     }

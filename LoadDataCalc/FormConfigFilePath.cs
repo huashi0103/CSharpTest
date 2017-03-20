@@ -122,7 +122,7 @@ namespace LoadDataCalc
                 listviewFiles.BeginUpdate();
                 foreach (ListViewItem item in listviewFiles.SelectedItems)
                 {
-                    string insname = item.Group.Header;
+                    string insname = item.Group.Header.Split(':')[0];
                     Files[insname].Remove(item.Text);
                     listviewFiles.Items.Remove(item);
                     discernFilCount--;

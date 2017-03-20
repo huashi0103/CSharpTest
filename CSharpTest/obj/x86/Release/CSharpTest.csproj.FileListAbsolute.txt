@@ -11,3 +11,4 @@ D:\wokspace\CSharpTest\CSharpTest\bin\Release\NPOI.OOXML.xml
 D:\wokspace\CSharpTest\CSharpTest\bin\Release\NPOI.OpenXml4Net.xml
 D:\wokspace\CSharpTest\CSharpTest\obj\x86\Release\CSharpTest.exe
 D:\wokspace\CSharpTest\CSharpTest\obj\x86\Release\CSharpTest.pdb
+D:\wokspace\CSharpTest\CSharpTest\obj\x86\Release\CSharpTest.csprojResolveAssemblyReference.cache

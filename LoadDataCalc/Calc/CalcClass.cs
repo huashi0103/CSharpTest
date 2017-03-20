@@ -57,12 +57,12 @@ namespace LoadDataCalc
             double result = 0;
             if (Math.Abs(data.Survey_ZorR) > 1)
             {
-                result = param.Gorf * (data.Survey_ZorR - param.ZorR) +
-                    param.Korb * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) - param.TemperatureRead * (param.RorT - param.ZeroR));
+                result = param.Gorf * (data.Survey_ZorR - param.ZorR) + GetTCorrect(param,data);
             }
             data.ResultReading = result;//这里要乘以系数
             data.Tempreture =(Math.Abs(data.Survey_RorT)>1)? param.TemperatureRead * (data.Survey_RorT - param.ZeroR):0;
             data.LoadReading = result;
+            data.Survey_ZorRMoshu = data.Survey_ZorR;
             return result;
         }
         /// <summary>单点振弦式默认计算方法
@@ -74,13 +74,12 @@ namespace LoadDataCalc
         {
             //Gorf*(Survey_ZorR-ZorR)+Korb*(Survey_RorT-RorT)
             double result = 0;
-            double Tcorrect = (data.Survey_RorT != 0) ? param.Korb * (data.Survey_RorT - param.RorT) : 0;
+            double Tcorrect = GetTCorrect(param, data);
             if (Math.Abs(data.Survey_ZorR) > 1)
             {
                 if (data.Survey_ZorR>4000)//模数
                 {
                     result = param.Gorf * (data.Survey_ZorR - param.ZorR) + Tcorrect;
-                    //data.Survey_ZorRMoshu = data.Survey_ZorR;
                 }
                 else//频率
                 {
@@ -95,9 +94,9 @@ namespace LoadDataCalc
                     {
                         result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) - param.ZorR * param.ZorR) + Tcorrect;
                     }
-                    //data.Survey_ZorRMoshu = Math.Pow(data.Survey_ZorR, 2) / 1000;
                 }
             }
+            data.Survey_ZorRMoshu = data.Survey_ZorR;
             data.ResultReading = result;//这里要乘以系数每种仪器不一样
             data.Tempreture = data.Survey_RorT;
             data.LoadReading = result;
@@ -200,7 +199,8 @@ namespace LoadDataCalc
                     dr["Observation_Date"] = surveydata.SurveyDate;
                     dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
                     dr["Temperature"] = (float)surveydata.Survey_RorT;
-                    dr["Frequency"] = (float)surveydata.Survey_ZorR;
+                    //dr["Frequency"] = (float)surveydata.Survey_ZorR;
+                    dr["Frequency"] = (float)surveydata.Survey_ZorRMoshu;
                     if (Encoding.Default.GetBytes(surveydata.Remark).Length > 60)
                     {
                         surveydata.Remark = "";
@@ -256,6 +256,13 @@ namespace LoadDataCalc
             }
             return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
         }
+
+        public int WriteToDB(DataTable dt)
+        {
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+
         /// <summary> 扩展方法1 对应CalcExpand1,子类有特殊计算方法才继承
         /// </summary>
         /// <param name="param"></param>
@@ -337,7 +344,32 @@ namespace LoadDataCalc
                 return 0.001;
             }
         }
-        
+
+        /// <summary>
+        /// 计算温度改正
+        /// </summary>
+        /// <param name="param"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        protected double GetTCorrect(ParamData param, SurveyData data)
+        {
+            double tcorrect = 0;
+            switch (param.InsCalcType)
+            {
+                case CalcType.DifBlock:
+                    double temperature = param.TemperatureRead * (data.Survey_RorT - param.RorT);
+                    tcorrect = (temperature <= Config.MinTemperature || temperature >= Config.MaxTemperature) ? 0 :
+                       param.Korb * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) - param.TemperatureRead * (param.RorT - param.ZeroR));
+                    break;
+                case CalcType.ShakeString:
+                    tcorrect = ((data.Survey_RorT <= Config.MinTemperature || data.Survey_RorT >= Config.MaxTemperature)) ? 0 : param.Korb * (data.Survey_RorT - param.RorT);
+                    break;
+                default:
+                    tcorrect = ((data.Survey_RorT <= Config.MinTemperature || data.Survey_RorT >= Config.MaxTemperature)) ? 0 : param.Korb * (data.Survey_RorT - param.RorT);
+                    break;
+            }
+            return tcorrect;
+        }
     }
 
 
@@ -579,6 +611,7 @@ namespace LoadDataCalc
         /// </summary>
         public Dictionary<string, SurveyData> MultiDatas = new Dictionary<string, SurveyData>();
         /// <summary>
+        /// 用来存写入数据库的测值，可能是模数，苗尾为频率
         /// 模数，当直接读取的值为模数时，与Survey_ZorR相同，否则为平方后/1000的值
         /// </summary>
         public double Survey_ZorRMoshu;

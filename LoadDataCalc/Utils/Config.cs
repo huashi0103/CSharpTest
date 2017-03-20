@@ -10,7 +10,7 @@ using System.Globalization;
 
 namespace LoadDataCalc
 {
-    public  static class Config
+    public static class Config
     {
         #region//config.xml中保存的配置参数
         /// <summary> 根目录
@@ -21,7 +21,7 @@ namespace LoadDataCalc
         public static string ProjectName = "DefaultProject";
         /// <summary>     //数据库字符串
         /// </summary>
-        public static  string DataBase = "";
+        public static string DataBase = "";
         /// <summary>
         /// 项目编码//构造数据处理类
         /// </summary>
@@ -30,7 +30,7 @@ namespace LoadDataCalc
         /// 是否是模数//考证表中录入的参数基准录入的是模数还是频率
         /// 主要针对振弦式仪器
         /// </summary>
-        public static  bool IsMoshu = false;
+        public static bool IsMoshu = false;
         /// <summary>是否自动化,自动化数据库多一个字段
         /// </summary>
         public static bool IsAuto = true;
@@ -53,6 +53,19 @@ namespace LoadDataCalc
         /// <summary> 指定起始时间
         /// </summary>
         public static DateTime StartTime = new DateTime();
+        /// <summary>
+        /// 最小温度//默认为0，每次进入程序从数据库表中查一遍
+        /// </summary>
+        public static double MinTemperature = 0;
+        /// <summary>
+        /// 最大温度，默认为70，每次进入程序从数据库表中查一遍
+        /// </summary>
+        public static double MaxTemperature = 70;
+
+        /// <summary>
+        /// 0值写空还是写0，0--0，1--null
+        /// </summary>
+        public static int  ZeroNull = 0;
 
         /// <summary>用户名
         /// </summary>
@@ -72,8 +85,8 @@ namespace LoadDataCalc
         //程序集目录
         private static string Assemblydir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         //0 为叶方毅数据库1为程翔数据库
-        private static  int DataBaseType = 0;
-      
+        private static int DataBaseType = 0;
+
         /// <summary>
         /// 扩展数据库，流域监测系统写数据
         /// </summary>
@@ -86,7 +99,7 @@ namespace LoadDataCalc
 
         /// <summary>从默认路径加载配置文件
         /// </summary>
-        public  static bool LoadConfig(bool IsReadDefault = false)
+        public static bool LoadConfig(bool IsReadDefault = false)
         {
             string filename = "\\config\\Config.xml";//针对项目的配置文件，只包含项目涉及到的仪器种类
             if (IsReadDefault) filename = "\\config\\Config_Default.xml";//default文件 包含所有种类仪器
@@ -129,7 +142,7 @@ namespace LoadDataCalc
                 }
                 //if (DataBaseType == 0)
                 //{ 
-                    loadIns();
+                loadIns();
                 //}
                 //else if (DataBaseType == 1)
                 //{
@@ -143,7 +156,7 @@ namespace LoadDataCalc
             }
             finally
             {
-                if(reader!=null)reader.Close();
+                if (reader != null) reader.Close();
             }
         }
         //导入仪器类型对应的考证表和数据表
@@ -234,7 +247,7 @@ namespace LoadDataCalc
             root.AppendChild(element);
 
             element = xml.CreateElement("ProCode");
-            element.SetAttribute("IsMoshu", (IsMoshu?1:0).ToString());
+            element.SetAttribute("IsMoshu", (IsMoshu ? 1 : 0).ToString());
             element.InnerText = ProCode;
             root.AppendChild(element);
 
@@ -266,7 +279,7 @@ namespace LoadDataCalc
                         ent.AppendChild(entkeyword);
                     }
                     element.AppendChild(ent);
-                   
+
                 }
             }
             root.AppendChild(element);
@@ -275,7 +288,7 @@ namespace LoadDataCalc
         }
         /// <summary>写一个默认模板
         /// </summary>
-        public static  void WriteDifaultConfig()
+        public static void WriteDifaultConfig()
         {
             string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string path = dir + "\\config\\Config_Default.xml";
@@ -379,7 +392,7 @@ namespace LoadDataCalc
             {
                 return null;
             }
- 
+
         }
         /// <summary> 获取多点位移计从浅到深排序的点，默认不在此列中得点为从深到浅排序
         /// </summary>
@@ -389,7 +402,7 @@ namespace LoadDataCalc
             List<string> list = new List<string>();
             string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\config\\MultiDisplacement.xls";
             var workbook = WorkbookFactory.Create(path);
-            string sheetname = Config.ProCode + "_Order";  
+            string sheetname = Config.ProCode + "_Order";
             var psheet = workbook.GetSheet(sheetname);
             if (psheet == null) return list;
             int count = psheet.LastRowNum + 1;
@@ -469,7 +482,6 @@ namespace LoadDataCalc
             return InsTables.Where(ins => ins.Result_Table == Result_Table).First();
         }
     }
-
     public static class DataUtils
     {
         public static  bool CheckDateTime(DateTime dt)
@@ -493,7 +505,7 @@ namespace LoadDataCalc
         }
         public static bool CheckStrIgnoreCN(string a,string b)
         {
-            return CultureInfo.GetCultureInfo("zh-cn").CompareInfo.Compare(a, b, CompareOptions.IgnoreWidth) == 0;
+            return CultureInfo.GetCultureInfo("zh-cn").CompareInfo.Compare(a, b, CompareOptions.IgnoreWidth|CompareOptions.IgnoreCase) == 0;
         }
        
     

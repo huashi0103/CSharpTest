@@ -57,17 +57,17 @@
             this.radioAll = new System.Windows.Forms.RadioButton();
             this.skinEngine1 = new Sunisoft.IrisSkin.SkinEngine(((System.ComponentModel.Component)(this)));
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.panel1 = new System.Windows.Forms.Panel();
             this.toolStripButtonConfig = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButtonRead = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonWrite = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonRollback = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonReadFile = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButtonCount = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButtonCheck = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonTest = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonCheck = new System.Windows.Forms.ToolStripButton();
+            this.panel1 = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericLimit)).BeginInit();
@@ -448,26 +448,6 @@
             this.toolStrip1.TabIndex = 11;
             this.toolStrip1.Text = "toolStrip1";
             // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 36);
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 36);
-            // 
-            // panel1
-            // 
-            this.panel1.Controls.Add(this.dataGridView1);
-            this.panel1.Controls.Add(this.tableLayoutPanel1);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(0, 36);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1262, 691);
-            this.panel1.TabIndex = 12;
-            // 
             // toolStripButtonConfig
             // 
             this.toolStripButtonConfig.AutoSize = false;
@@ -481,6 +461,11 @@
             this.toolStripButtonConfig.Size = new System.Drawing.Size(80, 36);
             this.toolStripButtonConfig.Text = "配置";
             this.toolStripButtonConfig.TextDirection = System.Windows.Forms.ToolStripTextDirection.Horizontal;
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 36);
             // 
             // toolStripButtonRead
             // 
@@ -531,6 +516,11 @@
             this.toolStripButtonReadFile.Size = new System.Drawing.Size(120, 36);
             this.toolStripButtonReadFile.Text = "导入文件";
             // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 36);
+            // 
             // toolStripButtonCount
             // 
             this.toolStripButtonCount.AutoSize = false;
@@ -542,6 +532,18 @@
             this.toolStripButtonCount.Name = "toolStripButtonCount";
             this.toolStripButtonCount.Size = new System.Drawing.Size(80, 36);
             this.toolStripButtonCount.Text = "统计";
+            // 
+            // toolStripButtonTest
+            // 
+            this.toolStripButtonTest.AutoSize = false;
+            this.toolStripButtonTest.Image = global::LoadDataCalc.Properties.Resources.test32;
+            this.toolStripButtonTest.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.toolStripButtonTest.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.toolStripButtonTest.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonTest.Name = "toolStripButtonTest";
+            this.toolStripButtonTest.Size = new System.Drawing.Size(80, 36);
+            this.toolStripButtonTest.Text = "测试";
+            this.toolStripButtonTest.Visible = false;
             // 
             // toolStripButtonCheck
             // 
@@ -555,16 +557,15 @@
             this.toolStripButtonCheck.Text = "校验基准";
             this.toolStripButtonCheck.Visible = false;
             // 
-            // toolStripButtonTest
+            // panel1
             // 
-            this.toolStripButtonTest.AutoSize = false;
-            this.toolStripButtonTest.Image = global::LoadDataCalc.Properties.Resources.test32;
-            this.toolStripButtonTest.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.toolStripButtonTest.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
-            this.toolStripButtonTest.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonTest.Name = "toolStripButtonTest";
-            this.toolStripButtonTest.Size = new System.Drawing.Size(80, 36);
-            this.toolStripButtonTest.Text = "测试";
+            this.panel1.Controls.Add(this.dataGridView1);
+            this.panel1.Controls.Add(this.tableLayoutPanel1);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel1.Location = new System.Drawing.Point(0, 36);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(1262, 691);
+            this.panel1.TabIndex = 12;
             // 
             // FormLoadCalc
             // 

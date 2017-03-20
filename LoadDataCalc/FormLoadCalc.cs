@@ -60,7 +60,6 @@ namespace LoadDataCalc
                     this.Invoke(new EventHandler(delegate {
                         if (toolStripProgressLoad.Visible) toolStripProgressLoad.Value = index;
                     }));
-
                 });
                 Files = Config.ReadFileList();
                 if (this.IsDisposed) return;
@@ -661,11 +660,15 @@ namespace LoadDataCalc
             int PcountEx = 0;//计算下仪器支数
             foreach (PointSurveyData pd in datas)
             {
-                
+                if (pd.SurveyPoint == "MJb1-2")
+                {
+
+                }
                 Pcount++;
                 if (flag && pd.Datas.Count > 0) PcountEx += pd.Datas[0].MultiDatas.Count;
                 foreach (var surveydata in pd.Datas)
                 {
+       
                     id++;
                     DataRow dr = dt.NewRow();
                     dr["ID"] = id;
@@ -689,7 +692,6 @@ namespace LoadDataCalc
                             dr["F" + i.ToString()] = v.Value.Survey_ZorR;
                             dr["R" + i.ToString()] = v.Value.LoadReading;
                             if (comboType.Text == "应变计组" || comboType.Text == "多点锚杆应力计") dr["T" + i.ToString()] = v.Value.Tempreture;
-                            
                             i++;
                         }
                     }

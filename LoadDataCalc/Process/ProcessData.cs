@@ -136,6 +136,7 @@ namespace LoadDataCalc
         /// <returns></returns>
         protected virtual bool CheckData(SurveyData sd, SurveyData lastsd, DataInfo info, List<SurveyData>Datas,string Survey_point_name,out ErrorMsg err)
         {
+            string keystr = "Frequency";
             err = new ErrorMsg();
             if (sd.Remark.Contains("已复测")) return true;
             var sqlhelper = CSqlServerHelper.GetInstance();
@@ -146,7 +147,7 @@ namespace LoadDataCalc
                "select  top 1 * from {0} where Survey_point_Number='{1}' and Observation_Date<'{2}'Order by Observation_Date desc ";
                 var data = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, sd.SurveyDate.Date.ToString()));
                 if (data.Rows.Count == 0) return true;
-                double f = Convert.ToDouble(data.Rows[0]["Frequency"]);
+                double f = Convert.ToDouble(data.Rows[0][keystr]);
                 //数据库里边不确定写的是频率还是模数
                 if (Math.Abs(sd.Survey_ZorR - f) < Config.LimitZ||
                    Math.Abs(sd.Survey_ZorR - Math.Sqrt(f*1000)) < Config.LimitZ) return true;
@@ -166,7 +167,7 @@ namespace LoadDataCalc
             SurveyData lastMorYData = null;
             if (table.Rows.Count > 0)
             {
-                szr = Convert.ToDouble(table.Rows[0]["Frequency"]);
+                szr = Convert.ToDouble(table.Rows[0][keystr]);
             }
             else
             {
@@ -179,7 +180,7 @@ namespace LoadDataCalc
             table = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, dt.ToString(), dt.ToString()));
             if (table.Rows.Count > 0)
             {
-                szr = Convert.ToDouble(table.Rows[0]["Frequency"]);
+                szr = Convert.ToDouble(table.Rows[0][keystr]);
             }
             else
             {
@@ -303,9 +304,11 @@ namespace LoadDataCalc
             maxDatetime = new DateTime();
             string sql = Config.IsAuto ? "select max(Observation_Date) from {0} where Survey_point_Number=@Survey_point_Number and RecordMethod='人工'" :
                 "select max(Observation_Date) from {0} where Survey_point_Number=@Survey_point_Number";
+
             string table = tablename == null ? Config.InsCollection[this.Instrument_Name].Measure_Table : tablename;
             sql = String.Format(sql, table);
             var result = sqlhelper.SelectFirst(sql, new SqlParameter("@Survey_point_Number", surveyNumber));
+           
             bool flag = (result != DBNull.Value);
             if (flag) maxDatetime = (DateTime)result;
             return flag;
@@ -395,7 +398,7 @@ namespace LoadDataCalc
                         //数据库没有数据，用基准值做对比，从基准值行开始读
                         if (!flag)
                         {
-                            if (!FirstFlag && Math.Abs(sd.Survey_ZorR - ZStandard) <= 0.01
+                            if (!FirstFlag && Math.Abs(sd.Survey_ZorR - ZStandard) <= 0.1
                                 ||(Config.IsMoshu && Math.Abs(sd.Survey_ZorR - Math.Sqrt(ZStandard * 1000)) < 1))
                             {
                                 FirstFlag = true;

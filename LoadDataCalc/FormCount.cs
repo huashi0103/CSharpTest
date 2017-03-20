@@ -75,6 +75,21 @@ namespace LoadDataCalc
             btnChkAllData.Click += (send, arg) => {
                 List<dynamic> Counts = new List<dynamic>();
                 string sql = "SELECT COUNT(ID) from {0}";
+                string AddName = String.Format("Survey_point_Number ='{0}'", txName.Text);
+                string AddTime = String.Format(" Observation_Date>'{0}' AND Observation_Date<'{1}'", DateTimeStart.Value.Date.ToString(),
+                    DateTimeEnd.Value.Date.ToString());
+                if (chkDateTime.Checked && chkName.Checked)
+                {
+                    sql += " where ";
+                    if (chkName.Checked) sql += AddName;
+                    sql += " and ";
+                    if (chkName.Checked) sql += AddTime;
+                }
+                else
+                {
+                    if (chkName.Checked) sql += " where " + AddName;
+                    if (chkDateTime.Checked) sql += " where " + AddTime;
+                }
                 int sum = 0;
                 foreach (var ins in Config.Instruments)
                 {

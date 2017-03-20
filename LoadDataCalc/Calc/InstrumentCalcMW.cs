@@ -1,6 +1,7 @@
 ﻿/*
  * 苗尾数据计算类,对应ProCode=MW
  * 考证表中的参数表格中是什么就录的什么，
+ * 数据库的测值都写频率
  * 暂未使用
 */
 using System;
@@ -11,61 +12,6 @@ using System.Data;
 
 namespace LoadDataCalc
 {
-    /// <summary>
-    /// 大地测量
-    /// </summary>
-    public class Fiducial_Earth_MeasureMW : Fiducial_Earth_Measure
-    {
-        public Fiducial_Earth_MeasureMW()
-        {
-            base.InsType = InstrumentType.Fiducial_Earth_Measure;
-        }
-        public override double DifBlock(ParamData param, SurveyData data, params double[] expand)
-        {
-            return base.DifBlock(param, data, expand);
-        }
-        public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
-        {
-            return base.ShakeString(param, data, expand);
-        }
-        public override double AutoDefined(ParamData param, SurveyData data, string expression)
-        {
-            return base.AutoDefined(param, data, expression);
-        }
-        public override ParamData GetParam(string Survey_point_Number, string tablename = null)
-        {
-            return base.GetParam(Survey_point_Number, this.InsType.ToString());
-        }
-
-    }
-
-    /// <summary>
-    /// 引张线
-    /// </summary>
-    public class Fiducial_Flex_LineMW : Fiducial_Flex_Line
-    {
-        public Fiducial_Flex_LineMW()
-        {
-            base.InsType = InstrumentType.Fiducial_Flex_Line;
-        }
-        public override double DifBlock(ParamData param, SurveyData data, params double[] expand)
-        {
-            return base.DifBlock(param, data, expand);
-        }
-        public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
-        {
-            return base.ShakeString(param, data, expand);
-        }
-        public override double AutoDefined(ParamData param, SurveyData data, string expression)
-        {
-            return base.AutoDefined(param, data, expression);
-        }
-        public override ParamData GetParam(string Survey_point_Number, string tablename = null)
-        {
-            return base.GetParam(Survey_point_Number, this.InsType.ToString());
-        }
-
-    }
 
     /// <summary>
     /// 测斜仪
@@ -118,45 +64,29 @@ namespace LoadDataCalc
             return base.DifBlock(param, data, expand);
         }
 
-        //特殊的计算方式/
-        private double calcOnePointExpand(ParamData pd, SurveyData sd)
-        {
-            if (Math.Abs(sd.Survey_ZorR) < 1)
-            {
-                return 0;
-            }
-            return ((int)(pd.Gorf * (sd.Survey_ZorR - pd.ZorR) * 100 + 0.5)) / 100.0 + pd.Korb * (sd.Survey_RorT - pd.RorT);
-        }
         public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
         {
-            if (Config.ProCode == "XJB" && param.SurveyPoint.StartsWith("ID-"))//特殊的计算方式
-            {
-                data.LoadReading = calcOnePointExpand(param, data);
-                data.Tempreture = data.Survey_RorT;
-                return data.LoadReading;
-            }
 
             double result = 0;
+            double tcorrect = param.Korb * (data.Survey_RorT - param.RorT);
             if (Math.Abs(data.Survey_ZorR) > 1)
             {
                 if (data.Survey_ZorR > 5000 || param.IsPotentiometer)
                 {
-                    result = param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT);
-                    //data.Survey_ZorRMoshu = data.Survey_ZorR;
+                    result = param.Gorf * (data.Survey_ZorR - param.ZorR) + tcorrect;
+                    data.Survey_ZorRMoshu = param.IsPotentiometer ? data.Survey_ZorR : Math.Sqrt(data.Survey_ZorR * 1000);
                 }
                 else
                 {
                     if (Config.IsMoshu)
                     {
-                        result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) / 1000.0 - param.ZorR) +
-                            param.Korb * (data.Survey_RorT - param.RorT);
+                        result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) / 1000.0 - param.ZorR) + tcorrect;
                     }
                     else
                     {
-                        result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) - param.ZorR * param.ZorR) +
-                                              param.Korb * (data.Survey_RorT - param.RorT);
+                        result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) - param.ZorR * param.ZorR) + tcorrect;
                     }
-                    //data.Survey_ZorRMoshu = Math.Pow(data.Survey_ZorR, 2) / 1000;
+                    data.Survey_ZorRMoshu = data.Survey_ZorR;
                 }
             }
             data.ResultReading = result;//这里要乘以系数每种仪器不一样
@@ -251,62 +181,6 @@ namespace LoadDataCalc
     }
 
     /// <summary>
-    /// 基岩变形计
-    /// </summary>
-    public class Fiducial_Basic_Rock_DistortionMW : Fiducial_Basic_Rock_Distortion
-    {
-        public Fiducial_Basic_Rock_DistortionMW()
-        {
-            base.InsType = InstrumentType.Fiducial_Basic_Rock_Distortion;
-        }
-        public override double DifBlock(ParamData param, SurveyData data, params double[] expand)
-        {
-            return base.DifBlock(param, data, expand);
-        }
-        public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
-        {
-            return base.ShakeString(param, data, expand);
-        }
-        public override double AutoDefined(ParamData param, SurveyData data, string expression)
-        {
-            return base.AutoDefined(param, data, expression);
-        }
-        public override ParamData GetParam(string Survey_point_Number, string tablename = null)
-        {
-            return base.GetParam(Survey_point_Number, this.InsType.ToString());
-        }
-
-    }
-
-    /// <summary>
-    /// 电磁沉降环
-    /// </summary>
-    public class Fiducial_Elect_Settlement_GaugeMW : Fiducial_Elect_Settlement_Gauge
-    {
-        public Fiducial_Elect_Settlement_GaugeMW()
-        {
-            base.InsType = InstrumentType.Fiducial_Elect_Settlement_Gauge;
-        }
-        public override double DifBlock(ParamData param, SurveyData data, params double[] expand)
-        {
-            return base.DifBlock(param, data, expand);
-        }
-        public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
-        {
-            return base.ShakeString(param, data, expand);
-        }
-        public override double AutoDefined(ParamData param, SurveyData data, string expression)
-        {
-            return base.AutoDefined(param, data, expression);
-        }
-        public override ParamData GetParam(string Survey_point_Number, string tablename = null)
-        {
-            return base.GetParam(Survey_point_Number, this.InsType.ToString());
-        }
-
-    }
-
-    /// <summary>
     /// 水管式沉降仪
     /// </summary>
     public class Fiducial_Hose_Settlement_GaugeMW : Fiducial_Hose_Settlement_Gauge
@@ -363,34 +237,6 @@ namespace LoadDataCalc
     }
 
     /// <summary>
-    /// 土体位移计
-    /// </summary>
-    public class Fiducial_Soil_DisplacementMW : Fiducial_Soil_Displacement
-    {
-        public Fiducial_Soil_DisplacementMW()
-        {
-            base.InsType = InstrumentType.Fiducial_Soil_Displacement;
-        }
-        public override double DifBlock(ParamData param, SurveyData data, params double[] expand)
-        {
-            return base.DifBlock(param, data, expand);
-        }
-        public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
-        {
-            return base.ShakeString(param, data, expand);
-        }
-        public override double AutoDefined(ParamData param, SurveyData data, string expression)
-        {
-            return base.AutoDefined(param, data, expression);
-        }
-        public override ParamData GetParam(string Survey_point_Number, string tablename = null)
-        {
-            return base.GetParam(Survey_point_Number, this.InsType.ToString());
-        }
-
-    }
-
-    /// <summary>
     /// 测缝计
     /// </summary>
     public class Fiducial_Measure_ApertureMW : Fiducial_Measure_Aperture
@@ -401,30 +247,30 @@ namespace LoadDataCalc
         }
         public override double DifBlock(ParamData param, SurveyData data, params double[] expand)
         {
+            data.Survey_ZorRMoshu = data.Survey_ZorR;
             return base.DifBlock(param, data, expand);
         }
         public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
         {
             double result = 0;
+            double tcorrect=param.Korb * (data.Survey_RorT - param.RorT);
             if (CheckIsMoshu(param.Gorf))
             {
-                result = (param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT));
-                //data.Survey_ZorRMoshu = data.Survey_ZorR;
+                result = param.Gorf * (data.Survey_ZorR - param.ZorR) + tcorrect;
+                data.Survey_ZorRMoshu = Math.Sqrt(data.Survey_ZorR * 1000);
             }
             else
             {
                 //录入的是频率或者模数
                 if (Config.IsMoshu)
                 {
-                    result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) / 1000.0 - param.ZorR) +
-                        param.Korb * (data.Survey_RorT - param.RorT);
+                    result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) / 1000.0 - param.ZorR) + tcorrect;
                 }
                 else
                 {
-                    result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) - param.ZorR * param.ZorR) +
-                                          param.Korb * (data.Survey_RorT - param.RorT);
+                    result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) - param.ZorR * param.ZorR) + tcorrect;
                 }
-                //data.Survey_ZorRMoshu = Math.Pow(data.Survey_ZorR, 2) / 1000;
+                data.Survey_ZorRMoshu = data.Survey_ZorR;
             }
 
             data.ResultReading = result;//这里要乘以系数每种仪器不一样
@@ -492,10 +338,8 @@ namespace LoadDataCalc
         public override double DifBlock(ParamData param, SurveyData data, params double[] expand)
         {
 
-            double result = (param.Gorf * (data.Survey_ZorR - param.ZorR) +
-                param.Korb * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) -
-                param.TemperatureRead * (param.RorT - param.ZeroR))) * param.KpaToMpa;
-
+            double result = (param.Gorf * (data.Survey_ZorR - param.ZorR) +GetTCorrect(param,data)) * param.KpaToMpa;
+            data.Survey_ZorRMoshu = data.Survey_ZorR;
             data.ResultReading = result * 102.0408;//最终结果水头ResultReading  Kpa
             data.Tempreture = param.TemperatureRead * (data.Survey_RorT - param.ZeroR);//温度
             data.LoadReading = result;//渗透压力LoadReading
@@ -505,25 +349,25 @@ namespace LoadDataCalc
         {
             double result = 0;
             //录入的是频率或者模数
+            double tcorrect = GetTCorrect(param, data);
             if (!param.Special)
             {
                 if (Math.Abs(param.Gorf * 10000) > 1)
                 {
-                    result = (param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT));
-                    // data.Survey_ZorRMoshu = data.Survey_ZorR;
+                    result = param.Gorf * (data.Survey_ZorR - param.ZorR) + tcorrect;
+                     data.Survey_ZorRMoshu = Math.Sqrt(data.Survey_ZorR*1000);
                 }
                 else
                 {
                     if (Config.IsMoshu)
                     {
-                        result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) / 1000.0 - param.ZorR) +
-                            param.Korb * (data.Survey_RorT - param.RorT);
+                        result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) / 1000.0 - param.ZorR) + tcorrect;
                     }
                     else
                     {
-                        result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) - param.ZorR * param.ZorR) +
-                                              param.Korb * (data.Survey_RorT - param.RorT);
+                        result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) - param.ZorR * param.ZorR) + tcorrect;
                     }
+                    data.Survey_ZorRMoshu = data.Survey_ZorR;
                 }
                 if (Math.Abs(param.Gorf * 100) > 1) param.KpaToMpa = 0.001;
             }
@@ -531,12 +375,13 @@ namespace LoadDataCalc
             {
                 if (param.IsMoshu)
                 {
-                    result = param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT);
+                    result = param.Gorf * (data.Survey_ZorR - param.ZorR) + tcorrect;
+                    data.Survey_ZorRMoshu = Math.Sqrt(data.Survey_ZorR * 1000);
                 }
                 else
                 {
-                    result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) - param.ZorR * param.ZorR) +
-                                               param.Korb * (data.Survey_RorT - param.RorT);
+                    result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) - param.ZorR * param.ZorR) + tcorrect;
+                    data.Survey_ZorRMoshu = data.Survey_ZorR;
                 }
             }
             result += param.Constant_b;
@@ -608,34 +453,6 @@ namespace LoadDataCalc
     }
 
     /// <summary>
-    /// 测压管
-    /// </summary>
-    public class Fiducial_MeasureStress_HoseMW : Fiducial_MeasureStress_Hose
-    {
-        public Fiducial_MeasureStress_HoseMW()
-        {
-            base.InsType = InstrumentType.Fiducial_MeasureStress_Hose;
-        }
-        public override double DifBlock(ParamData param, SurveyData data, params double[] expand)
-        {
-            return base.DifBlock(param, data, expand);
-        }
-        public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
-        {
-            return base.ShakeString(param, data, expand);
-        }
-        public override double AutoDefined(ParamData param, SurveyData data, string expression)
-        {
-            return base.AutoDefined(param, data, expression);
-        }
-        public override ParamData GetParam(string Survey_point_Number, string tablename = null)
-        {
-            return base.GetParam(Survey_point_Number, this.InsType.ToString());
-        }
-
-    }
-
-    /// <summary>
     /// 量水堰
     /// </summary>
     public class Fiducial_MeasureWater_WeirMW : Fiducial_MeasureWater_Weir
@@ -650,7 +467,34 @@ namespace LoadDataCalc
         }
         public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
         {
-            return base.ShakeString(param, data, expand);
+            data.LoadReading = 1.86 * param.Gorf * Math.Pow(data.Survey_ZorR, 1.5) * 1000;
+            data.ResultReading = data.LoadReading;
+            return data.ResultReading;
+        }
+        //矩形
+        public override double Expand1(ParamData param, SurveyData data, string expression)
+        {
+            double Q1 = 50;//初值
+            while (true)
+            {
+                double H = (param.RorT - data.Survey_ZorR) * param.Gorf + param.Constant_b;
+                double deltg = param.ZorR * (H + param.Korb);
+                double v = (Q1 / 1000.0) / deltg;
+                double I = H + Math.Pow(v, 2) / (2 * 9.81);
+                double F = 0.627 + 0.018 * I / param.Korb;
+                double Q2 = F * 2 * Math.Sqrt(2 * 9.81) * param.ZorR * Math.Pow(I, 1.5) * 1000 / 3;
+                if (Math.Abs(Q2 - Q1) < 0.01)
+                {
+                    Q1 = Q2;
+                    break;
+                }
+                else
+                {
+                    Q1 = Q2;
+                }
+            }
+            data.LoadReading = Q1;
+            return Q1;
         }
         public override double AutoDefined(ParamData param, SurveyData data, string expression)
         {
@@ -658,7 +502,40 @@ namespace LoadDataCalc
         }
         public override ParamData GetParam(string Survey_point_Number, string tablename = null)
         {
-            return base.GetParam(Survey_point_Number, this.InsType.ToString());
+            string sql = @"select * from {0} where Survey_point_Number='{1}'";
+            sql = string.Format(sql, tablename, Survey_point_Number);
+            var SqlHelper = CSqlServerHelper.GetInstance();
+            var dt = SqlHelper.SelectData(sql);
+            if (dt.Rows.Count < 1) return null;
+            try
+            {
+                ParamData pd = new ParamData();
+                pd.SurveyPoint = Survey_point_Number;
+                pd.Gorf = ConvetToData(dt.Rows[0]["A1_C"]);//灵敏度
+                pd.Korb = ConvetToData(dt.Rows[0]["A2_C"]);//高度
+                pd.ZorR = ConvetToData(dt.Rows[0]["Weir_Size"]);//宽度
+                pd.RorT = ConvetToData(dt.Rows[0]["Elevation"]);//初值
+                pd.Constant_b = ConvetToData(dt.Rows[0]["Section_Name"]);//堰水上头初值
+
+                string instype = dt.Rows[0]["Point_Type"].ToString();
+                if (instype == "1")//三角
+                {
+                    pd.InsCalcType = CalcType.DifBlock;
+                }
+                else if (instype == "2")//梯形
+                {
+                    pd.InsCalcType = CalcType.ShakeString;
+                }
+                else if (instype == "3")//矩形
+                {
+                    pd.InsCalcType = CalcType.CalcExpand1;
+                }
+                return pd;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
     }
@@ -677,8 +554,9 @@ namespace LoadDataCalc
             double result = 0;
             if (Math.Abs(data.Survey_ZorR) > 1)
             {
-                result = param.Gorf * (data.Survey_ZorR - param.ZorR) +
-                    (param.Korb - param.Concrete_Expansion_ac) * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) - param.TemperatureRead * (param.RorT - param.ZeroR));
+                double tcorrect = data.Survey_RorT <= 0 ? 0 :
+                     (param.Korb - param.Concrete_Expansion_ac) * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) - param.TemperatureRead * (param.RorT - param.ZeroR));
+                result = param.Gorf * (data.Survey_ZorR - param.ZorR) + tcorrect;
                 if (param.ZeroR > 1 && Math.Abs(data.Survey_RorT) > 1) data.Tempreture = param.TemperatureRead * (data.Survey_RorT - param.ZeroR);
             }
             data.ResultReading = result;
@@ -687,6 +565,7 @@ namespace LoadDataCalc
             {
                 data.LoadReading = data.LoadReading - data.NonStressSurveyData.LoadReading;
             }
+            data.Survey_ZorRMoshu = data.Survey_ZorR;
 
             return result;
         }
@@ -694,13 +573,14 @@ namespace LoadDataCalc
         {
             //Gorf*(Survey_ZorR-ZorR)+Korb*(Survey_RorT-RorT)
             double result = 0;
-            double Tcorrect = (data.Survey_RorT != 0) ? (param.Korb - param.Concrete_Expansion_ac) * (data.Survey_RorT - param.RorT) : 0;
+            double Tcorrect = (data.Survey_RorT > Config.MinTemperature && data.Survey_RorT < Config.MaxTemperature) ?
+                            (param.Korb - param.Concrete_Expansion_ac) * (data.Survey_RorT - param.RorT) : 0;
             if (Math.Abs(data.Survey_ZorR) > 1)
             {
                 if (data.Survey_ZorR > 5000)
                 {
                     result = param.Gorf * (data.Survey_ZorR - param.ZorR) + Tcorrect;
-                    //data.Survey_ZorRMoshu = data.Survey_ZorR;
+                    data.Survey_ZorRMoshu = Math.Sqrt(data.Survey_ZorR * 1000);
                 }
                 else
                 {
@@ -713,7 +593,7 @@ namespace LoadDataCalc
                     {
                         result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) - param.ZorR * param.ZorR) + Tcorrect;
                     }
-                    //data.Survey_ZorRMoshu = Math.Pow(data.Survey_ZorR, 2) / 1000;
+                    data.Survey_ZorRMoshu = data.Survey_ZorR;
                 }
             }
             data.ResultReading = result;
@@ -783,6 +663,7 @@ namespace LoadDataCalc
             data.ResultReading = result;
             data.Tempreture = data.Survey_RorT;
             data.LoadReading = result;
+            data.Survey_ZorRMoshu = data.Survey_ZorR;
             return result;
         }
 
@@ -816,11 +697,11 @@ namespace LoadDataCalc
                     dr["Observation_Date"] = surveydata.SurveyDate;
                     dr["Observation_Time"] = surveydata.SurveyDate.TimeOfDay.ToString(@"hh\:mm\:ss");
                     dr["Temperature"] = Math.Round(surveydata.Survey_RorT, 4);
-                    dr["Frequency"] = Math.Round(surveydata.Survey_ZorR, 4);
+                    dr["Frequency"] = Math.Round(surveydata.Survey_ZorRMoshu, 4);
                     if (surveydata.NonStressSurveyData != null)
                     {
                         dr["Non_Temperature"] = Math.Round(surveydata.NonStressSurveyData.Tempreture, 4);
-                        dr["Non_Frequency"] = Math.Round(surveydata.NonStressSurveyData.LoadReading, 4);
+                        dr["Non_Frequency"] = Math.Round(surveydata.NonStressSurveyData.Survey_ZorRMoshu, 4);
                     }
                     dr["Remark"] = surveydata.Remark;
                     dr["UpdateTime"] = DateTime.Now;
@@ -892,8 +773,9 @@ namespace LoadDataCalc
             double result = 0;
             if (Math.Abs(data.Survey_ZorR) > 1)
             {
-                result = param.Gorf * (data.Survey_ZorR - param.ZorR) +
-                    (param.Korb - param.Concrete_Expansion_ac) * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) - param.TemperatureRead * (param.RorT - param.ZeroR));
+                double tcorrect = data.Survey_RorT <= 0 ? 0 :
+                  (param.Korb - param.Concrete_Expansion_ac) * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) - param.TemperatureRead * (param.RorT - param.ZeroR));
+                result = param.Gorf * (data.Survey_ZorR - param.ZorR) + tcorrect;
             }
             data.ResultReading = result;
             data.Tempreture = param.TemperatureRead * (data.Survey_RorT - param.ZeroR);
@@ -903,13 +785,14 @@ namespace LoadDataCalc
         public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
         {
             double result = 0;
-            double Tcorrect = (data.Survey_RorT != 0) ? param.Korb * (data.Survey_RorT - param.RorT) : 0;
+            double Tcorrect = (data.Survey_RorT > Config.MinTemperature && data.Survey_RorT < Config.MaxTemperature) ?
+                            (param.Korb - param.Concrete_Expansion_ac) * (data.Survey_RorT - param.RorT) : 0;
             if (Math.Abs(data.Survey_ZorR) > 1)
             {
                 if (data.Survey_ZorR > 5000)
                 {
-                    result = param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT);
-                    //data.Survey_ZorRMoshu = data.Survey_ZorR;
+                    result = param.Gorf * (data.Survey_ZorR - param.ZorR) + Tcorrect;
+                    data.Survey_ZorRMoshu = Math.Sqrt(data.Survey_ZorR * 1000);
                 }
                 else
                 {
@@ -921,6 +804,7 @@ namespace LoadDataCalc
                     {
                         result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) - param.ZorR * param.ZorR) + Tcorrect;
                     }
+                    data.Survey_ZorRMoshu = data.Survey_ZorR;
                 }
             }
             data.ResultReading = result;
@@ -1030,11 +914,10 @@ namespace LoadDataCalc
             double result = 0;
             if (Math.Abs(data.Survey_ZorR) > 1)
             {
-                result = param.Gorf * (data.Survey_ZorR - param.ZorR) +
-                    param.Korb * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) - param.TemperatureRead * (param.RorT - param.ZeroR));
+                result = param.Gorf * (data.Survey_ZorR - param.ZorR) +GetTCorrect(param,data);
             }
             result += param.Constant_b;
-            data.Tempreture = param.TemperatureRead * (data.Survey_RorT - param.ZeroR);
+            data.Tempreture = data.Survey_RorT > 0 ? param.TemperatureRead * (data.Survey_RorT - param.ZeroR) : 0;
             data.LoadReading = result;
             data.ResultReading = (param.Steel_Diameter_L != 0) ? result * 1000 / (Math.PI * Math.Pow(param.Steel_Diameter_L / 2.0, 2)) : result;
             return result;
@@ -1043,13 +926,13 @@ namespace LoadDataCalc
         {
             //Gorf*(Survey_ZorR-ZorR)+Korb*(Survey_RorT-RorT)
             double result = 0;
-            double Tcorrect = (data.Survey_RorT != 0) ? param.Korb * (data.Survey_RorT - param.RorT) : 0;
+            double Tcorrect = GetTCorrect(param,data);
             if (Math.Abs(data.Survey_ZorR) > 1)
             {
                 if (data.Survey_ZorR > 3000)//模数
                 {
                     result = param.Gorf * (data.Survey_ZorR - param.ZorR) + Tcorrect;
-                    //data.Survey_ZorRMoshu = data.Survey_ZorR;
+                    data.Survey_ZorRMoshu = Math.Sqrt(data.Survey_ZorR*1000);
                 }
                 else//频率
                 {
@@ -1063,7 +946,7 @@ namespace LoadDataCalc
                     {
                         result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) - param.ZorR * param.ZorR) + Tcorrect;
                     }
-                    //data.Survey_ZorRMoshu = Math.Pow(data.Survey_ZorR, 2) / 1000;
+                    data.Survey_ZorRMoshu = data.Survey_ZorR;
                 }
             }
             result += param.Constant_b;
@@ -1115,13 +998,13 @@ namespace LoadDataCalc
 
             //Gorf*(Survey_ZorR-ZorR)+Korb*(Survey_RorT-RorT)
             double result = 0;
-            double Tcorrect = (data.Survey_RorT != 0) ? param.Korb * (data.Survey_RorT - param.RorT) : 0;
+            double Tcorrect = GetTCorrect(param, data);
             if (Math.Abs(data.Survey_ZorR) > 1)
             {
-                if (data.Survey_ZorR > 4000)//模数
+                if (base.CheckIsMoshu(param.Gorf))//模数
                 {
                     result = param.Gorf * (data.Survey_ZorR - param.ZorR) + Tcorrect;
-                    //data.Survey_ZorRMoshu = data.Survey_ZorR;
+                    data.Survey_ZorRMoshu = Math.Sqrt(data.Survey_ZorR*1000);
                 }
                 else//频率
                 {
@@ -1136,7 +1019,7 @@ namespace LoadDataCalc
                     {
                         result = param.Gorf * (Math.Pow(data.Survey_ZorR, 2) - param.ZorR * param.ZorR) + Tcorrect;
                     }
-                    //data.Survey_ZorRMoshu = Math.Pow(data.Survey_ZorR, 2) / 1000;
+                    data.Survey_ZorRMoshu =data.Survey_ZorR;
                 }
                 result += param.Constant_b;
             }
@@ -1201,42 +1084,6 @@ namespace LoadDataCalc
             return base.WriteResultToDB(datas);
         }
 
-
-    }
-
-    /// <summary>
-    /// 压应力计
-    /// </summary>
-    public class Fiducial_Press_StressMW : Fiducial_Press_Stress
-    {
-        public Fiducial_Press_StressMW()
-        {
-            base.InsType = InstrumentType.Fiducial_Press_Stress;
-        }
-        public override double DifBlock(ParamData param, SurveyData data, params double[] expand)
-        {
-            return base.DifBlock(param, data, expand);
-        }
-        public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
-        {
-            return base.ShakeString(param, data, expand);
-        }
-        public override double AutoDefined(ParamData param, SurveyData data, string expression)
-        {
-            return base.AutoDefined(param, data, expression);
-        }
-        public override ParamData GetParam(string Survey_point_Number, string tablename = null)
-        {
-            return base.GetParam(Survey_point_Number, this.InsType.ToString());
-        }
-        public override int WriteSurveyToDB(List<PointSurveyData> datas)
-        {
-            return base.WriteSurveyToDB(datas);
-        }
-        public override int WriteResultToDB(List<PointSurveyData> datas)
-        {
-            return base.WriteResultToDB(datas);
-        }
 
     }
 
@@ -1332,23 +1179,251 @@ namespace LoadDataCalc
     /// </summary>
     public class Fiducial_Anchor_CableMW : Fiducial_Anchor_Cable
     {
-        public Fiducial_Anchor_CableMW()
+        public Fiducial_Anchor_CableMW(): base()
         {
-            base.InsType = InstrumentType.Fiducial_Anchor_Cable;
         }
+
+        //private Dictionary<string, List<double>> DicR0 = new Dictionary<string, List<double>>();
+        //掉弦索引缓存
+        private List<string> ListCach = new List<string>();
+        private string[] sbStrlist = new string[] { "Reading_Red", "Reading_Black", "Reading_Yellow", "Reading_Blue", "Reading_Ash", "Reading_Purple" };
+
         public override double DifBlock(ParamData param, SurveyData data, params double[] expand)
         {
             return base.DifBlock(param, data, expand);
         }
+
         /// <summary>
-        /// 计算掉弦的系数
+        ///         //从当前数据中查询有不为0的数据
+        /// </summary>
+        /// <param name="end">截至时间</param>
+        /// <param name="key">查询的key</param>
+        /// <param name="pd">本次数据缓存</param>
+        /// <param name="IgnoreKey">被忽略的点</param>
+        /// <returns></returns>
+        SurveyData GetLastData(DateTime end, string key, PointSurveyData pd, List<string> IgnoreKey = null)
+        {
+            if (pd.Datas.Count == 0) return null;
+            SurveyData lastData = new SurveyData();
+            bool flag = true;
+            foreach (var sd in pd.Datas)
+            {
+                if (sd.SurveyDate.CompareTo(end) >= 0) break;
+                bool Zflag = true;
+                if (sd.MultiDatas[key].Survey_ZorR != 0)
+                {
+                    foreach (var d in sd.MultiDatas)
+                    {
+                        if (IgnoreKey != null && IgnoreKey.Contains(d.Key)) continue;
+                        if (d.Key != key && d.Value.Survey_ZorR == 0)
+                        {
+                            Zflag = false;
+                        }
+                    }
+                    if (Zflag)
+                    {
+                        flag = false;
+                        lastData = sd;
+                    }
+                }
+            }
+            if (flag) return null;//没找到
+            return lastData;
+
+        }
+        //掉一根弦
+        private void GetCOne(ParamData param, SurveyData sd, string key, PointSurveyData pd)
+        {
+            Anchor_CableParam p = param as Anchor_CableParam;
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            SurveyData lastSD = GetLastData(sd.SurveyDate, key, pd);
+            string ignorestr = "";
+            for (int i = 0; i < p.Sum; i++)
+            {
+                if (key != i.ToString())
+                {
+                    ignorestr += " and " + sbStrlist[i] + ">0";
+                }
+            }
+
+            if (lastSD == null)
+            {
+                lastSD = new SurveyData();
+                string sql = "select top 1 * from Survey_Anchor_Cable where Survey_point_Number='{0}' and {1}>0 {2} order by Observation_Date desc";
+                string anchorName = sbStrlist[Convert.ToInt16(key)];
+                var dt = sqlhelper.SelectData(string.Format(sql, p.SurveyPoint, anchorName, ignorestr));
+                if (dt.Rows.Count < 1) return;
+                sd.SurveyDate = (DateTime)dt.Rows[0]["Observation_Date"];
+                for (int i = 0; i < p.Sum; i++)
+                {
+                    SurveyData s = new SurveyData();
+                    s.Survey_ZorR = Convert.ToDouble(dt.Rows[0][sbStrlist[i]]);
+                    lastSD.MultiDatas.Add(i.ToString(), s);
+                }
+            }
+
+            double sum = 0;
+            double badZ = 0;
+            foreach (var d in lastSD.MultiDatas)
+            {
+                double moshu = d.Value.Survey_ZorR;
+                if (d.Value.Survey_ZorR < 3000)
+                {
+                    moshu = moshu * moshu / 1000.0;
+                }
+                sum += moshu;
+                if (d.Key == key) badZ = moshu;
+            }
+            coefficient_K = ((sum - badZ) / (p.Sum - 1)) / (sum / p.Sum);
+        }
+        //掉两根或者三根弦
+        private void GetCTwo(ParamData param, SurveyData data, List<string> keys, PointSurveyData pd)
+        {
+            Anchor_CableParam p = param as Anchor_CableParam;
+            //查询每次掉弦前一次的数据
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            Dictionary<string, SurveyData> DataDIc = new Dictionary<string, SurveyData>();
+            List<string> ignoreKey = new List<string>();//呗忽略的点
+            string ignorestr = "";
+            for (int i = 0; i < p.Sum; i++)
+            {
+                ignorestr += " and " + sbStrlist[i] + ">0";
+            }
+            var ls = GetLastData(data.SurveyDate, keys[0], pd, keys);
+            SurveyData sd = new SurveyData();
+            if (ls != null)
+            {
+                sd = ls;
+            }
+            else
+            {
+                string sql = "select top 1 * from Survey_Anchor_Cable where Survey_point_Number='{0}'  {1} order by Observation_Date desc";
+                //string anchorName = sbStrlist[Convert.ToInt16(k)];
+                var dt = sqlhelper.SelectData(string.Format(sql, p.SurveyPoint, ignorestr));
+                if (dt.Rows.Count < 1) return;
+                sd.SurveyDate = (DateTime)dt.Rows[0]["Observation_Date"];
+                for (int i = 0; i < p.Sum; i++)
+                {
+                    SurveyData s = new SurveyData();
+                    s.Survey_ZorR = Convert.ToDouble(dt.Rows[0][sbStrlist[i]]);
+                    sd.MultiDatas.Add(i.ToString(), s);
+                }
+            }
+            double K = 1;
+            double sum = 0;
+            double badZ = 0;
+            foreach (var d in sd.MultiDatas)
+            {
+                double moshu = d.Value.Survey_ZorR;
+                if (d.Value.Survey_ZorR < 3000)
+                {
+                    moshu = moshu * moshu / 1000.0;
+                }
+                sum += moshu;
+                if (keys.Contains(d.Key)) badZ += moshu;
+            }
+            K = ((sum - badZ) / (p.Sum - keys.Count)) / (sum / p.Sum);
+
+            //foreach (string k in keys)
+            //{
+            //    var ls = GetLastData(data.SurveyDate, k, pd, keys);
+            //    if (ls != null)
+            //    {
+            //        DataDIc.Add(k, ls);//在本次数据中找到了数据，直接下一根弦
+            //        continue;
+            //    }
+            //    SurveyData sd = new SurveyData();
+            //    string sql = "select top 1 * from Survey_Anchor_Cable where Survey_point_Number='{0}'  {1} order by Observation_Date desc";
+            //    //string anchorName = sbStrlist[Convert.ToInt16(k)];
+            //    var dt = sqlhelper.SelectData(string.Format(sql, p.SurveyPoint, ignorestr));
+            //    if (dt.Rows.Count < 1) continue;
+            //    sd.SurveyDate = (DateTime)dt.Rows[0]["Observation_Date"];
+            //    for (int i = 0; i < p.Sum; i++)
+            //    {
+            //        SurveyData s = new SurveyData();
+            //        s.Survey_ZorR = Convert.ToDouble(dt.Rows[0][sbStrlist[i]]);
+            //        sd.MultiDatas.Add(i.ToString(), s);
+            //    }
+            //    DataDIc.Add(k, sd);
+            //}
+            ////按时间排序
+            //var dic = DataDIc.OrderBy(x => x.Value.SurveyDate).ToDictionary(x => x.Key, x => x.Value);
+            //double K = 1;
+            //int cn = 0;//有多根掉弦，可能要循环计算多次
+            ////计算改正系数
+            //foreach (var di in dic)
+            //{
+            //    cn++;
+            //    double sum = 0;
+            //    double badZ = 0;
+            //    foreach (var d in di.Value.MultiDatas)
+            //    {
+            //        double moshu = d.Value.Survey_ZorR;
+            //        if (d.Value.Survey_ZorR < 3000)
+            //        {
+            //            moshu = moshu * moshu / 1000.0;
+            //        }
+            //        sum += moshu;
+            //        if (keys.Contains(d.Key)) badZ += moshu;
+            //    }
+            //    //sum = (sum / (p.Sum - cn + 1) / K) * (p.Sum - cn +1);//循环计算
+            //    K = ((sum - badZ) / (p.Sum - keys.Count)) / (sum / p.Sum);
+            //    break;
+            //}
+            //result = ((lastSum - dieZ) / (p.Sum - count)) / (lastSum / p.Sum);
+            coefficient_K = K;
+            ListCach = keys;
+            return;
+        }
+
+        /// <summary>计算掉弦的系数
         /// </summary>
         /// <param name="SurveyPoint"></param>
         /// <returns></returns>
-        public double GetC(ParamData param, SurveyData data)
+        public override double GetC(ParamData param, SurveyData data, PointSurveyData pd)
         {
-            return 1;
+
+            var dicCach = new Dictionary<int, List<string>>();
+            int count = 0;//掉弦的弦数
+            List<string> keys = new List<string>();//获取掉弦的索引
+            foreach (var d in data.MultiDatas)
+            {
+                if (d.Value.Survey_ZorR == 0)
+                {
+                    keys.Add(d.Key);
+                    count++;
+                }
+            }
+            if (count == 0) return 1;
+            Anchor_CableParam p = param as Anchor_CableParam;
+            if (count > p.Sum / 2) return 1;
+
+            if (keys.Count == ListCach.Count)//掉弦状况没变
+            {
+                bool flag = true;
+                for (int i = 0; i < keys.Count; i++)
+                {
+                    if (keys[i] != ListCach[i])
+                    {
+                        flag = false;
+                    }
+                }
+                if (flag) return coefficient_K;
+            }
+
+            if (keys.Count == 1)
+            {
+                GetCOne(param, data, keys[0], pd);
+            }
+            else
+            {
+                GetCTwo(param, data, keys, pd);
+            }
+            ListCach = keys;
+            return coefficient_K;
+
         }
+       
         public override double ShakeString(ParamData paramd, SurveyData data, params double[] expand)
         {
             var param = paramd as Anchor_CableParam;
@@ -1361,25 +1436,21 @@ namespace LoadDataCalc
                 if (dic.Value.Survey_ZorR <= 0) continue;
                 count++;
                 value += dic.Value.Survey_ZorR;
+                dic.Value.Survey_ZorRMoshu = Math.Sqrt(dic.Value.Survey_ZorR * 1000);
 
             }
-            
-            if (count == data.MultiDatas.Keys.Count)
-            {
-                value = value / count;
-            }
-            else
-            {//掉弦
-                value = (value / count) * GetC(param, data);
-            }
+
+            value = value / count;//直接算平均值
+            value = value / coefficient_K;//把改正系数带入计算
+            data.clacAverage = value;
+
             double ZorR = paramd.IsMoshu ? paramd.ZorR :Math.Pow(param.ZorR, 2) ;
             data.Survey_ZorR = value;
             value = paramd.IsMoshu ? value : Math.Pow(value, 2);
-
             result = param.Gorf * (value - ZorR) + param.Korb * (data.Survey_RorT - param.RorT);
 
             result += param.Constant_b;
-            //data.Survey_ZorRMoshu = value;
+            data.Survey_ZorRMoshu = Math.Sqrt(value * 1000);
             data.LoadReading = result;
             data.AfterLock = ((param.Lock_Value - result) / param.Lock_Value) * 100;
             data.PlanLock = ((param.Plan_Loading - result) / param.Plan_Loading) * 100;
@@ -1469,11 +1540,11 @@ namespace LoadDataCalc
         public override double DifBlock(ParamData param, SurveyData data, params double[] expand)
         {
             //Gorf*(Survey_ZorR-ZorR)+Korb*(TemperatureRead*(Survey_RorT-ZeroR)-RorT)
-            double result = param.Gorf * (data.Survey_ZorR - param.ZorR) +
-                param.Korb * (param.TemperatureRead * (data.Survey_RorT - param.ZeroR) - param.TemperatureRead * (param.RorT - param.ZeroR));
+            double result = param.Gorf * (data.Survey_ZorR - param.ZorR) +GetTCorrect(param,data);
             data.ResultReading = result * param.Elastic_Modulus_E;//这里要乘以系数
-            data.Tempreture = param.TemperatureRead * (data.Survey_RorT - param.ZeroR);
+            data.Tempreture = data.Survey_RorT > 0 ? param.TemperatureRead * (data.Survey_RorT - param.ZeroR) : 0;
             data.LoadReading = result * param.Elastic_Modulus_E;
+            data.Survey_ZorRMoshu = data.Survey_ZorR;
             return result;
         }
         public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
@@ -1483,12 +1554,12 @@ namespace LoadDataCalc
             if (Config.IsMoshu)
             {
                 result = param.Gorf * (data.Survey_ZorR - param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT);
-                //data.Survey_ZorRMoshu = data.Survey_ZorR;
+                data.Survey_ZorRMoshu = Math.Sqrt(data.Survey_ZorR*1000);
             }
             else
             {
                 result = param.Gorf * (data.Survey_ZorR * data.Survey_ZorR - param.ZorR * param.ZorR) + param.Korb * (data.Survey_RorT - param.RorT);
-                //data.Survey_ZorRMoshu = data.Survey_ZorR * data.Survey_ZorR/1000.0;
+                data.Survey_ZorRMoshu = data.Survey_ZorR;
             }
 
 
@@ -1695,7 +1766,19 @@ namespace LoadDataCalc
         }
         public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
         {
-            return base.ShakeString(param, data, expand);
+            //Gorf*(Survey_ZorR-ZorR)+Korb*(Survey_RorT-RorT)
+            double result = 0;
+
+            if (data.Survey_ZorR > 0)
+            {
+                result = Math.Round(param.Gorf * (data.Survey_ZorR - param.ZorR),3);
+            }
+
+            data.ResultReading = result;//这里要乘以系数每种仪器不一样
+            data.Tempreture = data.Survey_RorT;
+            data.LoadReading = result;
+
+            return result;
         }
         public override double AutoDefined(ParamData param, SurveyData data, string expression)
         {
@@ -1874,8 +1957,7 @@ namespace LoadDataCalc
                 }
                 else
                 {
-                    result = param.Gorf * (data.Survey_ZorR - param.ZorR) +
-                                 param.Korb * (param.TemperatureRead * (Mdata.Survey_RorT - param.ZeroR) - param.TemperatureRead * (param.RorT - param.ZeroR))-firstvalue;
+                    result = param.Gorf * (data.Survey_ZorR - param.ZorR) +GetTCorrect(param,data)-firstvalue;
                     firstvalue = firstvalue == 0 ? result : firstvalue;
                 }
                 data.ResultReading = result;//这里要乘以系数
@@ -1916,6 +1998,7 @@ namespace LoadDataCalc
             if (calc.IsMoshu == 1)//测值是否是模数
             {
                 result = pd.Gorf * (sd.Survey_ZorR - pd.ZorR) + pd.Korb * (sd.Survey_RorT - pd.RorT);
+                sd.Survey_ZorRMoshu = Math.Sqrt(sd.Survey_ZorR);
             }
             else
             {
@@ -1927,6 +2010,7 @@ namespace LoadDataCalc
                 {
                     result = pd.Gorf * (Math.Pow(sd.Survey_ZorR, 2)  - pd.ZorR*pd.ZorR) + pd.Korb * (sd.Survey_RorT - pd.RorT);
                 }
+                sd.Survey_ZorRMoshu = sd.Survey_ZorR;
 
             }
             result += pd.Constant_b;
@@ -2064,6 +2148,7 @@ namespace LoadDataCalc
         {
             double result = 0;
             var Mcalc = Config.MultiDisplacementCalcs.GetBySurveypoint(Mparam.SurveyPoint.Trim());
+
             if (Mcalc.Length > 0)
             {
                 calcOneGroup(Mparam, Mdata, Mcalc);
@@ -2219,30 +2304,6 @@ namespace LoadDataCalc
             base.InsType = InstrumentType.Fiducial_Strain_Group;
         }
 
-        /// <summary>
-        /// 5向应变计组平衡计算
-        /// </summary>
-        /// <param name="data"></param>
-        public void CalcGroup(SurveyData data)
-        {
-            List<string> seriallist = new List<string>(data.MultiDatas.Keys);
-            //(1+3)-(2+4)
-            //1'=1-delt/4    2'=1+delt/4   3'=1+delt/4    4'=4+delt/4  除以2或者4
-            double tempd = 4.0;
-            double DeltZ = (data.MultiDatas[seriallist[1]].LoadReading + data.MultiDatas[seriallist[3]].LoadReading) -
-                (data.MultiDatas[seriallist[2]].LoadReading + data.MultiDatas[seriallist[4]].LoadReading);
-            double c1 = data.MultiDatas[seriallist[1]].LoadReading - DeltZ / tempd;
-            double c2z= data.MultiDatas[seriallist[2]].LoadReading + DeltZ / tempd;
-            double c3 = data.MultiDatas[seriallist[3]].LoadReading - DeltZ / tempd;
-            double c4x = data.MultiDatas[seriallist[4]].LoadReading + DeltZ / tempd;
-            double c5y = data.MultiDatas[seriallist[4]].LoadReading;
-            data.StrainGroup_x = 0.021 * (c4x / (1 + 0.167) + (c2z + c4x + c5y) * 0.167 / (1 + 0.167) * (1 - 2 * 0.167));
-            data.StrainGroup_y = 0.021 * (c5y / (1 + 0.167) + (c2z + c4x + c5y) * 0.167 / (1 + 0.167) * (1 - 2 * 0.167));
-            data.StrainGroup_z = 0.021 * (c2z / (1 + 0.167) + (c2z + c4x + c5y) * 0.167 / (1 + 0.167) * (1 - 2 * 0.167));
-            data.StrainGroup_xz = 0.009 * (c3 - c1);
-                
-        }
-
         public override double DifBlock(ParamData param, SurveyData data, params double[] expand)
         {
             Fiducial_Strain_GaugeMW FStrain_Gauge = new Fiducial_Strain_GaugeMW();
@@ -2369,13 +2430,13 @@ namespace LoadDataCalc
                     int index = 1;
                     foreach (var dic in surveydata.MultiDatas)
                     {
-                        dr["Frequency" + index.ToString()] = Math.Round(dic.Value.Survey_ZorR,4);
+                        dr["Frequency" + index.ToString()] = Math.Round(dic.Value.Survey_ZorRMoshu,4);
                         dr["Temperature" + index.ToString()] = Math.Round(dic.Value.Survey_RorT,4);
                         index++;
                     }
                     if (surveydata.NonStressSurveyData != null)
                     {
-                        dr["Non_Frequency" + index.ToString()] = Math.Round(surveydata.NonStressSurveyData.Survey_ZorR, 4);
+                        dr["Non_Frequency" + index.ToString()] = Math.Round(surveydata.NonStressSurveyData.Survey_ZorRMoshu, 4);
                         dr["Non_Temperature" + index.ToString()] = Math.Round(surveydata.NonStressSurveyData.Survey_RorT, 4);
                     }
                     dr["Remark"] = surveydata.Remark;

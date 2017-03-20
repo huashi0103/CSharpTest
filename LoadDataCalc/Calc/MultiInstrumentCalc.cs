@@ -413,7 +413,7 @@ namespace LoadDataCalc
                     int index = 1;
                     foreach (var dic in surveydata.MultiDatas)
                     {
-                        dr["Frequency" + index.ToString()] = Math.Round(dic.Value.Survey_ZorR, 4);
+                        dr["Frequency" + index.ToString()] = Math.Round(dic.Value.Survey_ZorRMoshu, 4);
                         index++;
                     }
                     dr["Remark"] = surveydata.Remark;
@@ -547,7 +547,7 @@ namespace LoadDataCalc
         /// 5向应变计组平衡计算
         /// </summary>
         /// <param name="data"></param>
-        public void CalcGroup(SurveyData data)
+        public virtual void CalcGroup(SurveyData data)
         {
             List<string> seriallist = new List<string>(data.MultiDatas.Keys);
             //(1+3)-(2+4)
@@ -694,13 +694,13 @@ namespace LoadDataCalc
                     int index = 1;
                     foreach (var dic in surveydata.MultiDatas)
                     {
-                        dr["Frequency" + index.ToString()] = Math.Round(dic.Value.Survey_ZorR,4);
+                        dr["Frequency" + index.ToString()] = Math.Round(dic.Value.Survey_ZorRMoshu,4);
                         dr["Temperature" + index.ToString()] = Math.Round(dic.Value.Survey_RorT,4);
                         index++;
                     }
                     if (surveydata.NonStressSurveyData != null)
                     {
-                        dr["Non_Frequency" ] = Math.Round(surveydata.NonStressSurveyData.Survey_ZorR, 4);
+                        dr["Non_Frequency" ] = Math.Round(surveydata.NonStressSurveyData.Survey_ZorRMoshu, 4);
                         dr["Non_Temperature"] = Math.Round(surveydata.NonStressSurveyData.Survey_RorT, 4);
                     }
                     dr["Remark"] = surveydata.Remark;

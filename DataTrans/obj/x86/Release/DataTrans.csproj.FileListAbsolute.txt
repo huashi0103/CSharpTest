@@ -1,0 +1,17 @@
+D:\wokspace\CSharpTest\DataTrans\bin\Release\DLLS\ICSharpCode.SharpZipLib.dll
+D:\wokspace\CSharpTest\DataTrans\bin\Release\DLLS\IrisSkin2.dll
+D:\wokspace\CSharpTest\DataTrans\bin\Release\DLLS\NPOI.dll
+D:\wokspace\CSharpTest\DataTrans\bin\Release\DLLS\NPOI.OOXML.dll
+D:\wokspace\CSharpTest\DataTrans\bin\Release\DLLS\NPOI.OOXML.XML
+D:\wokspace\CSharpTest\DataTrans\bin\Release\DLLS\NPOI.OpenXml4Net.dll
+D:\wokspace\CSharpTest\DataTrans\bin\Release\DLLS\NPOI.OpenXml4Net.XML
+D:\wokspace\CSharpTest\DataTrans\bin\Release\DLLS\NPOI.OpenXmlFormats.dll
+D:\wokspace\CSharpTest\DataTrans\bin\Release\DLLS\NPOI.xml
+D:\wokspace\CSharpTest\DataTrans\bin\Release\DLLS\MSN.ssk
+D:\wokspace\CSharpTest\DataTrans\bin\Release\DataTrans.exe
+D:\wokspace\CSharpTest\DataTrans\bin\Release\DataTrans.pdb
+D:\wokspace\CSharpTest\DataTrans\bin\Release\LoadDataCalc.exe
+D:\wokspace\CSharpTest\DataTrans\bin\Release\LoadDataCalc.pdb
+D:\wokspace\CSharpTest\DataTrans\obj\x86\Release\DataTrans.csprojResolveAssemblyReference.cache
+D:\wokspace\CSharpTest\DataTrans\obj\x86\Release\DataTrans.exe
+D:\wokspace\CSharpTest\DataTrans\obj\x86\Release\DataTrans.pdb

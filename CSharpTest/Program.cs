@@ -19,8 +19,40 @@ namespace CSharpTest
     class Program
     {
 
+        static double calc()
+        {
+            double b = 1.4;
+            double p = 0.25;
+            double g = 0.39526;
+            double zs = 0.2070;
+            double H0 = 0.2720;
+            double Q1 = 50;
+            while(true)
+            {
+                double H = (zs - 0.4361) * g + H0;
+                double deltg = b * (H + p);
+                double v = (Q1 / 1000.0) / deltg;
+                double I=H + Math.Pow(v, 2) / (2 * 9.81);
+                double F = 0.627 + 0.018 * I / p;
+                double Q2 = F * 2 * Math.Sqrt(2 * 9.81) * b * Math.Pow(I, 1.5) * 1000 / 3;
+                if (Math.Abs(Q2 - Q1) < 0.01)
+                {
+                    Q1 = Q2;
+                    break;
+                }
+                else
+                {
+                    Q1 = Q2;
+                }
+            }
+            return Q1;
+
+        }
+
         static void Main(string[] args) 
         {
+
+            Console.WriteLine(calc());
 
             //List<test1> list = new List<test1>{new test1(){a=9,b="9"},
             //new test1(){a=11,b="11"},

@@ -1,8 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <ProConfig ProjectName="苗尾">
-  <DataRoot>D:\AWORK\苗尾\苗尾监测数据</DataRoot>
-  <DataBase IsAuto="1" DataBaseType="0">Data Source =XJ;Initial Catalog = MWDatabase;User ID = sa;Password = 123;</DataBase>
-  <!--<DataBase IsAuto="1" DataBaseType="1">Data Source =localhost\MSSQLSERVER08;Initial Catalog = WHDT;User ID = sa;Password = 12345678;</DataBase>-->
+  <DataRoot>D:\AWORK\苗尾\苗尾监测数据2-28</DataRoot>
+  <DataBase IsAuto="1">Data Source =XJ;Initial Catalog = MWDatabase;User ID = sa;Password = 123;</DataBase>
   <ProCode IsMoshu="0">MW</ProCode>
   <Instruments>
     <Ins Name="单点位移计">
@@ -27,7 +26,7 @@
       <KeyWord>多点位移计</KeyWord>
       <KeyWord>4点位移计</KeyWord>
       <KeyWord>四点式杆式位移计</KeyWord>
-      <KeyWord>回弹仪</KeyWord>
+      <KeyWord>杆式位移计</KeyWord>
       <KeyWord>多点变位计</KeyWord>
     </Ins>
     <Ins Name="应变计">

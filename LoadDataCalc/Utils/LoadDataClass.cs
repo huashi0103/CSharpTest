@@ -76,6 +76,7 @@ namespace LoadDataCalc
                 if (sqlhelper.Check())
                 {
                     res = "OK";
+                    LoadTempereture();
                 }
             }
             catch
@@ -84,7 +85,20 @@ namespace LoadDataCalc
             return res;
 
         }
-
+        /// <summary>加载温度量程
+        /// </summary>
+        public  void LoadTempereture()
+        {
+            CSqlServerHelper helper = CSqlServerHelper.GetInstance();
+            string sql = @"select * from InstrumentTable where Instrument_Name='温度计'";
+            var data = helper.SelectData(sql);
+            if (data.Rows.Count > 0)
+            {
+                Config.MinTemperature = data.Rows[0]["Min_Threshold"] == null ? 0 : Convert.ToDouble(data.Rows[0]["Min_Threshold"]);
+                Config.MaxTemperature = data.Rows[0]["Max_Threshold"] == null ? 70 : Convert.ToDouble(data.Rows[0]["Max_Threshold"]);
+            }
+        }
+   
         private bool CheckFile(string filename,params string[] insname)
         {
             foreach(string ins in insname)
@@ -244,6 +258,7 @@ namespace LoadDataCalc
             if (StatusAction != null) StatusAction("读取完成,正在写入日志文件");
             ErrorMsg.Log(ErrorMsgCach);
             ErrorMsg.LogSheetErr(process.ErrorSheetName);
+            ClearData();
 #if TEST
             using (StreamWriter sw = new StreamWriter(Environment.CurrentDirectory + @"\test.csv",false,Encoding.UTF8))
             {
@@ -258,6 +273,30 @@ namespace LoadDataCalc
                 }
             }
 #endif
+        }
+        //去掉重复的点数据
+        private void ClearData()
+        {
+            for (int j=0;j<SurveyDataCach.Count;j++)
+            {
+                var array = SurveyDataCach.FindAll((pt) => pt.SurveyPoint == SurveyDataCach[j].SurveyPoint).ToList();
+                if (array.Count > 1)
+                {
+                    int index = 0;
+                    for (int i = 1; i < array.Count; i++)
+                    {
+                        if (array[i].Datas.Count > array[i - 1].Datas.Count)
+                        {
+                            index = i;
+                        }
+                    }
+                    for (int i = 0; i < array.Count; i++)
+                    {
+                        if (i == index) continue;
+                        SurveyDataCach.Remove(array[i]);
+                    }
+                }
+            }
         }
 
         /// <summary>

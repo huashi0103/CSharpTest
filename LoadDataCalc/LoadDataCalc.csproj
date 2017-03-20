@@ -88,7 +88,7 @@
     </Compile>
     <Compile Include="Process\InstrumentProcessMW.cs" />
     <Compile Include="Process\ProcessData.cs" />
-    <Compile Include="Config.cs" />
+    <Compile Include="Utils\Config.cs" />
     <Compile Include="Utils\CSqlServer.cs" />
     <Compile Include="FormConfigFilePath.cs">
       <SubType>Form</SubType>
@@ -105,7 +105,7 @@
     <Compile Include="Calc\InstrumentCalc.cs" />
     <Compile Include="Process\InstrumentProcess.cs" />
     <Compile Include="Process\InstrumentProcessXJB.cs" />
-    <Compile Include="LoadDataClass.cs" />
+    <Compile Include="Utils\LoadDataClass.cs" />
     <Compile Include="Calc\MultiDisplacementCalc.cs" />
     <Compile Include="Calc\MultiInstrumentCalc.cs" />
     <Compile Include="Program.cs" />

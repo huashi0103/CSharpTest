@@ -8,23 +8,26 @@ using System.Data.SqlClient;
 
 namespace CSharpTest
 {
-    public  class CSqlServer
+    public sealed class CSqlServerHelper
     {
-        private static SqlConnection sqlConnection = null;
-        private static CSqlServer cSqlServer=null;
-        private CSqlServer()
+       //private static SqlConnection sqlConnection = null;
+        private static CSqlServerHelper cSqlServer=null;
+        /// <summary>
+        /// 使用之前赋值
+        /// </summary>
+        public static string Connectionstr = "";
+        private CSqlServerHelper()
         { }
         /// <summary>
         /// 获取实例
         /// </summary>
-        /// <param name="connectionstr"></param>
         /// <returns></returns>
-        public static  CSqlServer GetInstance(string connectionstr)
+        public static  CSqlServerHelper GetInstance()
         {
             if (cSqlServer == null)
             {
-                cSqlServer = new CSqlServer();
-                sqlConnection = new SqlConnection(connectionstr);
+                cSqlServer = new CSqlServerHelper();
+                //sqlConnection = new SqlConnection(Connectionstr);
             }
             return cSqlServer;
  
@@ -37,6 +40,7 @@ namespace CSharpTest
         public DataTable SelectData(string sql, params SqlParameter[] pms)
         {
             DataTable dt = new DataTable();
+            var sqlConnection = new SqlConnection(Connectionstr);
             try
             {
                 sqlConnection.Open();
@@ -44,6 +48,7 @@ namespace CSharpTest
                 cmd.Parameters.AddRange(pms);
                 SqlDataAdapter sda = new SqlDataAdapter(cmd);
                 sda.Fill(dt);
+                cmd.ExecuteScalar();
             }
             finally
             {
@@ -53,6 +58,28 @@ namespace CSharpTest
             return dt;
             
         }
+        /// <summary>查询返回查询结果的第一行的第一列
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="pms"></param>
+        /// <returns></returns>
+        public object SelectFirst(string sql, params SqlParameter[] pms)
+        {
+            var sqlConnection = new SqlConnection(Connectionstr);
+            try
+            {
+                sqlConnection.Open();
+                SqlCommand cmd = new SqlCommand(sql, sqlConnection);
+                cmd.Parameters.AddRange(pms);
+                return cmd.ExecuteScalar();
+            }
+            finally
+            {
+                sqlConnection.Close();
+            }
+
+        }
+
         /// <summary>
         /// 增删查改，sql语句不一样接口一样
         /// </summary>
@@ -61,6 +88,7 @@ namespace CSharpTest
         /// <returns></returns>
         public int InsertDelUpdate(string sql, params SqlParameter[] parameters)
         {
+            var sqlConnection = new SqlConnection(Connectionstr);
             int result = 0;
             try
             {
@@ -68,6 +96,7 @@ namespace CSharpTest
                 SqlCommand cmd = new SqlCommand(sql, sqlConnection);
                 cmd.Parameters.AddRange(parameters);
                 result = cmd.ExecuteNonQuery();
+               
             }
             finally
             {
@@ -79,79 +108,56 @@ namespace CSharpTest
         /// <summary> 批量插入数据
         /// </summary>
         /// <param name="dt">插入的数据,根据dt的表名和列名进行匹配</param>
-        public void BulkCopy(DataTable dt,bool IsMap=true)
+        public bool BulkCopy(DataTable dt,bool IsMap=true)
         {
+            var sqlConnection = new SqlConnection(Connectionstr);
             try
             {
                 sqlConnection.Open();
-                using (SqlBulkCopy bulk = new SqlBulkCopy(sqlConnection))
+                using (SqlBulkCopy bulk = new SqlBulkCopy(Connectionstr, SqlBulkCopyOptions.UseInternalTransaction))
                 {
-                    bulk.BatchSize = 1000;
+                    bulk.BatchSize = dt.Rows.Count;
                     bulk.DestinationTableName = dt.TableName;
                     if (IsMap)
                     {
                         for (int i = 0; i < dt.Columns.Count; i++)
                         {
-                            bulk.ColumnMappings.Add(dt.Columns[0].ColumnName, dt.Columns[0].ColumnName);
+                            bulk.ColumnMappings.Add(dt.Columns[i].ColumnName, dt.Columns[i].ColumnName);
                         }
                     }
                     bulk.WriteToServer(dt);
+                
                 }
+                return true;
+            }
+            catch
+            {
+                return false;
             }
             finally
             {
                 sqlConnection.Close();
             }
         }
-        public static void test()
+        /// <summary>
+        /// 检查数据库是否可以连接
+        /// </summary>
+        /// <returns></returns>
+        public bool Check()
         {
-            string connstr = " Data Source = 10.6.179.9,1433;Network Library = DBMSSOCN;Initial Catalog = MWDatabase;User ID = sa;Password = sa;";
-            var sqlserver = CSqlServer.GetInstance(connstr);
-            string sql = @"insert into Survey_Leakage_Pressure (ID,Survey_point_Number,Observation_Date,Observation_Time,Temperature,Frequency,Remark,UpdateTime) values
-             (@ID,@Survey_point_Number,@Observation_Date,@Observation_Time,@Temperature,@Frequency,@Remark,@UpdateTime)";
-            SqlParameter[] sps = new SqlParameter[8]{new SqlParameter("@ID",1),
-                new SqlParameter("@Survey_point_Number","test1"),
-                new SqlParameter("@Observation_Date",DateTime.Now),
-                new SqlParameter("@Observation_Time","10:20"),
-                new SqlParameter("@Temperature",20),
-                new SqlParameter("@Frequency",3000),
-                new SqlParameter("@Remark","test1"),
-                new SqlParameter("@UpdateTime",DateTime.Now),  
-            };
-            int a = sqlserver.InsertDelUpdate(sql, sps);
-            Console.WriteLine(a);
+            var sqlConnection = new SqlConnection(Connectionstr);
+            try
+            {
+                sqlConnection.Open();
+                bool res = (sqlConnection.State == ConnectionState.Open) ? true : false;
+                sqlConnection.Close();
+                return res;
+            }
+            catch
+            {
+                return false;
 
-            //string sql = "select * from Survey_Leakage_Pressure ";
-            //var dt = sqlserver.SelectData(sql);
-            //for (int i = 0; i < dt.Rows.Count; i++)
-            //{
-            //    for (int j = 0; j < dt.Columns.Count; j++)
-            //    {
-            //        Console.Write(dt.Rows[i][j] + " ");
-            //    }
-            //    Console.WriteLine();
-            //}
-            //sql = "update Survey_Leakage_Pressure set Temperature = 30 where Survey_point_Number='test1' ";
-            //int a = sqlserver.InsertData(sql);
-            //Console.WriteLine(a);
-            //sql = "select * from Survey_Leakage_Pressure ";
-            //dt = sqlserver.SelectData(sql);
-            //for (int i = 0; i < dt.Rows.Count; i++)
-            //{
-            //    for (int j = 0; j < dt.Columns.Count; j++)
-            //    {
-            //        Console.Write(dt.Rows[i][j] + " ");
-            //    }
-            //    Console.WriteLine();
-            //}
-
-            //sql = "delete from Survey_Leakage_Pressure where  Survey_point_Number='test1'";
-            //int a = sqlserver.InsertDelUpdate(sql);
-            //Console.WriteLine(a);
-
-
+            }
         }
-
-
     }
 }

@@ -47,9 +47,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LoadDataCalc\LoadDataCalc.csproj">
-      <Project>{4BB98847-4F23-4D19-9789-0C3B9B65D8E1}</Project>
-      <Name>LoadDataCalc</Name>
+    <ProjectReference Include="..\CSharpTest\CSharpTest.csproj">
+      <Project>{0C6E5E35-9AF9-49EC-9431-8958B3FB3716}</Project>
+      <Name>CSharpTest</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

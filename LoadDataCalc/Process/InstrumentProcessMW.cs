@@ -1158,7 +1158,7 @@ namespace LoadDataCalc
                 var dt = sqlhelper.SelectData(sql, new SqlParameter("@Survey_point_Number", pd.SurveyPoint));
                 dinfo.Sum = dt.Rows.Count;
                 List<string> seriallist = new List<string>();
-                for (int n = 0; n < dt.Rows.Count; n++) { seriallist.Add(dt.Rows[n][0].ToString().ToUpper()); }
+                for (int n = 0; n < dt.Rows.Count; n++) { seriallist.Add(dt.Rows[n]["Instrument_Serial"].ToString().ToUpper().Trim()); }
 
                 double ZStandard = 0;
                 if (!flag) ZStandard = GetZorRStandard(seriallist[0]);//以第一个锚杆的基准为准
@@ -1329,9 +1329,16 @@ namespace LoadDataCalc
                 var data = sqlhelper.SelectData(String.Format(sql, point, fre));
                 if (data.Rows.Count == 0) return true;
                 double f = Convert.ToDouble(data.Rows[0][fre]);
+                if (Math.Abs(sd.Survey_ZorR - f) < Config.LimitZ) return true;
                 //数据库里边不确定写的是频率还是模数
-                if (Math.Abs(sd.Survey_ZorR - f) < Config.LimitZ ||
-                   Math.Abs(sd.Survey_ZorR - Math.Sqrt(f * 1000)) < Config.LimitZ) return true;
+                if (Config.FreOrMoshu != 1)//默认 0的时候认为写进去的是模数或者频率 
+                {
+                    if (Math.Abs(sd.Survey_ZorR - Math.Sqrt(f * 1000)) < Config.LimitZ) return true;
+                }
+                else
+                {
+                    if (Math.Abs(sd.Survey_ZorR - f * f / 1000) < Config.LimitZ) return true;
+                }
             }
             else
             {
@@ -1477,6 +1484,7 @@ namespace LoadDataCalc
             foreach (var dic in sd.MultiDatas)
             {
                 if (dic.Value.Survey_ZorR == 0 || lastsd.MultiDatas[dic.Key].Survey_ZorR == 0) continue;
+
                 if (Math.Abs(dic.Value.Survey_ZorR - lastsd.MultiDatas[dic.Key].Survey_ZorR) > Config.LimitZ)
                 {
                     err.Exception = "数据误差超限";
@@ -1903,6 +1911,10 @@ namespace LoadDataCalc
                 }
                 if (!CheckName(sheetname))
                 {
+                    if (base.PointNumberCach.ContainsKey(sheetname.ToUpper().Trim()))
+                    {
+                        sheetname = PointNumberCach[sheetname.ToUpper().Trim()];
+                    }
                     if (CheckNameExpand(sheetname))//sheet未单个无应力计数据读完contnue
                     {
                         ReadNonStressData(psheet, errors, sheetname);
@@ -2894,7 +2906,18 @@ namespace LoadDataCalc
                 lastMorYData = GetData(dt.AddDays(-3), dt.AddDays(3), datas);
                 if (lastMorYData != null) szr = lastMorYData.Survey_ZorR;
             }
-            if (Math.Abs(sd.Survey_ZorR - szr) < Config.LimitZ) return true;
+            if (szr != 0)
+            {
+                if (Math.Abs(sd.Survey_ZorR - szr) < Config.LimitZ) return true;
+                if (Config.FreOrMoshu != 1)//默认 0的时候认为写进去的是模数
+                {
+                    if (Math.Abs(sd.Survey_ZorR - Math.Sqrt(szr * 1000)) < Config.LimitZ) return true;
+                }
+                else
+                {
+                    if (Math.Abs(sd.Survey_ZorR - szr * szr / 1000) < Config.LimitZ) return true;
+                }
+            }
             //跟上一年的同一天做对比
             dt = sd.SurveyDate.Date.AddYears(-1);
             table = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, dt.AddDays(-3).ToString(), dt.AddDays(3)));
@@ -2907,7 +2930,18 @@ namespace LoadDataCalc
                 lastMorYData = GetData(dt.AddDays(-3), dt.AddDays(3), datas);
                 if (lastMorYData != null) szr = lastMorYData.Survey_ZorR;
             }
-            if (Math.Abs(sd.Survey_ZorR - szr) < Config.LimitZ) return true;
+            if (szr != 0)
+            {
+                if (Math.Abs(sd.Survey_ZorR - szr) < Config.LimitZ) return true;
+                if (Config.FreOrMoshu != 1)//默认 0的时候认为写进去的是模数
+                {
+                    if (Math.Abs(sd.Survey_ZorR - Math.Sqrt(szr * 1000)) < Config.LimitZ) return true;
+                }
+                else
+                {
+                    if (Math.Abs(sd.Survey_ZorR - szr * szr / 1000) < Config.LimitZ) return true;
+                }
+            }
             err.Exception = "数据误差超限";
             return false;
         }
@@ -3377,6 +3411,11 @@ namespace LoadDataCalc
                 var result = sqlhelper.SelectFirst(sql, new SqlParameter("@Survey_point_Number", points[0]));
                 bool flag = (result != DBNull.Value);
                 if (flag) maxDatetime = (DateTime)result;
+                if (Config.IsCovery)
+                {
+                    maxDatetime = Config.StartTime;
+                    flag = !Config.IsCoveryAll;
+                }
 
                 List<Survey_Slant_FixedSurveyData> lastsd = null;
                 int count = psheet.LastRowNum;
@@ -4250,7 +4289,7 @@ namespace LoadDataCalc
         }
         protected override double GetZorRStandard(string point)
         {
-            string sql = "select  Weir_Size from {0}  where Survey_point_Number='{1}'";
+            string sql = "select  Elevation from {0}  where Survey_point_Number='{1}'";
             CSqlServerHelper sqlhelper = CSqlServerHelper.GetInstance();
             var res = sqlhelper.SelectFirst(String.Format(sql, Config.InsCollection[Instrument_Name].Fiducial_Table, point));
             if (res != DBNull.Value)
@@ -4494,6 +4533,65 @@ namespace LoadDataCalc
                 return 0;
             }
         }
+        protected override bool CheckData(SurveyData sd, SurveyData lastsd, DataInfo info, List<SurveyData> Datas, string Survey_point_name, out ErrorMsg err)
+        {
+            string keystr = "Frequency";
+            err = new ErrorMsg();
+            if (sd.Remark.Contains("已复测")) return true;
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            string sql;
+            if (lastsd == null)
+            {
+                sql = Config.IsAuto ? "select top 1 * from {0} where Survey_point_Number='{1}' and Observation_Date<'{2}' and RecordMethod='人工' Order by Observation_Date desc" :
+               "select  top 1 * from {0} where Survey_point_Number='{1}' and Observation_Date<'{2}'Order by Observation_Date desc ";
+                var data = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, sd.SurveyDate.Date.ToString()));
+                if (data.Rows.Count == 0) return true;
+                double f = Convert.ToDouble(data.Rows[0][keystr]) * 10;
+                //数据库里边不确定写的是频率还是模数
+                if (Math.Abs(sd.Survey_ZorR - f) < Config.LimitZ ||
+                   Math.Abs(sd.Survey_ZorR - Math.Sqrt(f * 1000)) < Config.LimitZ) return true;
+            }
+            else
+            {
+                //先跟上一次的数据做比较，不超过限值直接return
+                if (Math.Abs(sd.Survey_ZorR - lastsd.Survey_ZorR) < Config.LimitZ) return true;
+            }
+
+            //超过限值跟上一个月同一天作比较
+            DateTime dt = sd.SurveyDate.Date.AddMonths(-1);
+            sql = Config.IsAuto ? "select * from {0} where Survey_point_Number='{1}' and abs(datediff(d,Observation_Date,'{2}'))<3 and RecordMethod='人工' Order by abs(datediff(dd,Observation_Date,'{3}'))" :
+                "select * from {0} where Survey_point_Number='{1}' and abs(datediff(d,Observation_Date,'{2}'))<3 Order by abs(datediff(dd,Observation_Date,'{3}')) ";
+            var table = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, dt.ToString(), dt.ToString()));
+            double szr = 0;
+            SurveyData lastMorYData = null;
+            if (table.Rows.Count > 0)
+            {
+                szr = Convert.ToDouble(table.Rows[0][keystr]);
+            }
+            else
+            {
+                lastMorYData = GetData(dt.AddDays(-3), dt.AddDays(3), Datas);
+                if (lastMorYData != null) szr = lastMorYData.Survey_ZorR;
+            }
+            if (szr != 0 && Math.Abs(sd.Survey_ZorR - szr * 10) < Config.LimitZ) return true;
+            //跟上一年的同一天做对比
+            dt = sd.SurveyDate.Date.AddYears(-1);
+            table = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, dt.ToString(), dt.ToString()));
+            if (table.Rows.Count > 0)
+            {
+                szr = Convert.ToDouble(table.Rows[0][keystr]) * 10;
+            }
+            else
+            {
+                lastMorYData = GetData(dt.AddDays(-3), dt.AddDays(3), Datas);
+                if (lastMorYData != null) szr = lastMorYData.Survey_ZorR;
+            }
+            if (szr != 0 && Math.Abs(sd.Survey_ZorR - szr) < Config.LimitZ) return true;
+            err.Exception = "数据误差超限";
+
+            return false;
+        }
+    
     }
 
     public class Fiducial_Flex_DisplacementProcessMW : ProcessData
@@ -4524,7 +4622,6 @@ namespace LoadDataCalc
             {
                 IRow row = psheet.GetRow(j);
                 if (row == null) continue;
-                string laststr = "";
                 for (int c = 0; c < row.Cells.Count; c++)
                 {
                     var cell = row.Cells[c];
@@ -4569,6 +4666,64 @@ namespace LoadDataCalc
             {
                 return 0;
             }
+        }
+        protected override bool CheckData(SurveyData sd, SurveyData lastsd, DataInfo info, List<SurveyData> Datas, string Survey_point_name, out ErrorMsg err)
+        {
+            string keystr = "Frequency";
+            err = new ErrorMsg();
+            if (sd.Remark.Contains("已复测")) return true;
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            string sql;
+            if (lastsd == null)
+            {
+                sql = Config.IsAuto ? "select top 1 * from {0} where Survey_point_Number='{1}' and Observation_Date<'{2}' and RecordMethod='人工' Order by Observation_Date desc" :
+               "select  top 1 * from {0} where Survey_point_Number='{1}' and Observation_Date<'{2}'Order by Observation_Date desc ";
+                var data = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, sd.SurveyDate.Date.ToString()));
+                if (data.Rows.Count == 0) return true;
+                double f = Convert.ToDouble(data.Rows[0][keystr]) * 10;
+                //数据库里边不确定写的是频率还是模数
+                if (Math.Abs(sd.Survey_ZorR - f) < Config.LimitZ ||
+                   Math.Abs(sd.Survey_ZorR - Math.Sqrt(f * 1000)) < Config.LimitZ) return true;
+            }
+            else
+            {
+                //先跟上一次的数据做比较，不超过限值直接return
+                if (Math.Abs(sd.Survey_ZorR - lastsd.Survey_ZorR) < Config.LimitZ) return true;
+            }
+
+            //超过限值跟上一个月同一天作比较
+            DateTime dt = sd.SurveyDate.Date.AddMonths(-1);
+            sql = Config.IsAuto ? "select * from {0} where Survey_point_Number='{1}' and abs(datediff(d,Observation_Date,'{2}'))<3 and RecordMethod='人工' Order by abs(datediff(dd,Observation_Date,'{3}'))" :
+                "select * from {0} where Survey_point_Number='{1}' and abs(datediff(d,Observation_Date,'{2}'))<3 Order by abs(datediff(dd,Observation_Date,'{3}')) ";
+            var table = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, dt.ToString(), dt.ToString()));
+            double szr = 0;
+            SurveyData lastMorYData = null;
+            if (table.Rows.Count > 0)
+            {
+                szr = Convert.ToDouble(table.Rows[0][keystr]);
+            }
+            else
+            {
+                lastMorYData = GetData(dt.AddDays(-3), dt.AddDays(3), Datas);
+                if (lastMorYData != null) szr = lastMorYData.Survey_ZorR;
+            }
+            if (szr != 0 && Math.Abs(sd.Survey_ZorR - szr*10) < Config.LimitZ) return true;
+            //跟上一年的同一天做对比
+            dt = sd.SurveyDate.Date.AddYears(-1);
+            table = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, dt.ToString(), dt.ToString()));
+            if (table.Rows.Count > 0)
+            {
+                szr = Convert.ToDouble(table.Rows[0][keystr]) * 10;
+            }
+            else
+            {
+                lastMorYData = GetData(dt.AddDays(-3), dt.AddDays(3), Datas);
+                if (lastMorYData != null) szr = lastMorYData.Survey_ZorR;
+            }
+            if (szr != 0 && Math.Abs(sd.Survey_ZorR - szr) < Config.LimitZ) return true;
+            err.Exception = "数据误差超限";
+
+            return false;
         }
     }
 }

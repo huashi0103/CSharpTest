@@ -66,6 +66,10 @@ namespace LoadDataCalc
         /// 0值写空还是写0，0--0，1--null
         /// </summary>
         public static int  ZeroNull = 0;
+        /// <summary>数据库中存的是频率还是模数还是默认
+        /// 0-默认，excel中是什么就写什么，1-频率，2-模数
+        /// </summary>
+        public static int FreOrMoshu = 0;
 
         /// <summary>用户名
         /// </summary>
@@ -85,7 +89,7 @@ namespace LoadDataCalc
         //程序集目录
         private static string Assemblydir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         //0 为叶方毅数据库1为程翔数据库
-        private static int DataBaseType = 0;
+        //private static int DataBaseType = 0;
 
         /// <summary>
         /// 扩展数据库，流域监测系统写数据
@@ -119,10 +123,12 @@ namespace LoadDataCalc
                 DataRoot = dataroot.InnerText;
                 var database = root.SelectSingleNode("DataBase");
                 IsAuto = int.Parse(database.Attributes["IsAuto"].Value) == 0 ? false : true;
+                if (database.Attributes["FreOrMoshu"] != null) ZeroNull = int.Parse(database.Attributes["FreOrMoshu"].Value);
                 //DataBaseType = int.Parse(database.Attributes["DataBaseType"].Value);
                 DataBase = database.InnerText;
                 var DataProCode = root.SelectSingleNode("ProCode");
                 IsMoshu = int.Parse(DataProCode.Attributes["IsMoshu"].Value) == 0 ? false : true;
+                if (DataProCode.Attributes["ZeroNull"] != null) ZeroNull = int.Parse(DataProCode.Attributes["ZeroNull"].Value);
                 ProCode = DataProCode.InnerText;
                 var Instrumentents = root.SelectSingleNode("Instruments");
                 var list = Instrumentents.ChildNodes;
@@ -140,14 +146,7 @@ namespace LoadDataCalc
                     Instruments.Add(ins);
 
                 }
-                //if (DataBaseType == 0)
-                //{ 
-                loadIns();
-                //}
-                //else if (DataBaseType == 1)
-                //{
-                //    loadNewIns();
-                //}
+                if (!loadNewIns()) loadIns();
                 return true;
             }
             catch
@@ -159,7 +158,7 @@ namespace LoadDataCalc
                 if (reader != null) reader.Close();
             }
         }
-        //导入仪器类型对应的考证表和数据表
+        //从xml中导入仪器类型对应的考证表和数据表
         private static void loadIns()
         {
             string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -190,30 +189,41 @@ namespace LoadDataCalc
             }
             InsCollection.InstrumentDic = InsDic;
         }
-        private static void loadNewIns()
+        //从数据库表中导入
+        private static bool loadNewIns()
         {
-            CSqlServerHelper.Connectionstr = Config.DataBase;
-            var sqlhelper = CSqlServerHelper.GetInstance();
-            string sql = @"SELECT * FROM Table_PointTableName";
-            var table = sqlhelper.SelectData(sql);
-            List<InsTableInfo> list = new List<InsTableInfo>();
-            for (int i = 0; i < table.Rows.Count; i++)
+            try
             {
-                InsTableInfo info = new InsTableInfo();
-                info.Instrument_Name = table.Rows[i]["Point_Name"].ToString();
-                info.Measure_Table = table.Rows[i]["Result_Number"].ToString();
-                info.Fiducial_Table = table.Rows[i]["Info_Number"].ToString();
-                list.Add(info);
+                CSqlServerHelper.Connectionstr = Config.DataBase;
+                var sqlhelper = CSqlServerHelper.GetInstance();
+                string sql = @"SELECT * FROM InstrumentTable";
+                var table = sqlhelper.SelectData(sql);
+                List<InsTableInfo> list = new List<InsTableInfo>();
+                for (int i = 0; i < table.Rows.Count; i++)
+                {
+                    InsTableInfo info = new InsTableInfo();
+                    info.Instrument_Name = table.Rows[i]["Instrument_Name"].ToString();
+                    info.Measure_Table = table.Rows[i]["Measure_Table"].ToString();
+                    info.Result_Table = table.Rows[i]["Result_Table"].ToString();
+                    info.Fiducial_Table = table.Rows[i]["Fiducial_Table"].ToString();
+                    info.Monitor_Name = table.Rows[i]["Monitor_Name"].ToString();
+                    list.Add(info);
+                }
+                InsCollection.InsTables = list;
+                Dictionary<string, InstrumentType> InsDic = new Dictionary<string, InstrumentType>();
+                foreach (int myCode in Enum.GetValues(typeof(InstrumentType)))
+                {
+                    var instype = (InstrumentType)myCode;
+                    string insname = instype.GetDescription();
+                    InsDic.Add(insname, (InstrumentType)myCode);
+                }
+                InsCollection.InstrumentDic = InsDic;
+                return true;
             }
-            InsCollection.InsTables = list;
-            Dictionary<string, InstrumentType> InsDic = new Dictionary<string, InstrumentType>();
-            foreach (int myCode in Enum.GetValues(typeof(InstrumentType)))
+            catch
             {
-                var instype = (InstrumentType)myCode;
-                string insname = instype.GetDescription();
-                InsDic.Add(insname, (InstrumentType)myCode);
+                return false;
             }
-            InsCollection.InstrumentDic = InsDic;
 
         }
 
@@ -505,7 +515,7 @@ namespace LoadDataCalc
         }
         public static bool CheckStrIgnoreCN(string a,string b)
         {
-            return CultureInfo.GetCultureInfo("zh-cn").CompareInfo.Compare(a, b, CompareOptions.IgnoreWidth|CompareOptions.IgnoreCase) == 0;
+            return CultureInfo.GetCultureInfo("zh-cn").CompareInfo.Compare(a.Trim(), b.Trim(), CompareOptions.IgnoreWidth|CompareOptions.IgnoreCase) == 0;
         }
        
     

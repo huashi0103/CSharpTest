@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <ProConfig ProjectName="向家坝">
-  <DataRoot>D:\AWORK\向家坝\2016.12数据</DataRoot>
+  <DataRoot>D:\AWORK\向家坝\向家坝数据库外观数据导入格式</DataRoot>
   <DataBase IsAuto="0">Data Source =127.0.0.1\MSSQLSERVER08;Initial Catalog = XJBDatabase;User ID = sa;Password = 12345678;</DataBase>
   <ProCode IsMoshu="1">XJB</ProCode>
   <Instruments>
@@ -65,8 +65,9 @@
     <Ins Name="压应力计">
       <KeyWord>压应力计</KeyWord>
     </Ins>
-    <Ins Name="引张线">
+    <Ins Name="引张线式水平位移计">
       <KeyWord>引张线</KeyWord>
+      <KeyWord>水平变形</KeyWord>
     </Ins>
     <Ins Name="正倒垂线">
       <KeyWord>正倒垂线</KeyWord>

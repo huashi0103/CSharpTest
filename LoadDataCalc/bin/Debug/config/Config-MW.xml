@@ -1,8 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <ProConfig ProjectName="苗尾">
   <DataRoot>D:\AWORK\苗尾\苗尾监测数据2-28</DataRoot>
-  <DataBase IsAuto="1">Data Source =XJ;Initial Catalog = MWDatabase;User ID = sa;Password = 123;</DataBase>
-  <ProCode IsMoshu="0">MW</ProCode>
+    <DataBase IsAuto="1" FreOrMoshu="1">Data Source =XJ;Initial Catalog = MWDatabase;User ID = sa;Password = 123;</DataBase>
+    <!--<DataBase IsAuto="1">Data Source =DESKTOP-G2MV9UN;Initial Catalog = MWDatabase;User ID = sa;Password = 123;</DataBase>-->
+  <ProCode IsMoshu="0" ZeroNull="1">MW</ProCode>
   <Instruments>
     <Ins Name="单点位移计">
       <KeyWord>钢丝位移计</KeyWord>

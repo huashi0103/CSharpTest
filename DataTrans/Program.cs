@@ -9,7 +9,12 @@ namespace DataTrans
 {
     class Program
     {
-        
+
+        class a
+        {
+            public string name;
+            public string test;
+        }
         static  void Main(string[] args)
         {
             DataMove dm = new DataMove();
@@ -17,6 +22,10 @@ namespace DataTrans
             //dm.MoveSubject();//添加组织架构
             //AddFiducial();//添加考证表
 
+            List<a> testa = new List<a>();
+           
+            testa.ForEach(a => { a.name.Replace(",", ""); });
+            testa.AsParallel().ForAll(a => { a.name.Replace(",", ""); });
         }
         static void AddFiducial()
         {
@@ -54,7 +63,7 @@ namespace DataTrans
  
             Console.WriteLine(string.Format("加载源表数据{0}", ins));
             var t1 = sqlhelper.SelectFirst(string.Format(@"select Fiducial_Table from InstrumentTable where Instrument_Name='{0}'", ins));
-            if (t1 == DBNull.Value) { Console.WriteLine("仪器类型不粗在"); Console.Read(); }
+            if (t1 == DBNull.Value) { Console.WriteLine("仪器类型不存在"); Console.Read(); }
             string tablename = t1 .ToString();
             Console.WriteLine("old tablename:" + tablename);
             if (!CheckTable(tablename))

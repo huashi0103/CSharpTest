@@ -145,6 +145,9 @@
   <data name="count32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ICO\count32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="test32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ICO\test32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="config36" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ICO\config36.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -160,7 +163,7 @@
   <data name="write48" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ICO\write48.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="test32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ICO\test32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="about32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ICO\about32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

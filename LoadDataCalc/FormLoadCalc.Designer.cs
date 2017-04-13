@@ -68,6 +68,7 @@
             this.toolStripButtonTest = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonCheck = new System.Windows.Forms.ToolStripButton();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.toolStripButtonAbout = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericLimit)).BeginInit();
@@ -441,7 +442,8 @@
             this.toolStripSeparator2,
             this.toolStripButtonCount,
             this.toolStripButtonTest,
-            this.toolStripButtonCheck});
+            this.toolStripButtonCheck,
+            this.toolStripButtonAbout});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(1262, 36);
@@ -567,6 +569,17 @@
             this.panel1.Size = new System.Drawing.Size(1262, 691);
             this.panel1.TabIndex = 12;
             // 
+            // toolStripButtonAbout
+            // 
+            this.toolStripButtonAbout.AutoSize = false;
+            this.toolStripButtonAbout.Image = global::LoadDataCalc.Properties.Resources.about32;
+            this.toolStripButtonAbout.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.toolStripButtonAbout.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.toolStripButtonAbout.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonAbout.Name = "toolStripButtonAbout";
+            this.toolStripButtonAbout.Size = new System.Drawing.Size(120, 36);
+            this.toolStripButtonAbout.Text = "关于";
+            // 
             // FormLoadCalc
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 18F);
@@ -640,6 +653,7 @@
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.ToolStripButton toolStripButtonCheck;
         private System.Windows.Forms.ToolStripButton toolStripButtonTest;
+        private System.Windows.Forms.ToolStripButton toolStripButtonAbout;
     }
 }
 

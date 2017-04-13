@@ -102,6 +102,7 @@ namespace LoadDataCalc
 
                 }));
             });
+            loadThread.IsBackground = true;
             loadThread.Start();
 
             #endregion
@@ -283,6 +284,9 @@ namespace LoadDataCalc
             numericError.ValueChanged += (send, ar) => { changeBackColor(); };
             toolStripButtonCheck.Click += new EventHandler(toolStripButtonCheck_Click);
             toolStripButtonTest.Click += new EventHandler(toolStripButtonTest_Click);
+            toolStripButtonAbout.Click += (send, arg) => {
+                MessageBox.Show("版本:V1.1\n更新时间:2017年4月10日");
+            };
             #endregion
        
         }
@@ -408,6 +412,7 @@ namespace LoadDataCalc
             Status("开始写入数据...");
             ThreadPool.QueueUserWorkItem((obj) =>
             {
+                
                 bool flag = false;
                 flag = loadData.WirteToSurvey();
                 string surveyStatus = String.Format("写入测值{0}", (flag ? "成功" : "失败"));
@@ -479,6 +484,7 @@ namespace LoadDataCalc
                     Action call = cb as Action;
                     call();
                 });
+                threadLoad.IsBackground = true;
                 threadLoad.Start(callback);
             }
         }

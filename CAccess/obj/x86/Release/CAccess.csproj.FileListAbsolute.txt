@@ -5,4 +5,3 @@ D:\wokspace\CSharpTest\CAccess\obj\x86\Release\CAccess.Properties.Resources.reso
 D:\wokspace\CSharpTest\CAccess\obj\x86\Release\CAccess.csproj.GenerateResource.Cache
 D:\wokspace\CSharpTest\CAccess\obj\x86\Release\CAccess.exe
 D:\wokspace\CSharpTest\CAccess\obj\x86\Release\CAccess.pdb
-D:\wokspace\CSharpTest\CAccess\obj\x86\Release\CAccess.csprojResolveAssemblyReference.cache

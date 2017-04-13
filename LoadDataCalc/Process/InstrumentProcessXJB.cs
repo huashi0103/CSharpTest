@@ -3096,6 +3096,454 @@ namespace LoadDataCalc
         }
        
     }
+    public class Fiducial_Flex_DisplacementProcessXJB : ProcessData
+    {
+        public Fiducial_Flex_DisplacementProcessXJB()
+        {
+            base.InsType = InstrumentType.Fiducial_Flex_Displacement;
+            base.ErrorLimitRT = 20;
+            base.ErrorLimitZR = 20;
+            base.Instrument_Name = "引张线式水平位移计";
+        }
+        public override void ReadData(string path, out List<PointSurveyData> datas, out List<ErrorMsg> errors)
+        {
+            datas = new List<PointSurveyData>();
+            errors = new List<ErrorMsg>();
+            IFormatProvider culture = CultureInfo.CurrentCulture;
+            var workbook = WorkbookFactory.Create(path);
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sheet = workbook.GetSheetAt(0);
+            List<DateTime> Times = new List<DateTime>();
+            var row = sheet.GetRow(0);
+            for (int i = 1; i < row.LastCellNum; i++)
+            {
+                var cell = row.GetCell(i);
+                if (cell.CellType == CellType.Blank) break;
+                DateTime date = new DateTime();
+                if (!GetDateFromCell(cell, out date))
+                {
+                    date = new DateTime(2000, 1, 1);//读不到日期给个小的默认时间，不读这一列
+                }
+                Times.Add(date);
+            }
+            string table=Config.InsCollection[this.InsType.GetDescription()].Measure_Table;
+            for (int i = 1; i < sheet.LastRowNum; i++)
+            {
+                row = sheet.GetRow(i);
+                if (row == null) continue;
+                var cell = row.GetCell(0);
+                if (cell == null) continue;
+                string number = cell.StringCellValue;
+                if (!CheckName(number)) continue;
+                PointSurveyData pd = new PointSurveyData(this.InsType);
+                pd.SurveyPoint = number;
+                pd.ExcelPath = path;
+                DateTime maxdate=new DateTime();
+               
+                bool flag = GetMaxDate(number, out maxdate);
+                flag = Config.IsCovery;
+                int index = 1;//默认从第一列开始读取
+                if (flag)
+                {
+                     index = Times.FindIndex(t => t > maxdate)+1;//有数据从最新的数据开始读
+                }
+                SurveyData lastsd=null;
+                for (int j = index; j <row.LastCellNum&&j-1<Times.Count; j++)
+                {
+                    SurveyData sd = new SurveyData();
+                    sd.SurveyDate = Times[j - 1];
+                    cell = row.GetCell(j);
+                    if (!CheckCell(cell) && GetDataFromCell(cell, out sd.ResultReading))
+                    {
+                        ErrorMsg err=new ErrorMsg();
+                        if (CheckData(sd, lastsd, new DataInfo() { TableName = table }, pd.Datas, pd.SurveyPoint, out err))
+                        {
+                            pd.Datas.Add(sd);
+                            lastsd = sd;
+                        }
+                    }
+                }
+                datas.Add(pd);
+            }
 
+        }
+        protected override bool CheckData(SurveyData sd, SurveyData lastsd, DataInfo info, List<SurveyData> Datas, string Survey_point_name, out ErrorMsg err)
+        {
+            string keystr = "Result_X";
+            err = new ErrorMsg();
+            if (sd.Remark.Contains("已复测")) return true;
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            string sql;
+            if (lastsd == null)
+            {
+                sql = Config.IsAuto ? "select top 1 * from {0} where Survey_point_Number='{1}' and Observation_Date<'{2}' and RecordMethod='人工' Order by Observation_Date desc" :
+               "select  top 1 * from {0} where Survey_point_Number='{1}' and Observation_Date<'{2}'Order by Observation_Date desc ";
+                var data = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, sd.SurveyDate.Date.ToString()));
+                if (data.Rows.Count == 0) return true;
+                double f = Convert.ToDouble(data.Rows[0][keystr]);
+                if (Math.Abs(sd.Survey_ZorR - f) < Config.LimitZ) return true;
+                //数据库里边不确定写的是频率还是模数
+                if (Config.FreOrMoshu != 1)//默认 0的时候认为写进去的是模数或者频率 
+                {
+                    if (Math.Abs(sd.Survey_ZorR - Math.Sqrt(f * 1000)) < Config.LimitZ) return true;
+                }
+                else
+                {
+                    if (Math.Abs(sd.Survey_ZorR - f * f / 1000) < Config.LimitZ) return true;
+                }
+            }
+            else
+            {
+                //先跟上一次的数据做比较，不超过限值直接return
+                if (Math.Abs(sd.Survey_ZorR - lastsd.Survey_ZorR) < Config.LimitZ) return true;
+            }
+
+            //超过限值跟上一个月同一天作比较
+            DateTime dt = sd.SurveyDate.Date.AddMonths(-1);
+            sql = Config.IsAuto ? "select * from {0} where Survey_point_Number='{1}' and abs(datediff(d,Observation_Date,'{2}'))<3 and RecordMethod='人工' Order by abs(datediff(dd,Observation_Date,'{3}'))" :
+                "select * from {0} where Survey_point_Number='{1}' and abs(datediff(d,Observation_Date,'{2}'))<3 Order by abs(datediff(dd,Observation_Date,'{3}')) ";
+            var table = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, dt.ToString(), dt.ToString()));
+            double szr = 0;
+            SurveyData lastMorYData = null;
+            if (table.Rows.Count > 0)
+            {
+                szr = Convert.ToDouble(table.Rows[0][keystr]);
+            }
+            else
+            {
+                lastMorYData = GetData(dt.AddDays(-3), dt.AddDays(3), Datas);
+                if (lastMorYData != null) szr = lastMorYData.Survey_ZorR;
+            }
+            if (szr != 0)
+            {
+                if (Math.Abs(sd.Survey_ZorR - szr) < Config.LimitZ) return true;
+                if (Config.FreOrMoshu != 1)//默认 0的时候认为写进去的是模数
+                {
+                    if (Math.Abs(sd.Survey_ZorR - Math.Sqrt(szr * 1000)) < Config.LimitZ) return true;
+                }
+                else
+                {
+                    if (Math.Abs(sd.Survey_ZorR - szr * szr / 1000) < Config.LimitZ) return true;
+                }
+            }
+
+            //跟上一年的同一天做对比
+            dt = sd.SurveyDate.Date.AddYears(-1);
+            table = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, dt.ToString(), dt.ToString()));
+            if (table.Rows.Count > 0)
+            {
+                szr = Convert.ToDouble(table.Rows[0][keystr]);
+            }
+            else
+            {
+                lastMorYData = GetData(dt.AddDays(-3), dt.AddDays(3), Datas);
+                if (lastMorYData != null) szr = lastMorYData.Survey_ZorR;
+            }
+            if (szr != 0)
+            {
+                if (Math.Abs(sd.Survey_ZorR - szr) < Config.LimitZ) return true;
+                if (Config.FreOrMoshu != 1)//默认 0的时候认为写进去的是模数
+                {
+                    if (Math.Abs(sd.Survey_ZorR - Math.Sqrt(szr * 1000)) < Config.LimitZ) return true;
+                }
+                else
+                {
+                    if (Math.Abs(sd.Survey_ZorR - szr * szr / 1000) < Config.LimitZ) return true;
+                }
+            }
+            err.Exception = "数据误差超限";
+            return false;
+
+        }
+    
+    }
+
+    public class Fiducial_Inverst_VerticalProcessXJB : ProcessData
+    {
+        public Fiducial_Inverst_VerticalProcessXJB()
+        {
+            base.InsType = InstrumentType.Fiducial_Inverst_Vertical;
+            base.ErrorLimitRT = 20;
+            base.ErrorLimitZR = 20;
+            base.Instrument_Name = "正倒垂线";
+        }
+        public override void ReadData(string path, out List<PointSurveyData> datas, out List<ErrorMsg> errors)
+        {
+            datas = new List<PointSurveyData>();
+            errors = new List<ErrorMsg>();
+            IFormatProvider culture = CultureInfo.CurrentCulture;
+            var workbook = WorkbookFactory.Create(path);
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sheet = workbook.GetSheetAt(0);
+            List<DateTime> Times = new List<DateTime>();
+            var row = sheet.GetRow(0);
+            int x_index = 1;
+            int y_index = 1;
+            for (int i = 1; i < sheet.LastRowNum; i++)
+            {
+                var str = sheet.GetRow(i).GetCell(0).StringCellValue;
+                if (str.Contains("日期"))
+                {
+                    y_index = i;
+                }
+            }
+            for (int i = 1; i < row.LastCellNum; i++)
+            {
+                var cell = row.GetCell(i);
+                DateTime date = new DateTime();
+                if (!GetDateFromCell(cell, out date))
+                {
+                    if (cell.CellType == CellType.Blank) break;
+                    date = new DateTime(2000, 1, 1);//读不到日期给个小的默认时间，不读这一列
+                }
+                Times.Add(date);
+            }
+            var yrow = sheet.GetRow(y_index + 1);
+            for (int i = 1; i < y_index; i++)
+            {
+                row = sheet.GetRow(i);
+                if (row == null) continue;
+                yrow = sheet.GetRow(i + y_index);
+                var cell = row.GetCell(0);
+                if (cell == null) continue;
+                string number = cell.StringCellValue;
+                if (!CheckName(number)) continue;
+                PointSurveyData pd = new PointSurveyData(this.InsType);
+                pd.SurveyPoint = number;
+                pd.ExcelPath = path;
+                DateTime maxdate = new DateTime();
+                bool flag = GetMaxDate(number, out maxdate);
+                int index = 1;//默认从第一列开始读取
+                if (flag)
+                {
+                    index = Times.FindIndex(t => t > maxdate) + 1;//有数据从最新的数据开始读
+                }
+                for (int j = index; j < row.LastCellNum && j - 1 < Times.Count; j++)
+                {
+                    SurveyData sd = new SurveyData();
+                    sd.SurveyDate = Times[j - 1];
+                    cell = row.GetCell(j);
+                    if (cell != null) GetDataFromCell(cell, out sd.Survey_ZorR);
+                    cell = yrow.GetCell(j);
+                    if (cell != null) GetDataFromCell(cell, out sd.Survey_RorT);
+                    pd.Datas.Add(sd);
+                }
+                datas.Add(pd);
+            }
+
+        }
+    }
+    public class Fiducial_Earth_MeasureProcessXJB : ProcessData
+    {
+        public Fiducial_Earth_MeasureProcessXJB()
+        {
+            base.InsType = InstrumentType.Fiducial_Earth_Measure;
+            base.ErrorLimitRT = 20;
+            base.ErrorLimitZR = 20;
+            base.Instrument_Name = "大地测量";
+        }
+        public override void ReadData(string path, out List<PointSurveyData> datas, out List<ErrorMsg> errors)
+        {
+            datas = new List<PointSurveyData>();
+            errors = new List<ErrorMsg>();
+            IFormatProvider culture = CultureInfo.CurrentCulture;
+            var workbook = WorkbookFactory.Create(path);
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sheet = workbook.GetSheetAt(0);
+            List<DateTime> Times = new List<DateTime>();
+            var row = sheet.GetRow(0);
+            for (int i = 1; i < row.LastCellNum; i++)
+            {
+                var cell = row.GetCell(i);
+                DateTime date = new DateTime();
+                if (cell.CellType == CellType.Blank) continue;
+                if (!GetDateFromCell(cell, out date))
+                {
+                    date = new DateTime(2000, 1, 1);//读不到日期给个小的默认时间，不读这一列
+                }
+                Times.Add(date);
+            }
+            for (int i = 2; i < sheet.LastRowNum; i++)
+            {
+                row = sheet.GetRow(i);
+                if (row == null) continue;
+                var cell = row.GetCell(0);
+                if (cell == null) continue;
+                string number = cell.StringCellValue;
+                if (!CheckName(number)) continue;
+                PointSurveyData pd = new PointSurveyData(this.InsType);
+                pd.SurveyPoint = number;
+                pd.ExcelPath = path;
+                DateTime maxdate = new DateTime();
+                bool flag = GetMaxDate(number, out maxdate);
+                int index = 1;//默认从第一列开始读取
+                int Tindex = 0;
+                if (flag)
+                {
+                    Tindex = Times.FindIndex(t => t > maxdate);
+                    index = Tindex + 1;//有数据从最新的数据开始读
+                }
+  
+                for (int j = index; j < row.LastCellNum; j+=3)
+                {
+                    if (Tindex >= Times.Count) break;
+                    SurveyData sd = new SurveyData();
+                    sd.SurveyDate = Times[Tindex];
+                    cell = row.GetCell(j);
+                    if (cell != null) GetDataFromCell(cell, out sd.Survey_RorT);
+                    cell = row.GetCell(j+1);
+                    if (cell != null) GetDataFromCell(cell, out sd.Survey_ZorR);
+                    cell = row.GetCell(j+2);
+                    if (cell != null) GetDataFromCell(cell, out sd.ResultReading);
+                    pd.Datas.Add(sd);
+                    Tindex++;
+                }
+                datas.Add(pd);
+            }
+
+        }
+    }
+
+    public class Fiducial_Statics_LevelProcessXJB : ProcessData
+    {
+        public Fiducial_Statics_LevelProcessXJB()
+        {
+            base.InsType = InstrumentType.Fiducial_Statics_Level;
+            base.ErrorLimitRT = 20;
+            base.ErrorLimitZR = 20;
+            base.Instrument_Name = "静力水准";
+        }
+        public override void ReadData(string path, out List<PointSurveyData> datas, out List<ErrorMsg> errors)
+        {
+            datas = new List<PointSurveyData>();
+            errors = new List<ErrorMsg>();
+            IFormatProvider culture = CultureInfo.CurrentCulture;
+            var workbook = WorkbookFactory.Create(path);
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sheet = workbook.GetSheetAt(0);
+            List<DateTime> Times = new List<DateTime>();
+            var row = sheet.GetRow(0);
+            for (int i = 1; i < row.LastCellNum; i++)
+            {
+                var cell = row.GetCell(i);
+                if (cell.CellType == CellType.Blank) break;
+                DateTime date = new DateTime();
+                if (!GetDateFromCell(cell, out date))
+                {
+                    date = new DateTime(2000, 1, 1);//读不到日期给个小的默认时间，不读这一列
+                }
+                Times.Add(date);
+            }
+            for (int i = 1; i < sheet.LastRowNum; i++)
+            {
+                row = sheet.GetRow(i);
+                if (row == null) continue;
+                var cell = row.GetCell(0);
+                if (cell == null) continue;
+                string number = cell.StringCellValue;
+                if (!CheckName(number)) continue;
+                PointSurveyData pd = new PointSurveyData(this.InsType);
+                pd.SurveyPoint = number;
+                pd.ExcelPath = path;
+                DateTime maxdate=new DateTime();
+                bool flag = GetMaxDate(number, out maxdate);
+                flag = Config.IsCovery;
+                int index = 1;//默认从第一列开始读取
+                if (flag)
+                {
+                     index = Times.FindIndex(t => t > maxdate)+1;//有数据从最新的数据开始读
+                }
+                for (int j = index; j <row.LastCellNum&&j-1<Times.Count; j++)
+                {
+                    SurveyData sd = new SurveyData();
+                    sd.SurveyDate = Times[j - 1];
+                    cell = row.GetCell(j);
+                    if (cell != null&&GetDataFromCell(cell, out sd.ResultReading)) pd.Datas.Add(sd);
+                    
+                }
+                datas.Add(pd);
+            }
+
+        }
+    }
+
+    public class Fiducial_Laser_CollimationProcessXJB : ProcessData
+    {
+        public Fiducial_Laser_CollimationProcessXJB()
+        {
+            base.InsType = InstrumentType.Fiducial_Laser_Collimation;
+            base.ErrorLimitRT = 20;
+            base.ErrorLimitZR = 20;
+            base.Instrument_Name = "激光准直";
+        }
+        public override void ReadData(string path, out List<PointSurveyData> datas, out List<ErrorMsg> errors)
+        {
+            datas = new List<PointSurveyData>();
+            errors = new List<ErrorMsg>();
+            IFormatProvider culture = CultureInfo.CurrentCulture;
+            var workbook = WorkbookFactory.Create(path);
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sheet = workbook.GetSheetAt(0);
+            List<DateTime> Times = new List<DateTime>();
+            var row = sheet.GetRow(0);
+            int x_index = 1;
+            int y_index = 1;
+            for (int i = 1; i < sheet.LastRowNum; i++)
+            {
+                var cell = sheet.GetRow(i).GetCell(0);
+                if (cell == null) continue;
+                var str = cell.StringCellValue;
+                if (str.Contains("部位"))
+                {
+                    y_index = i;
+                    break;
+                }
+            }
+            for (int i = 2; i < row.LastCellNum; i++)
+            {
+                var cell = row.GetCell(i);
+                DateTime date = new DateTime();
+                if (!GetDateFromCell(cell, out date))
+                {
+                    if (cell.CellType == CellType.Blank) break;
+                    date = new DateTime(2000, 1, 1);//读不到日期给个小的默认时间，不读这一列
+                }
+                Times.Add(date);
+            }
+            var yrow = sheet.GetRow(y_index + 1);
+            for (int i = 1; i < y_index; i++)
+            {
+                row = sheet.GetRow(i);
+                if (row == null) continue;
+                yrow = sheet.GetRow(i + y_index);
+                var cell = row.GetCell(1);
+                if (cell == null) continue;
+                string number = cell.StringCellValue;
+                if (!CheckName(number)) continue;
+                PointSurveyData pd = new PointSurveyData(this.InsType);
+                pd.SurveyPoint = number;
+                pd.ExcelPath = path;
+                DateTime maxdate = new DateTime();
+                bool flag = GetMaxDate(number, out maxdate);
+                int index = 1;//默认从第一列开始读取
+                if (flag)
+                {
+                    index = Times.FindIndex(t => t > maxdate) + 1;//有数据从最新的数据开始读
+                }
+                for (int j = index; j < row.LastCellNum && j - 1 < Times.Count; j++)
+                {
+                    SurveyData sd = new SurveyData();
+                    sd.SurveyDate = Times[j - 1];
+                    cell = row.GetCell(j);
+                    if (cell != null) GetDataFromCell(cell, out sd.Survey_ZorR);
+                    cell = yrow.GetCell(j);
+                    if (cell != null) GetDataFromCell(cell, out sd.Survey_RorT);
+                    pd.Datas.Add(sd);
+                }
+                datas.Add(pd);
+            }
+
+        }
+    }
 
 }

@@ -588,6 +588,7 @@ namespace LoadDataCalc
             ID = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
             return true;
         }
+
         /// <summary>写测值表
         /// </summary>
         /// <returns></returns>
@@ -606,8 +607,8 @@ namespace LoadDataCalc
             if (Config.IsCovery)
             {
                 string tablename = Config.InsCollection[inscalc.InsType.GetDescription()].Measure_Table;
-                string sql = Config.IsAuto?"delete from {0} where Survey_point_Number='{1}'  and Observation_Date>'{2}' and RecordMethod='人工' ":
-                    "delete from {0} where Survey_point_Number='{1}'  and Observation_Date>'{2}'";
+                string sql = Config.IsAuto?"delete from {0} where Survey_point_Number='{1}'  and Observation_Date>='{2}' and RecordMethod='人工' ":
+                    "delete from {0} where Survey_point_Number='{1}'  and Observation_Date>='{2}'";
                 if (Config.IsCoveryAll)//全部覆盖导入
                 {
                     foreach (var pd in SurveyDataCach)
@@ -627,15 +628,16 @@ namespace LoadDataCalc
                 }
             }
             #endregion
-            int result = inscalc.WriteSurveyToDB(SurveyDataCach);
+            var table = inscalc.WriteSurveyToDB(SurveyDataCach);
+            int result = inscalc.WriteToDB(table);
             ErrorMsg.Log(String.Format("写入{0}行测值",result));
            //应变计和应变计组,还需要写入无应力计的数据
             if ((inscalc.InsType == InstrumentType.Fiducial_Strain_Gauge || inscalc.InsType == InstrumentType.Fiducial_Strain_Group))
             {
                 if (Config.IsCovery)
                 {
-                    string sql = Config.IsAuto ? "DELETE FROM Survey_Nonstress where Survey_point_Number='{0}' and Observation_Date>'{1}'and RecordMethod='人工'" :
-                        "DELETE FROM Survey_Nonstress where Survey_point_Number='{0}' and Observation_Date>'{1}'";
+                    string sql = Config.IsAuto ? "DELETE FROM Survey_Nonstress where Survey_point_Number='{0}' and Observation_Date>='{1}'and RecordMethod='人工'" :
+                        "DELETE FROM Survey_Nonstress where Survey_point_Number='{0}' and Observation_Date>='{1}'";
                     if (Config.IsCoveryAll)//全部覆盖导入
                     {
                         foreach (var pd in SurveyDataCachExpand)
@@ -655,7 +657,8 @@ namespace LoadDataCalc
                     }
                 }
                 Fiducial_Nonstress fn = new Fiducial_Nonstress();
-                fn.WriteSurveyToDB(SurveyDataCachExpand);
+                table =fn.WriteSurveyToDB(SurveyDataCachExpand);
+                fn.WriteToDB(table);
             }
             return result == icount;
         }
@@ -677,8 +680,8 @@ namespace LoadDataCalc
             if (Config.IsCovery)
             {
                 string tablename = Config.InsCollection[inscalc.InsType.GetDescription()].Result_Table;
-                string sql = Config.IsAuto ? "delete from {0} where Survey_point_Number='{1}'  and Observation_Date>'{2}' and RecordMethod='人工'" :
-                    "delete from {0} where Survey_point_Number='{1}'  and Observation_Date>'{2}'";
+                string sql = Config.IsAuto ? "delete from {0} where Survey_point_Number='{1}'  and Observation_Date>='{2}' and RecordMethod='人工'" :
+                    "delete from {0} where Survey_point_Number='{1}'  and Observation_Date>='{2}'";
                 if (Config.IsCoveryAll)//全部覆盖导入
                 {
                     foreach (var pd in SurveyDataCach)
@@ -698,15 +701,16 @@ namespace LoadDataCalc
                 }
             }
             #endregion
-            int  result = inscalc.WriteResultToDB(SurveyDataCach);
+            var table = inscalc.WriteResultToDB(SurveyDataCach);
+            int result = inscalc.WriteToDB(table);
             ErrorMsg.Log(String.Format("写入{0}行成果值", result));
             //应变计和应变计组,还需要写入无应力计的数据
             if ((inscalc.InsType == InstrumentType.Fiducial_Strain_Gauge || inscalc.InsType == InstrumentType.Fiducial_Strain_Group))
             {
                 if (Config.IsCovery)
                 {
-                    string sql = Config.IsAuto ? "DELETE FROM Result_Nonstress where Survey_point_Number='{0}' and Observation_Date>'{1}' and RecordMethod='人工'" :
-                        "DELETE FROM Result_Nonstress where Survey_point_Number='{0}' and Observation_Date>'{1}' ";
+                    string sql = Config.IsAuto ? "DELETE FROM Result_Nonstress where Survey_point_Number='{0}' and Observation_Date>='{1}' and RecordMethod='人工'" :
+                        "DELETE FROM Result_Nonstress where Survey_point_Number='{0}' and Observation_Date>='{1}' ";
                     if (Config.IsCoveryAll)//全部覆盖导入
                     {
                         foreach (var pd in SurveyDataCachExpand)
@@ -726,7 +730,8 @@ namespace LoadDataCalc
                     }
                 }
                 Fiducial_Nonstress fn = new Fiducial_Nonstress();
-                fn.WriteResultToDB(SurveyDataCachExpand);
+                table= fn.WriteResultToDB(SurveyDataCachExpand);
+                fn.WriteToDB(table);
             }
             return result == icount;
         }

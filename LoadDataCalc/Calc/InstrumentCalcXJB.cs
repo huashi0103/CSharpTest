@@ -28,7 +28,7 @@ namespace LoadDataCalc
             //温度改正用减
             double result = (param.Gorf * (data.Survey_ZorR - param.ZorR) -GetTCorrect(param,data)) * param.KpaToMpa;
 
-            data.LoadReading = result*0.001;//渗透压力LoadReading
+            data.LoadReading = result;//渗透压力LoadReading
 
             if (data.LoadReading > 0)
             {
@@ -126,7 +126,7 @@ namespace LoadDataCalc
         /// </summary>
         /// <param name="datas"></param>
         /// <returns></returns>
-        public override int WriteResultToDB(List<PointSurveyData> datas)
+        public override DataTable WriteResultToDB(List<PointSurveyData> datas)
         {
             DataTable dt = new DataTable();
             string TableName = Config.InsCollection[InsType.GetDescription()].Result_Table;
@@ -163,7 +163,8 @@ namespace LoadDataCalc
                     dt.Rows.Add(dr);
                 }
             }
-            return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+            return dt;
+            //return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
         }
 
     }
@@ -774,6 +775,7 @@ namespace LoadDataCalc
             data.ResultReading = result;//这里要乘以系数
             data.Tempreture = data.Survey_RorT > 0 ? param.TemperatureRead * (data.Survey_RorT - param.ZeroR) : 0;
             data.LoadReading = result;
+            data.Survey_ZorRMoshu = data.Survey_ZorR;
             return result;
         }
         public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
@@ -1174,6 +1176,512 @@ namespace LoadDataCalc
         public override double AutoDefined(ParamData param, SurveyData data, string expression)
         {
             return base.AutoDefined(param, data, expression);
+        }
+    }
+    /// <summary>
+    /// 引张线
+    /// </summary>
+    public class Fiducial_Flex_DisplacementXJB : Fiducial_Flex_Displacement
+    {
+        public Fiducial_Flex_DisplacementXJB()
+        {
+            base.InsType = InstrumentType.Fiducial_Flex_Displacement;
+        }
+        public override double DifBlock(ParamData param,SurveyData data, params double[] expand)
+        {
+            return base.DifBlock(param,data,expand);
+        }
+        public override double ShakeString(ParamData param,SurveyData data, params double[] expand)
+        {
+            return 1;
+        }
+        public override double AutoDefined(ParamData param,SurveyData data, string expression)
+        {
+            return base.AutoDefined(param,data,expression);
+        }
+        public override ParamData GetParam(string Survey_point_Number, string tablename = null)
+        {
+            string sql = @"select * from {0} where Survey_point_Number='{1}'";
+            sql = string.Format(sql, tablename, Survey_point_Number);
+            var SqlHelper = CSqlServerHelper.GetInstance();
+            var dt = SqlHelper.SelectData(sql);
+            if (dt.Rows.Count < 1) return null;
+            try
+            {
+                ParamData pd = new ParamData();
+                pd.SurveyPoint = Survey_point_Number;
+                return pd;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        public override DataTable WriteSurveyToDB(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Measure_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Result_X");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Result_X"] = surveydata.Survey_ZorR;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dt.Rows.Add(dr);
+                }
+            }
+            return dt;
+            //return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+        public override DataTable WriteResultToDB(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Measure_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Result_X");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Result_X"] = surveydata.Survey_ZorR;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dt.Rows.Add(dr);
+                }
+            }
+            return dt;
+            //return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+
+
+    }
+
+
+    public class Fiducial_Inverst_VerticalXJB : Fiducial_Inverst_Vertical
+    {
+        public Fiducial_Inverst_VerticalXJB()
+        {
+            base.InsType = InstrumentType.Fiducial_Inverst_Vertical;
+        }
+        public override double DifBlock(ParamData param,SurveyData data, params double[] expand)
+        {
+            return base.DifBlock(param,data,expand);
+        }
+        public override double ShakeString(ParamData param,SurveyData data, params double[] expand)
+        {
+            return 1;
+        }
+        public override double AutoDefined(ParamData param,SurveyData data, string expression)
+        {
+            return base.AutoDefined(param,data,expression);
+        }
+        public override ParamData GetParam(string Survey_point_Number, string tablename = null)
+        {
+            string sql = @"select * from {0} where Survey_point_Number='{1}'";
+            sql = string.Format(sql, tablename, Survey_point_Number);
+            var SqlHelper = CSqlServerHelper.GetInstance();
+            var dt = SqlHelper.SelectData(sql);
+            if (dt.Rows.Count < 1) return null;
+            try
+            {
+                ParamData pd = new ParamData();
+                pd.SurveyPoint = Survey_point_Number;
+                return pd;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        public override DataTable WriteSurveyToDB(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Measure_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Result_X");
+            dt.Columns.Add("Result_Y");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Result_X"] = surveydata.Survey_ZorR;
+                    dr["Result_Y"] = surveydata.Survey_RorT;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dt.Rows.Add(dr);
+                }
+            }
+            return dt;
+            //return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+        public override DataTable WriteResultToDB(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Measure_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Result_X");
+            dt.Columns.Add("Result_Y");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Result_X"] = surveydata.Survey_ZorR;
+                    dr["Result_Y"] = surveydata.Survey_RorT;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dt.Rows.Add(dr);
+                }
+            }
+            return dt;
+            //return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+
+    }
+    public class Fiducial_Earth_MeasureXJB : Fiducial_Earth_Measure
+    {
+        public Fiducial_Earth_MeasureXJB()
+        {
+            base.InsType = InstrumentType.Fiducial_Earth_Measure;
+        }
+        public override double DifBlock(ParamData param,SurveyData data, params double[] expand)
+        {
+            return base.DifBlock(param,data,expand);
+        }
+        public override double ShakeString(ParamData param,SurveyData data, params double[] expand)
+        {
+            return 1;
+        }
+        public override double AutoDefined(ParamData param,SurveyData data, string expression)
+        {
+            return base.AutoDefined(param,data,expression);
+        }
+        public override ParamData GetParam(string Survey_point_Number, string tablename = null)
+        {
+            string sql = @"select * from {0} where Survey_point_Number='{1}'";
+            sql = string.Format(sql, tablename, Survey_point_Number);
+            var SqlHelper = CSqlServerHelper.GetInstance();
+            var dt = SqlHelper.SelectData(sql);
+            if (dt.Rows.Count < 1) return null;
+            try
+            {
+                ParamData pd = new ParamData();
+                pd.SurveyPoint = Survey_point_Number;
+                return pd;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        public override DataTable WriteSurveyToDB(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Measure_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Result_X");
+            dt.Columns.Add("Result_Y");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Result_X"] = surveydata.Survey_ZorR;
+                    dr["Result_Y"] = surveydata.Survey_RorT;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dt.Rows.Add(dr);
+                }
+            }
+            return dt;
+            //return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+        public override DataTable WriteResultToDB(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Measure_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Result_X");
+            dt.Columns.Add("Result_Y");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Result_X"] = surveydata.Survey_ZorR;
+                    dr["Result_Y"] = surveydata.Survey_RorT;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dt.Rows.Add(dr);
+                }
+            }
+            return dt;
+            //return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+
+    }
+    public class Fiducial_Statics_LevelXJB : Fiducial_Earth_Measure
+    {
+        public Fiducial_Statics_LevelXJB()
+        {
+            base.InsType = InstrumentType.Fiducial_Statics_Level;
+        }
+        public override double DifBlock(ParamData param, SurveyData data, params double[] expand)
+        {
+            return base.DifBlock(param, data, expand);
+        }
+        public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
+        {
+            return 1;
+        }
+        public override double AutoDefined(ParamData param, SurveyData data, string expression)
+        {
+            return base.AutoDefined(param, data, expression);
+        }
+        public override ParamData GetParam(string Survey_point_Number, string tablename = null)
+        {
+            string sql = @"select * from {0} where Survey_point_Number='{1}'";
+            sql = string.Format(sql, tablename, Survey_point_Number);
+            var SqlHelper = CSqlServerHelper.GetInstance();
+            var dt = SqlHelper.SelectData(sql);
+            if (dt.Rows.Count < 1) return null;
+            try
+            {
+                ParamData pd = new ParamData();
+                pd.SurveyPoint = Survey_point_Number;
+                return pd;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        public override DataTable WriteSurveyToDB(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Measure_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Result_X");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Result_X"] = surveydata.Survey_ZorR;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dt.Rows.Add(dr);
+                }
+            }
+            return dt;
+            //return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+        public override DataTable WriteResultToDB(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Measure_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Result_X");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Result_X"] = surveydata.Survey_ZorR;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dt.Rows.Add(dr);
+                }
+            }
+            return dt;
+            //return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+
+    }
+
+    public class Fiducial_Laser_CollimationXJB : Fiducial_Laser_Collimation
+    {
+        public Fiducial_Laser_CollimationXJB()
+        {
+            base.InsType = InstrumentType.Fiducial_Laser_Collimation;
+        }
+        public override double DifBlock(ParamData param, SurveyData data, params double[] expand)
+        {
+            return base.DifBlock(param, data, expand);
+        }
+        public override double ShakeString(ParamData param, SurveyData data, params double[] expand)
+        {
+            return 1;
+        }
+        public override double AutoDefined(ParamData param, SurveyData data, string expression)
+        {
+            return base.AutoDefined(param, data, expression);
+        }
+        public override ParamData GetParam(string Survey_point_Number, string tablename = null)
+        {
+            string sql = @"select * from {0} where Survey_point_Number='{1}'";
+            sql = string.Format(sql, tablename, Survey_point_Number);
+            var SqlHelper = CSqlServerHelper.GetInstance();
+            var dt = SqlHelper.SelectData(sql);
+            if (dt.Rows.Count < 1) return null;
+            try
+            {
+                ParamData pd = new ParamData();
+                pd.SurveyPoint = Survey_point_Number;
+                return pd;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        public override DataTable WriteSurveyToDB(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Measure_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Result_Y");
+            dt.Columns.Add("Result_Z");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Result_Y"] = surveydata.Survey_ZorR;
+                    dr["Result_Z"] = surveydata.Survey_RorT;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dt.Rows.Add(dr);
+                }
+            }
+            return dt;
+            //return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
+        }
+        public override DataTable WriteResultToDB(List<PointSurveyData> datas)
+        {
+            DataTable dt = new DataTable();
+            string TableName = Config.InsCollection[InsType.GetDescription()].Measure_Table;
+            dt.TableName = TableName;
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Survey_point_Number");
+            dt.Columns.Add("Observation_Date");
+            dt.Columns.Add("Result_X");
+            dt.Columns.Add("UpdateTime");
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            var sid = sqlhelper.SelectFirst("select max(ID) as sid  from " + TableName);
+            int id = sid == DBNull.Value ? 0 : Convert.ToInt32(sid);
+            foreach (PointSurveyData pd in datas)
+            {
+                foreach (var surveydata in pd.Datas)
+                {
+                    id++;
+                    DataRow dr = dt.NewRow();
+                    dr["ID"] = id;
+                    dr["Survey_point_Number"] = pd.SurveyPoint;
+                    dr["Observation_Date"] = surveydata.SurveyDate;
+                    dr["Result_X"] = surveydata.Survey_ZorR;
+                    dr["UpdateTime"] = DateTime.Now;
+                    dt.Rows.Add(dr);
+                }
+            }
+            return dt;
+            //return sqlhelper.BulkCopy(dt) ? dt.Rows.Count : 0;
         }
     }
 

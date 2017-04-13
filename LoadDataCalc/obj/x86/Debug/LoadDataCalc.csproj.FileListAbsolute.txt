@@ -34,3 +34,4 @@ D:\wokspace\CSharpTest\LoadDataCalc\bin\Debug\LoadDataCalc.exe
 D:\wokspace\CSharpTest\LoadDataCalc\bin\Debug\LoadDataCalc.pdb
 D:\wokspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.exe
 D:\wokspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.pdb
+D:\wokspace\CSharpTest\LoadDataCalc\obj\x86\Debug\LoadDataCalc.csprojResolveAssemblyReference.cache

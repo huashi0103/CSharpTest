@@ -148,9 +148,16 @@ namespace LoadDataCalc
                 var data = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, sd.SurveyDate.Date.ToString()));
                 if (data.Rows.Count == 0) return true;
                 double f = Convert.ToDouble(data.Rows[0][keystr]);
+                if (Math.Abs(sd.Survey_ZorR - f) < Config.LimitZ) return true;
                 //数据库里边不确定写的是频率还是模数
-                if (Math.Abs(sd.Survey_ZorR - f) < Config.LimitZ||
-                   Math.Abs(sd.Survey_ZorR - Math.Sqrt(f*1000)) < Config.LimitZ) return true;
+                if (Config.FreOrMoshu !=1)//默认 0的时候认为写进去的是模数或者频率 
+                {
+                    if (Math.Abs(sd.Survey_ZorR - Math.Sqrt(f * 1000)) < Config.LimitZ) return true;
+                }
+                else
+                {
+                    if (Math.Abs(sd.Survey_ZorR - f*f/1000) < Config.LimitZ) return true;
+                }
             }
             else
             {
@@ -174,7 +181,19 @@ namespace LoadDataCalc
                 lastMorYData = GetData(dt.AddDays(-3),dt.AddDays(3),Datas);
                 if (lastMorYData != null) szr = lastMorYData.Survey_ZorR;
             }
-            if (szr!=0&&Math.Abs(sd.Survey_ZorR - szr) < Config.LimitZ) return true;
+            if (szr!=0)
+            {
+                if(Math.Abs(sd.Survey_ZorR - szr) < Config.LimitZ)return true;
+                if (Config.FreOrMoshu != 1)//默认 0的时候认为写进去的是模数
+                {
+                    if (Math.Abs(sd.Survey_ZorR - Math.Sqrt(szr * 1000)) < Config.LimitZ) return true;
+                }
+                else
+                {
+                    if (Math.Abs(sd.Survey_ZorR - szr * szr / 1000) < Config.LimitZ) return true;
+                }
+            }
+
             //跟上一年的同一天做对比
             dt = sd.SurveyDate.Date.AddYears(-1);
             table = sqlhelper.SelectData(String.Format(sql, info.TableName, Survey_point_name, dt.ToString(), dt.ToString()));
@@ -187,7 +206,18 @@ namespace LoadDataCalc
                 lastMorYData = GetData(dt.AddDays(-3), dt.AddDays(3), Datas);
                 if (lastMorYData != null) szr = lastMorYData.Survey_ZorR;
             }
-            if (szr != 0 && Math.Abs(sd.Survey_ZorR - szr) < Config.LimitZ) return true;
+            if (szr != 0)
+            {
+                if (Math.Abs(sd.Survey_ZorR - szr) < Config.LimitZ) return true;
+                if (Config.FreOrMoshu != 1)//默认 0的时候认为写进去的是模数
+                {
+                    if (Math.Abs(sd.Survey_ZorR - Math.Sqrt(szr * 1000)) < Config.LimitZ) return true;
+                }
+                else
+                {
+                    if (Math.Abs(sd.Survey_ZorR - szr * szr / 1000) < Config.LimitZ) return true;
+                }
+            }
             err.Exception = "数据误差超限";
             
             return false;
@@ -308,7 +338,7 @@ namespace LoadDataCalc
             string table = tablename == null ? Config.InsCollection[this.Instrument_Name].Measure_Table : tablename;
             sql = String.Format(sql, table);
             var result = sqlhelper.SelectFirst(sql, new SqlParameter("@Survey_point_Number", surveyNumber));
-           
+
             bool flag = (result != DBNull.Value);
             if (flag) maxDatetime = (DateTime)result;
             return flag;
@@ -592,6 +622,7 @@ namespace LoadDataCalc
             {
                 if (cell.CellType == CellType.Formula && cell.CellFormula == "#REF!") return false;
                 if (!HSSFDateUtil.IsCellDateFormatted(cell)) return false;
+          
             }
             if (info.TimeIndex > 0 && row.GetCell(info.TimeIndex) != null && row.GetCell(info.TimeIndex).ToString() != "")
             {
@@ -644,7 +675,42 @@ namespace LoadDataCalc
         {
             NonNumberDataCach = Config.GetMultiDisplacementOrder();
         }
-
+        /// <summary>
+        /// 从单元格获取日期
+        /// </summary>
+        /// <param name="cell"></param>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        protected  bool GetDateFromCell(ICell cell,out DateTime date)
+        {
+            date = new DateTime();
+            if (cell.CellType != CellType.Numeric && cell.CellType != CellType.Formula)
+            {
+                if (cell.CellType == CellType.String)
+                {
+                    double dvalue;
+                    if (double.TryParse(cell.StringCellValue, out  dvalue))
+                    {
+                        date = DateTime.FromOADate(dvalue);
+                        return true;
+                    }
+                    else
+                    {
+                        return DateTime.TryParse(cell.StringCellValue, out date);
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                date=cell.DateCellValue;
+            }
+            return true;
+        }
+        
 #if TEST
         //测试代码：
         public Dictionary<string, List<string>> PointCach = new Dictionary<string, List<string>>();

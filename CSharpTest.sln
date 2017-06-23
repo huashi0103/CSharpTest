@@ -9,9 +9,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tcpserverTest", "tcpserverT
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinDraw", "WinDraw\WinDraw.csproj", "{0D7EA531-6C72-42ED-B504-F3000BD5B868}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAccess", "CAccess\CAccess.csproj", "{2BAA60FD-E3CF-487E-AE20-3D30599D7C38}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mine", "CAccess\Mine.csproj", "{2BAA60FD-E3CF-487E-AE20-3D30599D7C38}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataTrans", "DataTrans\DataTrans.csproj", "{B5AA8E40-8D91-4928-AE0A-422CA2A68774}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfApplication1", "WpfApplication1\WpfApplication1.csproj", "{54A036BA-788E-4293-926E-DCDA6CBA6ACC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsFormsApplication1", "WindowsFormsApplication1\WindowsFormsApplication1.csproj", "{5CC4A8C7-0C34-4617-A8D3-F35C5A5DEEB2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CExcel", "CExcel\CExcel.csproj", "{9767B683-9092-4ADA-A0EE-EC7275D806E5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,6 +65,24 @@ Global
 		{B5AA8E40-8D91-4928-AE0A-422CA2A68774}.Release|Any CPU.ActiveCfg = Release|x86
 		{B5AA8E40-8D91-4928-AE0A-422CA2A68774}.Release|x86.ActiveCfg = Release|x86
 		{B5AA8E40-8D91-4928-AE0A-422CA2A68774}.Release|x86.Build.0 = Release|x86
+		{54A036BA-788E-4293-926E-DCDA6CBA6ACC}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{54A036BA-788E-4293-926E-DCDA6CBA6ACC}.Debug|x86.ActiveCfg = Debug|x86
+		{54A036BA-788E-4293-926E-DCDA6CBA6ACC}.Debug|x86.Build.0 = Debug|x86
+		{54A036BA-788E-4293-926E-DCDA6CBA6ACC}.Release|Any CPU.ActiveCfg = Release|x86
+		{54A036BA-788E-4293-926E-DCDA6CBA6ACC}.Release|x86.ActiveCfg = Release|x86
+		{54A036BA-788E-4293-926E-DCDA6CBA6ACC}.Release|x86.Build.0 = Release|x86
+		{5CC4A8C7-0C34-4617-A8D3-F35C5A5DEEB2}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{5CC4A8C7-0C34-4617-A8D3-F35C5A5DEEB2}.Debug|x86.ActiveCfg = Debug|x86
+		{5CC4A8C7-0C34-4617-A8D3-F35C5A5DEEB2}.Debug|x86.Build.0 = Debug|x86
+		{5CC4A8C7-0C34-4617-A8D3-F35C5A5DEEB2}.Release|Any CPU.ActiveCfg = Release|x86
+		{5CC4A8C7-0C34-4617-A8D3-F35C5A5DEEB2}.Release|x86.ActiveCfg = Release|x86
+		{5CC4A8C7-0C34-4617-A8D3-F35C5A5DEEB2}.Release|x86.Build.0 = Release|x86
+		{9767B683-9092-4ADA-A0EE-EC7275D806E5}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{9767B683-9092-4ADA-A0EE-EC7275D806E5}.Debug|x86.ActiveCfg = Debug|x86
+		{9767B683-9092-4ADA-A0EE-EC7275D806E5}.Debug|x86.Build.0 = Debug|x86
+		{9767B683-9092-4ADA-A0EE-EC7275D806E5}.Release|Any CPU.ActiveCfg = Release|x86
+		{9767B683-9092-4ADA-A0EE-EC7275D806E5}.Release|x86.ActiveCfg = Release|x86
+		{9767B683-9092-4ADA-A0EE-EC7275D806E5}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

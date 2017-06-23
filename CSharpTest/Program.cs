@@ -7,17 +7,174 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using WinDraw;
 using System.Diagnostics;
+using System.Threading;
+using System.Net.NetworkInformation;
+using System.Threading.Tasks;
+using System.Data.SqlClient;
+using System.Messaging;
 
 namespace CSharpTest
 {
 
-    public class test1
+    public class Mine
     {
-        public int a;
-        public string b;
+        public int[,] Set(int r,int c,int hard)
+        {
+            int[,] data = new int[r,c];
+            Random rd=new Random();
+            for (int i = 0; i < r*c; i++)
+            {
+                data[i / c, i % c] = rd.Next(hard) == 1 ? 1 : 0;
+            }
+            return data;
+
+        }
+        public int[,] GetNewData(int[,] data)
+        {
+            int r = data.GetLength(0);
+            int c= data.GetLength(1);
+            int[,] newdata = new int[r, c];
+            for (int i = 0; i < r * c; i++)
+            {
+                if (data[i / c, i % c] == 1)
+                {
+                    newdata[i / c, i % c] = 9;
+                }
+                else
+                {
+                    int d = 0;
+                    for (int j = 0; j < 9; j++)
+                    {
+                        if (i / c + (j / 3 - 1)>=0 && i % c + (j % 3 - 1) >= 0 &&
+                            i / c + (j / 3 - 1) < r && i % c + (j % 3 - 1) < c &&
+                            data[i / c + (j / 3 - 1), i % c + (j % 3 - 1)] == 1)
+                        {
+                            d++;
+                        }
+                    }
+                    newdata[i / c, i % c] = d;
+                }
+            }
+            return newdata;
+        }
+
     }
+   
+    delegate void testDelegate(object s);
     class Program
     {
+
+        public class Node
+        {
+            public int NodeData;
+            public Node LeftChild;
+            public Node RightChild;
+        }
+        public class TreeNode
+        {
+            public int val;
+            public TreeNode left;
+            public TreeNode right;
+            public TreeNode (int x)
+            {
+                val = x;
+            }
+        }
+
+        static bool check()
+        {
+            int[][] array = new int[4][] { new[] { 1, 5, 9, 13 }, new[] { 2, 6, 10, 14, 20, 30 }, new[] { 3, 7, 11, 15 }, new[] { 4, 8, 12, 16, 21 } };
+            int a = 20;
+            Node tree = null;
+            Action<int> func = null;
+            func = (b) =>
+            {
+                Node Parent;
+                var newNode = new Node() { NodeData = b };
+                if (tree == null)
+                {
+                    tree = newNode;
+                }
+                else
+                {
+                    Node Current = tree;
+                    while (true)
+                    {
+                        Parent = Current;
+                        if (newNode.NodeData < Current.NodeData)
+                        {
+                            Current = Current.LeftChild;
+                            if (Current == null)
+                            {
+                                Parent.LeftChild = newNode;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            Current = Current.RightChild;
+                            if (Current == null)
+                            {
+                                Parent.RightChild = newNode;
+                                //插入叶子后跳出循环
+                                break;
+                            }
+                        }
+                    }
+                }
+            };
+
+            for (int i = 0; i < array.Length; i++)
+            {
+                for (int j = 0; j < array[i].Length; j++)
+                {
+                    func(array[i][j]);
+                }
+            }
+            var current = tree;
+            if (current == null) return false;
+            while (true)
+            {
+                if (a < current.NodeData)
+                {
+                    if (current.LeftChild == null) break;
+                    current = current.LeftChild;
+                }
+                else if (a > current.NodeData)
+                {
+                    if (current.RightChild == null) break;
+                    current = current.RightChild;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+       static  TreeNode reConstructBinaryTree(int [] pre,int [] tin) {
+           TreeNode root = reConstructBinaryTree(pre, 0, pre.Length - 1, tin, 0, tin.Length - 1);
+            return root;
+        }
+         //前序遍历{1,2,4,7,3,5,6,8}和中序遍历序列{4,7,2,1,5,3,8,6}
+        static  TreeNode reConstructBinaryTree(int [] pre,int startPre,int endPre,int [] tin,int startIn,int endIn) {
+         
+            if(startPre>endPre||startIn>endIn)
+                return null;
+            TreeNode root=new TreeNode(pre[startPre]);
+
+            for (int i = startIn; i <= endIn; i++)
+            {
+                if (tin[i] == pre[startPre])
+                {
+                    root.left = reConstructBinaryTree(pre, startPre + 1, startPre + i - startIn, tin, startIn, i - 1);
+                    root.right = reConstructBinaryTree(pre, i - startIn + startPre + 1, endPre, tin, i + 1, endIn);
+                }
+            }
+            return root;
+        }
 
         static double calc()
         {
@@ -48,118 +205,87 @@ namespace CSharpTest
             return Q1;
 
         }
+        public class ListNode
+        {
+            public int val;
+            public ListNode next;
+            public ListNode(int x)
+            {
+                val = x;
+            }
+        }
 
+        static void func(string s)
+        {
+            Console.WriteLine(s);
+        }
+       static  int sum(int n)
+        {
+            if (n <= 0) return 0;
+            return n + sum(n - 1);
+        }
         static void Main(string[] args) 
         {
+            string filepath = @"D:\Desktop\MWXC08配置表.doc";
+            MessageQueue mq = new MessageQueue(@".\DESKTOP-9SCR28N");
+            mq.Send("test msg");
+            var msg=mq.Receive();
+            Console.WriteLine(msg);
+           
+                
 
-            Console.WriteLine(calc());
+            //Console.WriteLine("111\r\a");
 
-            //List<test1> list = new List<test1>{new test1(){a=9,b="9"},
-            //new test1(){a=11,b="11"},
-            //new test1(){a=3,b="3"},
-            //new test1(){a=7,b="7"}};
-
-            //string str = "2009-06-15";
-            //DateTime dt = DateTime.Parse(str);
-            Console.WriteLine(Regex.Match("K2YD-B4-1-(1)", @".*(?=\-\()").Groups[0].ToString());
-
-            //Pic pic = new Pic();
-            //var bit = pic.pic1(3);
-            //string path = "D:\\2.jpg";
-            //if (File.Exists(path)) File.Delete(path);
-            //bit.Save(path);
-            //Process.Start(path);
-            //Console.WriteLine("OK");
-            //NExcel excel = new NExcel();
-            //string filepath = @"D:\WORK\Project\三峡\三峡工程自动化文件\XIN三峡枢纽考证表格式.xls";
-            //excel.Open(filepath);
-            //var data = excel.getData(excel.getSheet(0));
-            //for (int i = 0; i < data.Rows.Count; i++)
+            //CSWord csword = null;
+            //List<MCU> datas = new List<MCU>();
+            //try
             //{
-            //    for (int j = 0; j < data.Columns.Count; j++)
+            //    csword = new CSWord(filepath, true);
+            //    datas = csword.test();
+            //}
+            //catch (Exception ex)
+            //{
+            //    Console.WriteLine(ex.Message);
+            //}
+            //finally
+            //{
+            //    if (csword != null) csword.Dispose();
+            //}
+            //Console.WriteLine("read over");
+            //CSqlServerHelper.Connectionstr = @"Data Source =DESKTOP-9SCR28N\SQLEXPRESS12;Initial Catalog = MWDatabase;User ID = sa;Password = 123;";
+            //CSqlServerHelper sqlhelper = CSqlServerHelper.GetInstance();
+
+            //foreach (MCU mcu in datas)
+            //{
+            //    Console.Write(mcu.ToString());
+            //    foreach (var point in mcu.SurveyPoint)
             //    {
-            //        Console.Write(data.Rows[i][j].ToString());
-            //        Console.Write(" ");
+            //        if (string.IsNullOrEmpty(point.Value)) continue;
+            //        sqlhelper.DoPROCEDURE("update_Auto_Points",
+            //            new SqlParameter("Survey_point_number", point.Value),
+            //            new SqlParameter("MCU_Station", mcu.mcustation.Split('-')[0]),
+            //            new SqlParameter("MCU_Number", mcu.mcustation),
+            //            new SqlParameter("CJ_Number", point.Key),
+            //            new SqlParameter("IP", mcu.IP));
             //    }
-            //    Console.WriteLine();
             //}
 
-            //Console.WriteLine("导出OK");
-            //List<string> list = new List<string>();
-            //string root = @"D:\AWORK\苗尾\昆明院苗尾监测资料\内观资料";
-            //Action<string> fileaction = (dir) =>
+            //try
             //{
-            //    var files = Directory.GetFiles(dir, "*.xls");
-            //    foreach (var file in files)
-            //    {
-            //        string filename = Path.GetFileName(file);
-            //        if (filename.Contains("渗压计"))
-            //        {
-            //            Console.WriteLine(file);
-            //            list.Add(file);
-            //        }
-            //    }
-            //};
-            //Action<string> newAction = null;
-            //newAction = (dir) =>
-            //{
-            //    fileaction(dir);
-            //    var dirs = Directory.GetDirectories(dir);
-            //    if (dirs.Length > 0)
-            //    {
-            //        foreach (var d in dirs)
-            //        {
-            //            //Console.WriteLine(d);
-            //            newAction(d);
-            //        }
-            //    }
-            //    else
-            //    {
-            //        return;
-            //    }
-            //};
-            //newAction(root);
-            //CXML xml = new CXML();
-            //string path = @"D:\WORK\Project\苗尾\typelist.xml";
-            //xml.readxml(path);
-            //CExcel.test();
-            //string path = @"D:\WORK\Project\苗尾\昆明院苗尾监测资料\内观资料\PD45探洞（渗压计）\PD45探洞渗压计.xls";
-            //foreach (var file in list)
-            //{
-            //    NExcel.test(file);
+            //    CExcel.test();
             //}
-            //List<int> a = new List<int> { 1231, 0, 2, 100, 2, 4, 53, 23, 123, 4, 53, 7, 9 };
-            //List<int> b = new List<int>();
-            //for (int i = 0; i < a.Count; i++)
+            //catch (Exception ex)
             //{
-            //    bool flag = true;
-            //    for (int j = 0; j < b.Count; j++)
-            //    {
-            //        if (a[i] > b[j])
-            //        {
-            //            b.Insert(j, a[i]);
-            //            flag = false;
-            //            break;
-            //        }
-            //    }
-            //    if (flag) b.Add(a[i]);
+            //    Console.WriteLine(ex.Message);
             //}
-            //foreach (int v in b)
-            //{
-            //    Console.WriteLine(v);
-            //}
-            //Console.WriteLine("Sb1-2与Nb1-2".Split('与')[0]);
-            //string r = Regex.Replace(DateTime.Now.TimeOfDay.ToString(), @"\.\d+$", string.Empty);
-            //var ts = TimeSpan.Parse(r);
+            //string stackInfo = new StackTrace().ToString();
+            //Console.WriteLine(stackInfo);
 
-            //Console.WriteLine(DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss"));
-            //double a = 42639.00;
-            //string s="该仪器在洞口开挖过程中,由于放炮仪器周围岩石脱落,造成6米处仪器露在外面";
-            //string d="35A";
-            //Console.WriteLine(d.Substring(0, d.Length-1));
-            //CSqlServer.test();
-            //CAccessClass.Test();
+            //System.Diagnostics.Process.Start("regsvr32",@"D:\Program Files\长江三峡水利枢纽安全监测自动化系统工程\三峡安全监测\SXSmOCX_0.1.ocx");
+
+            Console.WriteLine("OK");
             Console.ReadLine();
+
         }
     }
 }

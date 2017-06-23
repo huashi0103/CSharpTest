@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Office.Interop.Word;
 using MSWord = Microsoft.Office.Interop.Word;
+using System.Text.RegularExpressions;
 
 namespace CSharpTest
 {
@@ -19,21 +20,31 @@ namespace CSharpTest
             {
                  docPath = path;
                 Object Nothing = System.Reflection.Missing.Value;
+                wordApp = new MSWord.Application();
+                wordApp.Visible = false;
+               
+                wordApp.DisplayAlerts = WdAlertLevel.wdAlertsNone;
                 //创建Word文档
                 if (isOpen)
                 {
-                    wordApp = new MSWord.Application();
+
                     wordDoc = wordApp.Documents.Open(path);
                 }
                 else
                 {
-                    wordApp = new MSWord.Application();
                     wordDoc = wordApp.Documents.Add(ref Nothing, ref Nothing, ref Nothing, ref Nothing);
                 }
-                wordApp.Visible = false;
+                ((DocumentEvents2_Event)wordDoc).Close += () => {
+                    Console.WriteLine("Close");
+                };
+                ((ApplicationEvents4_Event)wordApp).Quit+= () =>
+                {
+                    Console.WriteLine("quit");
+                };
             }
-            catch {
-                throw new Exception("创建word对象失败");
+            catch(Exception ex) {
+
+                throw new Exception("创建word对象失败,error:"+ex.Message);
             }
         }
 
@@ -314,22 +325,80 @@ namespace CSharpTest
         {
             if (wordDoc != null)
             {
-                wordDoc.Close();
+                ((_Document)wordDoc).Close();
             }
             if (wordApp != null)
             {
-                wordApp.Quit();
+                ((_Application)wordApp).Quit();
             }
         }
 
-        private void test()
+
+        public List<MCU> test()
         {
+            List<MCU> mculist = new List<MCU>();
             Paragraphs pgs = wordApp.Selection.Paragraphs;
             foreach (Paragraph pg in pgs)
             {
-                Console.WriteLine(pg.Range.Text);
+                foreach (Table table in wordDoc.Tables)
+                {
+                    int k = 0;
+                    MCU mcu = new MCU();
+                    foreach (Row row in table.Rows)
+                    {
+                        string temp = "";
+                         foreach(Cell cell in row.Cells)
+                        {
+                            string s = cell.Range.Text.Trim();
+                            foreach (char cha in s)
+                            {
+                                if(cha!=7&&cha!=13)
+                                    temp+=cha;
+                            }
+                            if(cell.Next!=null)temp += ',';
+                        }
+                        //Console.WriteLine(temp);
+                         if (k == 0) mcu.mcustation = temp.Replace(",","");
+                         else if (k == 1) mcu.IP = temp.Split(':')[1].Replace(",", "");
+                         else if (k == 2) { k++; continue; }
+                         else
+                         {
+                             if (temp.Contains(','))
+                             {
+                                 var str = temp.Split(',');
+                                 if (!String.IsNullOrEmpty(str[0])) mcu.SurveyPoint.Add(str[0], str[1]);
+                                 if (!String.IsNullOrEmpty(str[2])) mcu.SurveyPoint.Add(str[2], str[3]);
+                             }
+                         }
+                        k++;
+                    }
+                    mculist.Add(mcu);
+                }
             }
+            return mculist;
+            //foreach (var m in mculist)
+            //{
+            //    Console.Write(m.ToString());
+            //    Console.WriteLine();
+            //}
+        }
+    }
+    public class MCU
+    {
+        public string mcustation;
+        public string IP;
+        public Dictionary<string, string> SurveyPoint = new Dictionary<string, string>();
+        public override string ToString()
+        {
+            string s = "测站:" + mcustation + Environment.NewLine;
+            s += "IP:" + IP + Environment.NewLine;
+            foreach (var dic in SurveyPoint)
+            {
+                s += "通道:" + dic.Key + "," + "测点:" + dic.Value + Environment.NewLine;
+            }
+            return s;
         }
     }
    
 }
+

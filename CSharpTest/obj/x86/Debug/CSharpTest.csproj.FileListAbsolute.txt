@@ -16,3 +16,17 @@ D:\wokspace\CSharpTest\CSharpTest\bin\Debug\CSharpTest.exe
 D:\wokspace\CSharpTest\CSharpTest\bin\Debug\CSharpTest.pdb
 D:\wokspace\CSharpTest\CSharpTest\obj\x86\Debug\CSharpTest.exe
 D:\wokspace\CSharpTest\CSharpTest\obj\x86\Debug\CSharpTest.pdb
+D:\wokspace\CSharpTest\CSharpTest\obj\x86\Debug\CSharpTest.csprojResolveAssemblyReference.cache
+D:\codepace\CSharpTest\CSharpTest\bin\Debug\CSharpTest.exe.config
+D:\codepace\CSharpTest\CSharpTest\obj\x86\Debug\CSharpTest.exe
+D:\codepace\CSharpTest\CSharpTest\obj\x86\Debug\CSharpTest.pdb
+D:\codepace\CSharpTest\CSharpTest\bin\Debug\CSharpTest.exe
+D:\codepace\CSharpTest\CSharpTest\bin\Debug\CSharpTest.pdb
+D:\codepace\CSharpTest\CSharpTest\obj\x86\Debug\CSharpTest.csprojResolveAssemblyReference.cache
+D:\codespace\CSharpTest\CSharpTest\bin\Debug\CSharpTest.exe.config
+D:\codespace\CSharpTest\CSharpTest\obj\x86\Debug\CSharpTest.exe
+D:\codespace\CSharpTest\CSharpTest\obj\x86\Debug\CSharpTest.pdb
+D:\codespace\CSharpTest\CSharpTest\bin\Debug\CSharpTest.exe
+D:\codespace\CSharpTest\CSharpTest\bin\Debug\CSharpTest.pdb
+D:\codespace\CSharpTest\CSharpTest\obj\x86\Debug\CSharpTest.csprojResolveAssemblyReference.cache
+D:\codespace\CSharpTest\CSharpTest\obj\x86\Debug\CSharpTest.csproj.ResolveComReference.cache

@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Data;
+using System.Reflection;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+
+
 
 using SDataTable = System.Data.DataTable;
 using Microsoft.Office.Interop.Excel;
-using System.Data;
-using System.Reflection;
 
 namespace CSharpTest
 {
@@ -59,12 +63,17 @@ namespace CSharpTest
         {
             if (workbook != null) workbook.Close();
         }
+
         /// <summary>
         /// 释放excel对象
         /// </summary>
         public void Dispose()
         {
             excel.Quit();
+            int ProID = 0;
+            GetWindowThreadProcessId(new IntPtr(excel.Hwnd), out ProID);
+            var pro = Process.GetProcessById(ProID);
+            if (pro != null) pro.Kill();
         }
         /// <summary>
         /// 读取一个sheet内容
@@ -167,52 +176,49 @@ namespace CSharpTest
 
         }
 
+        [DllImport("user32", EntryPoint = "GetWindowThreadProcessId")]
+        static extern int GetWindowThreadProcessId(IntPtr hwnd, out int pid);
         public static void test()
         {
-            string path = @"D:\WORK\Project\苗尾\昆明院苗尾监测资料\内观资料\PD45探洞（渗压计）\PD45探洞渗压计.xls";
-            var excel1 = new Application();
+            string path = @"D:\AWORK\向家坝\向家坝11月数据\11月数据(2016.11)\11月数据\渗压计、测压管、水文孔、量水堰\水位孔\水位孔（一期）.xlsx";
+            Application excel1 = new Application();
             excel1.Visible = false;
-            
-            var workbook = excel1.Application.Workbooks.Open(path);
-            //foreach (var sh in workbook.Worksheets)
+            excel1.DisplayAlerts = false;
+            Workbook workbook = excel1.Application.Workbooks.Open(path);
+            try
             {
-                //Worksheet psheet = sh as Worksheet;
-                Worksheet psheet = workbook.Worksheets[1];
-                int rowcount = psheet.UsedRange.Cells.Rows.Count;
-                int colcount = psheet.UsedRange.Columns.Count;
-                Range range;
-                for (int iRow = 11; iRow <= rowcount; iRow++)//从第11行开始读
+                //zOH1-1
+                //foreach (Worksheet psheet in workbook.Worksheets)
                 {
-                    Range startCell = (Range)psheet.Cells[iRow, 1];
-                    Range endCell = (Range)psheet.Cells[iRow, 4];
-                    range = psheet.Range[startCell, endCell];
-                    var value = (object[,])range.get_Value(Microsoft.Office.Interop.Excel.XlRangeValueDataType.xlRangeValueDefault);
-                    if (value[1,1]==null||string.IsNullOrEmpty(value[1, 1].ToString())) break;
-                    //for (int i = 1; i < value.GetLength(1); i++)
-                    //{
-                    //    Console.Write(value[1,i]);
-                    //    Console.Write(":");
-                    //}
-                    if (value[1, 1] != null && value[1, 2] != null)
+                    Worksheet psheet = workbook.Worksheets["zOH1-1"];
+                    int rowcount = psheet.UsedRange.Cells.Rows.Count;
+                    int colcount = psheet.UsedRange.Columns.Count;
+                    for (int iRow = 1; iRow <= rowcount; iRow++)
                     {
-                        string data = value[1, 1].ToString();
-                        string time = DateTime.FromOADate(Convert.ToDouble(value[1, 2])).ToString();
-                        DateTime dt = DateTime.Parse(data.Split(' ')[0] + " " + time.Split(' ')[1]);
-                        Console.WriteLine("{0}:{1}", iRow, dt.ToString());
-                    }
-                    else
-                    {
-                        Console.WriteLine("{0}", iRow);
+                        for (int iCol = 1; iCol <= colcount; iCol++)
+                        {
+                            var range = psheet.Cells[iRow, iCol] as Range;
+                            if (range == null || range.Value == null) continue;
+                            Console.Write(range.Value.ToString());
+                            if (iCol != colcount) Console.Write(",");
+                        }
+                        Console.WriteLine();
                     }
                 }
-
             }
-            excel1.DisplayAlerts = false;
-            excel1.Quit();
-            System.Runtime.InteropServices.Marshal.ReleaseComObject(excel1);
-            GC.Collect();
-            excel1 = null;
- 
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                workbook.Close();
+                excel1.Quit();
+                int ProID = 0;
+                GetWindowThreadProcessId(new IntPtr(excel1.Hwnd), out ProID);
+                var pro = Process.GetProcessById(ProID);
+                if (pro != null) pro.Kill();
+            }
         }
 
      

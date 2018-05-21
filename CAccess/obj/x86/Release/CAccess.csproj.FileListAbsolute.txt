@@ -1,7 +1,0 @@
-D:\wokspace\CSharpTest\CAccess\bin\Release\CAccess.exe
-D:\wokspace\CSharpTest\CAccess\bin\Release\CAccess.pdb
-D:\wokspace\CSharpTest\CAccess\obj\x86\Release\CAccess.Form1.resources
-D:\wokspace\CSharpTest\CAccess\obj\x86\Release\CAccess.Properties.Resources.resources
-D:\wokspace\CSharpTest\CAccess\obj\x86\Release\CAccess.csproj.GenerateResource.Cache
-D:\wokspace\CSharpTest\CAccess\obj\x86\Release\CAccess.exe
-D:\wokspace\CSharpTest\CAccess\obj\x86\Release\CAccess.pdb

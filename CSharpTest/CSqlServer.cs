@@ -79,6 +79,29 @@ namespace CSharpTest
             }
 
         }
+        /// <summary>
+        /// 执行存储过程
+        /// </summary>
+        /// <param name="proname"></param>
+        /// <param name="pms"></param>
+        /// <returns></returns>
+        public object DoPROCEDURE(string proname, params SqlParameter[] pms)
+        {
+            var sqlConnection = new SqlConnection(Connectionstr);
+            try
+            {
+                sqlConnection.Open();
+                SqlCommand cmd = new SqlCommand(proname, sqlConnection);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddRange(pms);
+                return cmd.ExecuteNonQuery();
+            }
+            finally
+            {
+                sqlConnection.Close();
+            }
+        }
+
 
         /// <summary>
         /// 增删查改，sql语句不一样接口一样

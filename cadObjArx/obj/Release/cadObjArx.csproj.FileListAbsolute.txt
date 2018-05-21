@@ -4,3 +4,9 @@ D:\workspace\test\cadObjArx\obj\Release\cadObjArx.dll
 D:\workspace\test\cadObjArx\obj\Release\cadObjArx.pdb
 D:\workspace\test\cadObjArx\obj\Release\cadObjArx.csproj.ResolveComReference.cache
 D:\workspace\test\cadObjArx\obj\Release\cadObjArx.csprojResolveAssemblyReference.cache
+E:\codespace\CSharpTest\cadObjArx\obj\Release\cadObjArx.csprojResolveAssemblyReference.cache
+E:\codespace\CSharpTest\cadObjArx\obj\Release\cadObjArx.csproj.ResolveComReference.cache
+E:\codespace\CSharpTest\cadObjArx\obj\Release\cadObjArx.FormToolsForCass.resources
+E:\codespace\CSharpTest\cadObjArx\obj\Release\cadObjArx.csproj.GenerateResource.Cache
+E:\codespace\CSharpTest\cadObjArx\obj\Release\cadObjArx.csproj.CoreCompileInputs.cache
+E:\codespace\CSharpTest\cadObjArx\obj\Release\cadObjArx.dll

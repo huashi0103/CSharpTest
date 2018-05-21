@@ -1,0 +1,17 @@
+D:\codespace\CSharpTest\CAccess\bin\Debug\CAccess.exe
+D:\codespace\CSharpTest\CAccess\bin\Debug\CAccess.pdb
+D:\codespace\CSharpTest\CAccess\obj\x86\Debug\Mine.Form1.resources
+D:\codespace\CSharpTest\CAccess\obj\x86\Debug\CAccess.Properties.Resources.resources
+D:\codespace\CSharpTest\CAccess\obj\x86\Debug\mine.csproj.GenerateResource.Cache
+D:\codespace\CSharpTest\CAccess\obj\x86\Debug\CAccess.exe
+D:\codespace\CSharpTest\CAccess\obj\x86\Debug\CAccess.pdb
+D:\codespace\CSharpTest\CAccess\obj\x86\Debug\Mine.csprojResolveAssemblyReference.cache
+E:\codespace\CSharpTest\CAccess\bin\Debug\CAccess.exe
+E:\codespace\CSharpTest\CAccess\bin\Debug\CAccess.pdb
+E:\codespace\CSharpTest\CAccess\obj\x86\Debug\Mine.csprojResolveAssemblyReference.cache
+E:\codespace\CSharpTest\CAccess\obj\x86\Debug\Mine.Form1.resources
+E:\codespace\CSharpTest\CAccess\obj\x86\Debug\CAccess.Properties.Resources.resources
+E:\codespace\CSharpTest\CAccess\obj\x86\Debug\Mine.csproj.GenerateResource.cache
+E:\codespace\CSharpTest\CAccess\obj\x86\Debug\Mine.csproj.CoreCompileInputs.cache
+E:\codespace\CSharpTest\CAccess\obj\x86\Debug\CAccess.exe
+E:\codespace\CSharpTest\CAccess\obj\x86\Debug\CAccess.pdb

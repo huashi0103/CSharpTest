@@ -1,0 +1,5 @@
+E:\codespace\CSharpTest\output\DomainTest.pdb
+E:\codespace\CSharpTest\DomainTest\obj\Debug\DomainTest.csproj.CoreCompileInputs.cache
+E:\codespace\CSharpTest\DomainTest\obj\Debug\DomainTest.pdb
+E:\codespace\CSharpTest\output\DomainTest.dll
+E:\codespace\CSharpTest\DomainTest\obj\Debug\DomainTest.dll

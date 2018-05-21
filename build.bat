@@ -1,0 +1,1 @@
+msbuild ExercisePrj.sln /t:rebuild /p:Warbubfkevek=2;outdir=..\TestDir;configuration=Release|x86;Targetframework=v4.0;debugtype=none /flp1:warningsonly;logfile=war.txt /flp2:errorsonly;logfile=err.txt 

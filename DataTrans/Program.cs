@@ -21,11 +21,11 @@ namespace DataTrans
             //dm.ChangeDatabase();//改数据库字段长度
             //dm.MoveSubject();//添加组织架构
             //AddFiducial();//添加考证表
-
-            List<a> testa = new List<a>();
-           
-            testa.ForEach(a => { a.name.Replace(",", ""); });
-            testa.AsParallel().ForAll(a => { a.name.Replace(",", ""); });
+            string connectstr1 = @"Data Source =LX\MSSQLSERVER12;Initial Catalog = MWDatabase;User ID = sa;Password = 111;";
+            CSqlServerHelper.Connectionstr = connectstr1;
+            var sqlhelper = CSqlServerHelper.GetInstance();
+            Console.WriteLine(sqlhelper.Check());
+            Console.Read();
         }
         static void AddFiducial()
         {

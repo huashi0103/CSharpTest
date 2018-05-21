@@ -1,2 +1,0 @@
-(command "netload" "cadObjArx.dll")
-

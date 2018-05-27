@@ -467,7 +467,7 @@ namespace WinDraw
 	            std::list<CTriangle*>::iterator iter_Triangle =	m_lstBowyerWatsonTriangleList.begin();
 	            while (iter_Triangle != m_lstBowyerWatsonTriangleList.end())
 	            {
-		            if ((*iter_Triangle)->l1 == line || (*iter_Triangle)->l2 == line || (*iter_Triangle)->l3 == line )
+		            if ((*iter_Triangle),l1 == line || (*iter_Triangle),l2 == line || (*iter_Triangle),l3 == line )
 		            {
 			            SAFE_DELETE(*iter_Triangle);
 			            m_lstBowyerWatsonTriangleList.erase(iter_Triangle);
@@ -539,7 +539,7 @@ namespace WinDraw
 	        while (iter_triangle != triangleList.end())
 	        {
 		        //是否存在三角形外接圆内
-		        if ((*iter_triangle)->CheckInCircle(pt))
+		        if ((*iter_triangle),CheckInCircle(pt))
 		        {
 			        commonTriangleVector.push_back(*iter_triangle);
 		        }
@@ -556,27 +556,27 @@ namespace WinDraw
 
 		        /////////////////////////////////
 		        //连接三角形三点
-		        CLine line1 = CLine(pt,(*iter_v)->p1);
-		        CLine line2 = CLine(pt,(*iter_v)->p2);
-		        CLine line3 = CLine(pt,(*iter_v)->p3);
+		        CLine line1 = CLine(pt,(*iter_v),p1);
+		        CLine line2 = CLine(pt,(*iter_v),p2);
+		        CLine line3 = CLine(pt,(*iter_v),p3);
 		        AddBowyerWatsonLine(line1);
 		        AddBowyerWatsonLine(line2);
 		        AddBowyerWatsonLine(line3);
 
 		        //加入新三角形
-		        if (CheckTriangleLinesExist(pt, (*iter_v)->p1, (*iter_v)->p2))
+		        if (CheckTriangleLinesExist(pt, (*iter_v),p1, (*iter_v),p2))
 		        {
-			        CTriangle tg1 = CTriangle(pt,(*iter_v)->p1,(*iter_v)->p2);
+			        CTriangle tg1 = CTriangle(pt,(*iter_v),p1,(*iter_v),p2);
 			        AddBowyerWatsonTriangle(tg1);
 		        }
-		        if (CheckTriangleLinesExist(pt, (*iter_v)->p2, (*iter_v)->p3))
+		        if (CheckTriangleLinesExist(pt, (*iter_v),p2, (*iter_v),p3))
 		        {
-			        CTriangle tg2 = CTriangle(pt,(*iter_v)->p2,(*iter_v)->p3);
+			        CTriangle tg2 = CTriangle(pt,(*iter_v),p2,(*iter_v),p3);
 			        AddBowyerWatsonTriangle(tg2);
 		        }
-		        if (CheckTriangleLinesExist(pt, (*iter_v)->p3, (*iter_v)->p1))
+		        if (CheckTriangleLinesExist(pt, (*iter_v),p3, (*iter_v),p1))
 		        {
-			        CTriangle tg3 = CTriangle(pt,(*iter_v)->p3,(*iter_v)->p1);
+			        CTriangle tg3 = CTriangle(pt,(*iter_v),p3,(*iter_v),p1);
 			        AddBowyerWatsonTriangle(tg3);
 		        }
 	        }
@@ -590,7 +590,7 @@ namespace WinDraw
 				        CTriangle* trg1 =	*(commonTriangleVector.begin() + i);
 				        CTriangle* trg2 =	*(commonTriangleVector.begin() +j);
 
-				        CLine* commonLine = trg1->FindCommonLine(*trg2);
+				        CLine* commonLine = trg1,FindCommonLine(*trg2);
 				        if (commonLine != NULL)
 				        {
 					        ////////////////////////////////
@@ -603,12 +603,12 @@ namespace WinDraw
 
 					        /////////////////////////////////
 					        //连接三角形三点
-					        CLine line1_1 = CLine(pt,trg1->p1);
-					        CLine line1_2 = CLine(pt,trg1->p2);
-					        CLine line1_3 = CLine(pt,trg1->p3);
-					        CLine line2_1 = CLine(pt,trg2->p1);
-					        CLine line2_2 = CLine(pt,trg2->p2);
-					        CLine line2_3 = CLine(pt,trg2->p3);
+					        CLine line1_1 = CLine(pt,trg1,p1);
+					        CLine line1_2 = CLine(pt,trg1,p2);
+					        CLine line1_3 = CLine(pt,trg1,p3);
+					        CLine line2_1 = CLine(pt,trg2,p1);
+					        CLine line2_2 = CLine(pt,trg2,p2);
+					        CLine line2_3 = CLine(pt,trg2,p3);
 
 					        AddBowyerWatsonLine(line1_1);
 					        AddBowyerWatsonLine(line1_2);
@@ -618,35 +618,35 @@ namespace WinDraw
 					        AddBowyerWatsonLine(line2_3);
 
 					        //加入新三角形
-					        if (CheckTriangleLinesExist(pt, trg1->p1, trg1->p2))
+					        if (CheckTriangleLinesExist(pt, trg1,p1, trg1,p2))
 					        {
-						        CTriangle tg1 = CTriangle(pt, trg1->p1, trg1->p2);
+						        CTriangle tg1 = CTriangle(pt, trg1,p1, trg1,p2);
 						        AddBowyerWatsonTriangle(tg1);
 					        }
-					        if (CheckTriangleLinesExist(pt, trg1->p2, trg1->p3))
+					        if (CheckTriangleLinesExist(pt, trg1,p2, trg1,p3))
 					        {
-						        CTriangle tg2 = CTriangle(pt,trg1->p2,trg1->p3);
+						        CTriangle tg2 = CTriangle(pt,trg1,p2,trg1,p3);
 						        AddBowyerWatsonTriangle(tg2);
 					        }
-					        if (CheckTriangleLinesExist(pt, trg1->p3, trg1->p1))
+					        if (CheckTriangleLinesExist(pt, trg1,p3, trg1,p1))
 					        {
-						        CTriangle tg3 = CTriangle(pt, trg1->p3, trg1->p1);
+						        CTriangle tg3 = CTriangle(pt, trg1,p3, trg1,p1);
 						        AddBowyerWatsonTriangle(tg3);
 					        }
 
-					        if (CheckTriangleLinesExist(pt, trg2->p1, trg2->p2))
+					        if (CheckTriangleLinesExist(pt, trg2,p1, trg2,p2))
 					        {
-						        CTriangle tg1 = CTriangle(pt, trg2->p1, trg2->p2);
+						        CTriangle tg1 = CTriangle(pt, trg2,p1, trg2,p2);
 						        AddBowyerWatsonTriangle(tg1);
 					        }
-					        if (CheckTriangleLinesExist(pt, trg2->p2, trg2->p3))
+					        if (CheckTriangleLinesExist(pt, trg2,p2, trg2,p3))
 					        {
-						        CTriangle tg2 = CTriangle(pt,trg2->p2,trg2->p3);
+						        CTriangle tg2 = CTriangle(pt,trg2,p2,trg2,p3);
 						        AddBowyerWatsonTriangle(tg2);
 					        }
-					        if (CheckTriangleLinesExist(pt, trg2->p3, trg2->p1))
+					        if (CheckTriangleLinesExist(pt, trg2,p3, trg2,p1))
 					        {
-						        CTriangle tg3 = CTriangle(pt, trg2->p3, trg2->p1);
+						        CTriangle tg3 = CTriangle(pt, trg2,p3, trg2,p1);
 						        AddBowyerWatsonTriangle(tg3);
 					        }
 
@@ -723,8 +723,8 @@ namespace WinDraw
             std::list<CLine*>::iterator iter = m_lstBowyerWatsonLineList.begin(); 
 	        for ( ;iter != m_lstBowyerWatsonLineList.end();iter++)
 	        {
-		        //(*iter)->p1.x, (*iter)->p1.y
-		        //(*iter)->p2.x, (*iter)->p2.y
+		        //(*iter),p1.x, (*iter),p1.y
+		        //(*iter),p2.x, (*iter),p2.y
 	        }
         }
 

@@ -12,9 +12,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.IO;
 
 namespace SharpGLTest
 {
@@ -25,22 +27,257 @@ namespace SharpGLTest
         const float far = 10000;
         private bool mouseDownFlag;
 
+
+
+
+        //string path = "data.txt";
+        string path= @"D:\CODE\DisplayPoints\7125.asc";
         public Form1()
         {
             InitializeComponent();
+            InitParam();
         }
-
         protected override void OnLoad(EventArgs e)
         {
+
             base.OnLoad(e);
+            defualtToolStripMenuItem.Click += delegate
+            {
+                InitParam();
+
+            };
+            testFormToolStripMenuItem.Click += delegate
+            {
+                var frm = new FrmTest();
+                frm.data = pDoc.m_ptVertexList;
+                frm.Show();
+            };
+
             InitEvent(sceneControl1);
+
+            m_rectOld.Width = openGLControl1.Width;
+            m_rectOld.Height = openGLControl1.Height;
+            InitOpenGL();
+
+            openGLControl1.MouseDown += OpenGLControl1_MouseDown;
+            openGLControl1.MouseWheel += OpenGLControl1_MouseWheel;
+            openGLControl1.MouseUp += OpenGLControl1_MouseUp;
+            openGLControl1.MouseMove += OpenGLControl1_MouseMove;
+
+            openGLControl1.OpenGLDraw += OpenGLControl1_OpenGLDraw;
+            openGLControl1.SizeChanged += OpenGLControl1_SizeChanged;;
+        }
+
+
+        private void OpenGLControl1_SizeChanged(object sender, EventArgs e)
+        {
+     
+            m_rectOld.Width = openGLControl1.Width;
+            m_rectOld.Height = openGLControl1.Height;
+            var gl = openGLControl1.OpenGL;
+            //这里有问题，控件大小变了以后视口和视点都没了///
+            //todo
+            gl.Viewport(0, 0, m_rectOld.Width, m_rectOld.Height);
+            //InitView();
+
+            //gl.Perspective(45.0f, (float)Width / (float)Height, 0.1f, pDoc.m_dbDistance);
+        }
+
+        private void OpenGLControl1_OpenGLDraw(object sender, RenderEventArgs args)
+        {
+    
+           var gl = openGLControl1.OpenGL;
+            gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
+            gl.LoadIdentity();
+            gl.PushMatrix();
+            conversion(gl);
+            DrawData(gl);
+            var g = args.Graphics;
+            gl.PopMatrix();
+            gl.Flush();
+            //双缓冲
+            //SwapBuffers(wglGetCurrentDC());
+        }
+        void mydraw(OpenGL gl)
+        {
+            //gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);//清除缓存将背景置
+            //gl.Color(1.0, 1.0, 1.0);
+            //gl.PointSize(1);
+            //gl.CallList(glbase);
+            //gl.CallList(baselist);
+        }
+
+        double c=Math.PI/180.0; //弧度和角度转换参数
+        int du = 0, oldmy= -1,oldmx= -1; //du是视点绕y轴的角度,opengl里默认y轴是上方向
+        float r=1.5f, h= 0.0f; //r是视点绕y轴的半径,h是视点高度即在y轴上的坐标
+        int xTran=0, yTran= 0;
+        void conversion(OpenGL gl)
+        {
+
+            float transx, transy, transz;//平移参数
+            float scalex, scaley, scalez;//缩放参数
+            float rotx, rotz;//旋转参数，只有考虑当前x轴和Z轴旋转	
+
+            transx = glTransX + glCurTransX;
+            transy = glTransY + glCurTransY;
+            transz = glTransZ + glCurTransZ;
+            gl.Translate(transx, transy, transz);//平移
+
+            //坐标轴中心移到起始中心  保证图的缩放和旋转是以当前视角进行
+            //旋转缩放后再移回世界坐标系原点
+            gl.Translate(pDoc.m_ptBoxCenter.x, pDoc.m_ptBoxCenter.y, pDoc.m_ptBoxCenter.z);
+            rotx = glCurRotX + glRotX;//X轴旋转参数
+            //if(rotx>90||rotx<-90)rotx=abs(rotx)/rotx*90.0;
+            gl.Rotate(rotx, 1.0, 0.0, 0.0);
+            rotz = glCurRotZ + glRotZ;//Z轴旋转角度
+            gl.Rotate(rotz, 0.0, 0.0, 1.0);
+
+            if (glScaleX < 0.001)
+            {
+                glScaleX = glScaleY = glScaleZ = 0.001f;
+            }
+            gl.Scale(glScaleX, glScaleY, glScaleZ);
+            gl.Translate(-pDoc.m_ptBoxCenter.x, -pDoc.m_ptBoxCenter.y, -pDoc.m_ptBoxCenter.z);//移回去
+
+
+        }
+        void drawaxis(OpenGL gl)
+        {
+            gl.MatrixMode(OpenGL.GL_MODELVIEW);
+            gl.LoadIdentity();
+            gl.LineWidth(1.0f);
+            gl.Begin(OpenGL.GL_LINES);
+            //缩放
+            gl.Color(1.0, 1.0, 1.0);//白色 X轴
+            double delt = 50 * glScaleX;
+            gl.Vertex(pDoc.m_ptBoxCenter.x - 500, pDoc.m_ptBoxCenter.y, pDoc.m_ptBoxCenter.z);
+            gl.Vertex(pDoc.m_ptBoxCenter.x + 500, pDoc.m_ptBoxCenter.y, pDoc.m_ptBoxCenter.z);
+
+            gl.Vertex(pDoc.m_ptBoxCenter.x - delt, pDoc.m_ptBoxCenter.y - 5, pDoc.m_ptBoxCenter.z);
+            gl.Vertex(pDoc.m_ptBoxCenter.x - delt, pDoc.m_ptBoxCenter.y + 5, pDoc.m_ptBoxCenter.z);
+            gl.Vertex(pDoc.m_ptBoxCenter.x + delt, pDoc.m_ptBoxCenter.y - 5, pDoc.m_ptBoxCenter.z);
+            gl.Vertex(pDoc.m_ptBoxCenter.x + delt, pDoc.m_ptBoxCenter.y + 5, pDoc.m_ptBoxCenter.z);
+
+            //
+            gl.Color(1.0, 0.0, 0.0);//红色Z轴
+            gl.Vertex(pDoc.m_ptBoxCenter.x, pDoc.m_ptBoxCenter.y, pDoc.m_ptBoxCenter.z + 500);
+            gl.Vertex(pDoc.m_ptBoxCenter.x, pDoc.m_ptBoxCenter.y, pDoc.m_ptBoxCenter.z - 500);
+
+            gl.Vertex(pDoc.m_ptBoxCenter.x - 5, pDoc.m_ptBoxCenter.y, pDoc.m_ptBoxCenter.z + delt);
+            gl.Vertex(pDoc.m_ptBoxCenter.x + 5, pDoc.m_ptBoxCenter.y, pDoc.m_ptBoxCenter.z + delt);
+
+            gl.Vertex(pDoc.m_ptBoxCenter.x - 5, pDoc.m_ptBoxCenter.y, pDoc.m_ptBoxCenter.z - delt);
+            gl.Vertex(pDoc.m_ptBoxCenter.x + 5, pDoc.m_ptBoxCenter.y, pDoc.m_ptBoxCenter.z - delt);
+            gl.End();
+
+        }
+        
+        private void OpenGLControl1_OpenGLInitialized(object sender, EventArgs e)
+        {
+            //var gl = openGLControl1.OpenGL;
+            ////背景色 默认为黑色
+            //gl.ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            ////gl.ClearColor(255, 0, 0, 255);
+            //gl.ShadeModel(OpenGL.GL_SMOOTH);
+            //gl.ClearDepth(1.0f);
+            //gl.Enable(OpenGL.GL_DEPTH_TEST);
+        }
+
+        private void OpenGLControl1_MouseMove(object sender, MouseEventArgs e)
+        {
+            GetPoint(openGLControl1.OpenGL, e.X, e.Y);
+
+            if (m_bMoving)
+            {
+                glCurTransX = (float)((e.X - glDownX) / m_rectOld.Width * 2 * pDoc.m_dbDistance);
+                glCurTransY = (float)((glDownY - e.Y) / m_rectOld.Height * 2 * pDoc.m_dbDistance);
+
+                //Invalidate(FALSE);//显示更新
+            }
+            if (m_bRotation)
+            {
+                glCurRotZ = (float)((double)(e.X - glDownX) * 360.0 / (double)m_rectOld.Width);
+                glCurRotX = (float)((double)(e.Y - glDownY) * 360.0 / (double)m_rectOld.Height);
+               // Invalidate(FALSE);//显示更新
+            }
+        }
+
+        private void OpenGLControl1_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (m_bMoving)
+            {       //平移
+                glCurTransX = (float)((e.X - glDownX) / m_rectOld.Width * 2 * pDoc.m_dbDistance);
+                glCurTransY = (float)((glDownY - e.Y) / m_rectOld.Height * 2 * pDoc.m_dbDistance);
+                glTransX += glCurTransX;
+                glTransY += glCurTransY;
+                glTransZ += glCurTransZ;
+                glCurTransX = 0;
+                glCurTransY = 0;
+                glCurTransZ = 0;
+                m_bMoving = false;
+            }
+            if (m_bRotation)
+            {
+                ////旋转
+                glCurRotZ = (e.X - glDownX) * 360.0f /(float)m_rectOld.Width;
+                glCurRotX = (e.Y - glDownY) * 360f / (float)m_rectOld.Height;
+                glRotX += glCurRotX;
+                glRotY += glCurRotY;
+                glRotZ += glCurRotZ;
+                glCurRotX = 0;
+                glCurRotY = 0;
+                glCurRotZ = 0;
+                m_bRotation = false;
+
+            }
+           // Invalidate(FALSE);
+        }
+
+        private void OpenGLControl1_MouseWheel(object sender, MouseEventArgs e)
+        {
+            switch (Control.ModifierKeys)
+            {
+                case Keys.Control:
+                    glScaleZ += (float)e.Delta / (float)m_rectOld.Height;
+                    break;
+                case Keys.Shift:
+                    glCurTransZ = (float)e.Delta / (float)m_rectOld.Height * 50;
+                    glTransZ += glCurTransZ;
+                    break;
+                default:
+                    glScaleX = glScaleY = glScaleZ += (float)e.Delta / (float)m_rectOld.Height;
+                    break;
+            }
+            //Invalidate(FALSE);
+        }
+
+        private void OpenGLControl1_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button==MouseButtons.Middle)
+            {//平移
+                m_bMoving = true;
+                glDownX = (float)e.X;
+                glDownY = (float)e.Y;
+                glDownZ = 0;
+            }
+            else
+            {//旋转
+                m_bRotation = true;
+                glDownX = (float)e.X;
+                glDownY = (float)e.Y;
+                glDownZ = 0;
+            }
         }
 
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
 
+            tabControl1.SelectedIndex = 1;
+
         }
+
+        #region scene
         void InitEvent(SceneControl sceneControl)
         {
             Init(sceneControl.Scene);
@@ -220,5 +457,133 @@ namespace SharpGLTest
             InitElements(scene);
         }
         #endregion
+
+        #endregion
+
+        float glDownX, glDownY, glDownZ; //按下时的坐标
+        float glTransX, glTransY, glTransZ; //平移值
+        float glRotX, glRotY, glRotZ;//旋转值
+        float glScaleX, glScaleY, glScaleZ;//缩放值
+
+        float glCurRotX, glCurRotY, glCurRotZ;
+        float glCurTransX, glCurTransY, glCurTransZ;
+        bool m_bScale;
+        bool m_bRotation;
+        bool m_bMoving;
+        Point ptDown;
+        bool bInitOpenGL = false;
+        uint glbase;
+        Rectangle m_rectOld = new Rectangle();
+        DisplayDoc pDoc = new DisplayDoc();
+
+        void InitParam()
+        {  
+            //放到构造函数中
+            //初始化参数
+            glTransX = glTransY = glTransZ = 0;
+            glCurTransX = glCurTransY = glCurTransZ = 0;
+            glRotX = glRotY = glRotZ = 0;
+            glRotX = -30;
+
+
+            glScaleX = glScaleY = glScaleZ = 1.0f;
+            glCurRotX = glCurRotY = glCurRotZ = 0.0f;
+            m_bScale = false;
+            m_bRotation = false;
+            m_bMoving = false;
+            bInitOpenGL = false;
+        }
+        void InitOpenGL()
+        {
+            //加载数据:
+            pDoc.LoadData(path);
+            //初始化视窗
+            InitView();
+
+        }
+
+        void GetPoint(OpenGL gl,int x, int y)
+        {
+            int[] viewport = new int[4];
+            double[] mvmatrix = new double[16];
+            double[] projmatrix = new double[16];
+            gl.GetInteger(GetTarget.Viewport, viewport);
+            gl.GetDouble(GetTarget.ModelviewMatix, mvmatrix);
+            gl.GetDouble(GetTarget.ProjectionMatrix, projmatrix);
+
+            /*  note viewport[3] is height of window in pixels  */
+           var  realy = viewport[3] - y - 1;
+           double wx = 0, wy = 0, wz = 0;
+           gl.UnProject(x, realy, 0.0,
+               mvmatrix, projmatrix, viewport, ref wx, ref wy, ref wz);
+            double wx1 = 0, wy1= 0, wz1 = 0;
+            gl.UnProject(x, realy, 1.0,
+                  mvmatrix, projmatrix, viewport, ref wx1, ref wy1, ref wz1);
+            toolStripStatusLabel1.Text = $"{wx:F4},{wy:F4},{wz:F4}|||{wx1:F4},{wy1:F4},{wz1:F4}";
+        }
+        void DrawData(OpenGL gl)
+        {
+
+           // gl.DeleteLists(glbase, 1);
+            //glbase = gl.GenLists(1);
+           // gl.NewList(glbase, OpenGL.GL_COMPILE);
+
+            gl.PointSize(1.0f);
+            gl.Begin(BeginMode.Points);
+            foreach (var ptXYZ in pDoc.m_ptVertexList)
+            {
+                //gl.Color(1.0f, 0.0f, 0.0f);
+                gl.Color(1.0 * (1.0 - Math.Abs(ptXYZ.z) / 60.0), 0.0, 1.0 * Math.Abs(ptXYZ.z) / 60.0);
+                gl.Vertex(ptXYZ.x, ptXYZ.y, ptXYZ.z);
+            }
+
+            gl.End();
+            //gl.EndList();
+
+       
+        }
+        void InitView()
+        {
+            var gl = openGLControl1.OpenGL;
+            double wid = m_rectOld.Width;
+            double height = m_rectOld.Height;
+
+            gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
+            gl.MatrixMode(MatrixMode.Projection);
+            gl.ShadeModel(ShadeModel.Smooth);
+            gl.ClearDepth(1.0f);
+            gl.LoadIdentity();
+
+            ////设置视窗
+            if (wid <= height)
+            {
+                gl.Ortho(-pDoc.m_dbDistance, pDoc.m_dbDistance,
+                    -pDoc.m_dbDistance * height / wid,
+                    pDoc.m_dbDistance * height / wid,
+                    -pDoc.m_dbDistance, pDoc.m_dbDistance);
+            }
+            else
+            {
+                gl.Ortho(-pDoc.m_dbDistance * wid / height,
+                    pDoc.m_dbDistance * wid / height,
+                    -pDoc.m_dbDistance, pDoc.m_dbDistance, -pDoc.m_dbDistance, pDoc.m_dbDistance);
+
+            }
+
+            gl.LookAt(pDoc.m_ptBoxCenter.x, pDoc.m_ptBoxCenter.y, 0, pDoc.m_ptBoxCenter.x, pDoc.m_ptBoxCenter.y, pDoc.m_ptBoxCenter.z,  0, 1, 0);
+
+            bInitOpenGL = true;
+            gl.MatrixMode(MatrixMode.Modelview);
+ 
+        }
+
+        
+
+
+
+
+
     }
+
+
 }

@@ -64,23 +64,29 @@ namespace SharpGLTest
             openGLControl1.MouseUp += OpenGLControl1_MouseUp;
             openGLControl1.MouseMove += OpenGLControl1_MouseMove;
 
+            openGLControl1.Resized += OpenGLControl1_Resize;
+
             openGLControl1.OpenGLDraw += OpenGLControl1_OpenGLDraw;
-            openGLControl1.SizeChanged += OpenGLControl1_SizeChanged;;
         }
 
-
-        private void OpenGLControl1_SizeChanged(object sender, EventArgs e)
+        private void OpenGLControl1_Resize(object sender, EventArgs e)
         {
-     
+            OpenGL gl = openGLControl1.OpenGL;
+
+            //  设置当前矩阵模式,对投影矩阵应用随后的矩阵操作
+            gl.MatrixMode(OpenGL.GL_PROJECTION);
+            // 重置当前指定的矩阵为单位矩阵,将当前的用户坐标系的原点移到了屏幕中心
+            gl.LoadIdentity();
             m_rectOld.Width = openGLControl1.Width;
             m_rectOld.Height = openGLControl1.Height;
-            var gl = openGLControl1.OpenGL;
             //这里有问题，控件大小变了以后视口和视点都没了///
             //todo
-            gl.Viewport(0, 0, m_rectOld.Width, m_rectOld.Height);
-            //InitView();
 
-            //gl.Perspective(45.0f, (float)Width / (float)Height, 0.1f, pDoc.m_dbDistance);
+            gl.Viewport(0, 0, m_rectOld.Width, m_rectOld.Height);
+            // 创建透视投影变换
+            // gl.Perspective(30.0f, (double)Width / (double)Height, 5, 100.0);
+
+            InitView();
         }
 
         private void OpenGLControl1_OpenGLDraw(object sender, RenderEventArgs args)
@@ -91,8 +97,8 @@ namespace SharpGLTest
             gl.LoadIdentity();
             gl.PushMatrix();
             conversion(gl);
+            //drawaxis(gl);
             DrawData(gl);
-            var g = args.Graphics;
             gl.PopMatrix();
             gl.Flush();
             //双缓冲
@@ -127,11 +133,17 @@ namespace SharpGLTest
             //旋转缩放后再移回世界坐标系原点
             gl.Translate(pDoc.m_ptBoxCenter.x, pDoc.m_ptBoxCenter.y, pDoc.m_ptBoxCenter.z);
             rotx = glCurRotX + glRotX;//X轴旋转参数
-            //if(rotx>90||rotx<-90)rotx=abs(rotx)/rotx*90.0;
+            if(Math.Abs(rotx)>360)
+                rotx =(Math.Abs(rotx)%360)*(Math.Abs(rotx)/rotx);
             gl.Rotate(rotx, 1.0, 0.0, 0.0);
             rotz = glCurRotZ + glRotZ;//Z轴旋转角度
+
+            if (Math.Abs(rotz) > 360)
+                rotx = (Math.Abs(rotz) % 360) * (Math.Abs(rotz) / rotz);
+            var interval = 1.0 * (Math.Abs(rotx) * rotx) * (Math.Abs(rotz) * rotz);
             gl.Rotate(rotz, 0.0, 0.0, 1.0);
 
+            testlabl.Text = $"{rotx},{rotz}";
             if (glScaleX < 0.001)
             {
                 glScaleX = glScaleY = glScaleZ = 0.001f;
@@ -143,8 +155,6 @@ namespace SharpGLTest
         }
         void drawaxis(OpenGL gl)
         {
-            gl.MatrixMode(OpenGL.GL_MODELVIEW);
-            gl.LoadIdentity();
             gl.LineWidth(1.0f);
             gl.Begin(OpenGL.GL_LINES);
             //缩放

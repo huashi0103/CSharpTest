@@ -41,6 +41,7 @@
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.openGLControl1 = new SharpGL.OpenGLControl();
+            this.testlabl = new System.Windows.Forms.ToolStripStatusLabel();
             ((System.ComponentModel.ISupportInitialize)(this.sceneControl1)).BeginInit();
             this.toolStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -105,7 +106,8 @@
             // statusStrip1
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripStatusLabel1});
+            this.toolStripStatusLabel1,
+            this.testlabl});
             this.statusStrip1.Location = new System.Drawing.Point(0, 496);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(800, 22);
@@ -164,6 +166,12 @@
             this.openGLControl1.TabIndex = 0;
             this.openGLControl1.OpenGLInitialized += new System.EventHandler(this.OpenGLControl1_OpenGLInitialized);
             // 
+            // testlabl
+            // 
+            this.testlabl.Name = "testlabl";
+            this.testlabl.Size = new System.Drawing.Size(131, 17);
+            this.testlabl.Text = "toolStripStatusLabel2";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -202,6 +210,7 @@
         private SharpGL.OpenGLControl openGLControl1;
         private System.Windows.Forms.ToolStripMenuItem testFormToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem drawpicToolStripMenuItem;
+        private System.Windows.Forms.ToolStripStatusLabel testlabl;
     }
 }
 

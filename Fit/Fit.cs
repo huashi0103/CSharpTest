@@ -233,7 +233,7 @@ namespace Fit
 
         public double[,] Transition(IList<Point3D> pList1, IList<Point3D> pList2)
         {
-            var center1 = GetCenter(pList1);
+             var center1 = GetCenter(pList1);
             var center2 = GetCenter(pList2);
             var p1 = new List<Point3D>();
             var p2 = new List<Point3D>();
@@ -249,16 +249,15 @@ namespace Fit
             for (int i = 0; i < n; i++)
             {
                 double[,] c = new double[,] {
-                    { p1[i].X*p2[i].X+p1[i].Y*p2[i].Y+p1[i].Z*p2[i].Z   ,   p1[i].Y*p2[i].Z-p1[i].Z*p2[i].Y,
-                        -p1[i].X*p2[i].Z+p1[i].Z*p2[i].X,                           p1[i].X*p2[i].Y-p1[i].Y*p2[i].X},
-                    {   p1[i].Y*p2[i].Z-p1[i].Z*p2[i].Y ,                            p1[i].X*p2[i].X-p1[i].Y*p2[i].Y-p1[i].Z*p2[i].Z,
-                        p1[i].X*p2[i].Y+p1[i].Y*p2[i].X,                            p1[i].X*p2[i].Z-p1[i].Z*p2[i].X},
-                    {   -p1[i].X*p2[i].Z-p1[i].Z*p2[i].X ,                           p1[i].X*p2[i].Y+ p1[i].Y*p2[i].X,
-                        -p1[i].X*p2[i].X+p1[i].Y*p2[i].Y-p1[i].Z*p2[i].Z,    p1[i].Y*p2[i].Z-p1[i].Z*p2[i].X},
-                    {   p1[i].X*p2[i].Y-p1[i].Y*p2[i].X ,                            p1[i].X*p2[i].Z+p1[i].Z*p2[i].X,
-                        p1[i].Y*p2[i].Z+p1[i].Z*p2[i].Y,                           -p1[i].X*p2[i].X-p1[i].Y*p2[i].Y+p1[i].Z*p2[i].Z}
+                    { p1[i].X*p2[i].X+p1[i].Y*p2[i].Y+p1[i].Z*p2[i].Z   ,   p1[i].Y*p2[i].Z-p1[i].Z*p2[i].Y,   -p1[i].X*p2[i].Z+p1[i].Z*p2[i].X,  p1[i].X*p2[i].Y-p1[i].Y*p2[i].X},
+
+                    {   p1[i].Y*p2[i].Z-p1[i].Z*p2[i].Y ,   p1[i].X*p2[i].X - p1[i].Y*p2[i].Y-p1[i].Z*p2[i].Z,   p1[i].X*p2[i].Y+p1[i].Y*p2[i].X, p1[i].X*p2[i].Z + p1[i].Z*p2[i].X},
+
+                    {   -p1[i].X*p2[i].Z+p1[i].Z*p2[i].X ,  p1[i].X*p2[i].Y + p1[i].Y*p2[i].X,   -p1[i].X*p2[i].X+p1[i].Y*p2[i].Y-p1[i].Z*p2[i].Z,    p1[i].Y*p2[i].Z + p1[i].Z*p2[i].Y},
+
+                    {   p1[i].X*p2[i].Y-p1[i].Y*p2[i].X ,    p1[i].X*p2[i].Z+p1[i].Z*p2[i].X, p1[i].Y*p2[i].Z+p1[i].Z*p2[i].Y,      -p1[i].X*p2[i].X-p1[i].Y*p2[i].Y+p1[i].Z*p2[i].Z}
                 };
-                C1 = C1 + -2 * m.DenseOfArray(c);
+                C1 = C1 + (-2) * m.DenseOfArray(c);
 
                 double[,] c2 = new double[,]
                     {
@@ -272,23 +271,41 @@ namespace Fit
             var N = ((C2.Transpose() * C2) / (2 * n) - C1 - C1.Transpose()) / 2;
             double[] w;
             double[,] z;
-            alglib.smatrixevd(N.ToArray(), 4, 1, true, out w, out z);
+            alglib.smatrixevd(N.ToArray(), 4, 1, false, out w, out z);
             var index = Array.IndexOf(w, w.Max());
             var s0 = z[0, index];
-            var s1 = z[1, index];
-            var s2 = z[2, index];
-            var s3 = z[3, index];
-            var s = m.DenseOfArray(new double[,] { { s1 }, { s2 }, { s3 } });
+            var sx = z[1, index];
+            var sy = z[2, index];
+            var sz = z[3, index];
+            var s = m.DenseOfArray(new double[,] { { sx }, { sy }, { sz } });
             var ks = new double[,] {
-                { 0,-s3,s2},
-                { s3,-0,-s1},
-                { -s3,-s1,0}
+                { 0,    -sz,  sy},
+                { sz,  0,    -sx},
+                { -sy, sx,   0}
             };
-            var R = (s0 * s0 - s.Transpose() * s) * m.DenseIdentity(3) + 2 * s * s.Transpose() + 2 * s0 * m.DenseOfArray(ks);
+            var R = (s0 * s0 - (s.Transpose() * s)[0, 0]) * m.DenseIdentity(3) + 2 * s * s.Transpose() + 2 * s0 * m.DenseOfArray(ks);
 
-            var q = -C2 * m.DenseOfArray(new double[,] { { s0 }, { s1 }, { s2 }, { s3 } }) / (2 * n);
+            //var q = -C2 * m.DenseOfArray(new double[,] { { s0 }, { s1 }, { s2 }, { s3 } }) / (2 * n);
 
-            return R.ToArray(); 
+            //return R.ToArray(); 
+            var pc = m.DenseOfArray(new double[,]
+                {{center1.X},
+                {center1.Y},
+                {center1.Z}});
+            var qc = m.DenseOfArray(new double[,]
+                {{center2.X},
+                {center2.Y},
+                {center2.Z}});
+
+            var t = qc - R * pc;
+            double[,] res = new double[,] {
+                                    {R[0,0],R[0,0],R[0,2]},
+                                    {R[1,0],R[1,1],R[1,2]},
+                                    {R[2,0],R[2,1],R[2,2]},
+                                    {t[0,0],t[1,0], t[2,0]}
+            };
+
+            return res;
         }
 
 
